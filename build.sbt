@@ -1,26 +1,98 @@
-import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
+import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, integrationTestSettings, scalaSettings, targetJvm}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
+import sbt.Keys.baseDirectory
+import sbt.Test
+import sbt.Tests.{Group, SubProcess}
+import uk.gov.hmrc.SbtAutoBuildPlugin
+import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
+import bloop.integrations.sbt.BloopDefaults
 
 val appName = "gatekeeper-email"
 
-val silencerVersion = "1.7.3"
+lazy val playSettings: Seq[Setting[_]] = Seq.empty
+lazy val ComponentTest = config("component") extend Test
 
-lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
-  .settings(
-    majorVersion                     := 0,
-    scalaVersion                     := "2.12.13",
-    libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test,
-    // ***************
-    // Use the silencer plugin to suppress warnings
-    scalacOptions += "-P:silencer:pathFilters=routes",
-    libraryDependencies ++= Seq(
-      compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
-      "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
-    )
-    // ***************
+lazy val microservice = (project in file("."))
+  .enablePlugins(
+    play.sbt.PlayScala,
+    SbtAutoBuildPlugin,
+    SbtDistributablesPlugin
   )
+  .settings(playSettings: _*)
+  .settings(scalaSettings: _*)
   .settings(publishingSettings: _*)
+  .settings(playPublishingSettings: _*)
+  .settings(ScoverageSettings())
+  .settings(defaultSettings(): _*)
+  .settings(
+    name := appName,
+    targetJvm := "jvm-1.8",
+    scalaVersion := "2.12.11",
+    libraryDependencies ++= AppDependencies(),
+    majorVersion := 0,
+    resolvers ++= Resolvers(),
+    routesImport += "uk.gov.hmrc.gatekeeperemail.controllers.binders._"
+  )
+  .settings(SilencerSettings())
+  .settings(
+    Compile / unmanagedResourceDirectories += baseDirectory.value / "resources"
+  )
+  .settings(inConfig(Test)(BloopDefaults.configSettings))
+  .settings(
+    Test / fork := false,
+    Test / parallelExecution := false,
+    Test / unmanagedSourceDirectories += baseDirectory.value / "test" / "common",
+    Test / unmanagedSourceDirectories += baseDirectory.value / "testcommon"
+  )
   .configs(IntegrationTest)
-  .settings(integrationTestSettings(): _*)
-  .settings(resolvers += Resolver.jcenterRepo)
+  .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
+  .settings(inConfig(IntegrationTest)(BloopDefaults.configSettings))
+  .settings(
+    IntegrationTest / fork := false,
+    IntegrationTest / parallelExecution := false,
+    IntegrationTest / unmanagedSourceDirectories += baseDirectory.value / "it",
+    IntegrationTest / unmanagedSourceDirectories += baseDirectory.value / "testcommon",
+    IntegrationTest / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-eT"),
+    IntegrationTest / testGrouping := oneForkedJvmPerTest(
+      (definedTests in IntegrationTest).value
+    ),
+    addTestReportOption(IntegrationTest, "int-test-reports")
+  )
+  .configs(ComponentTest)
+  .settings(inConfig(ComponentTest)(Defaults.testSettings): _*)
+  .settings(inConfig(ComponentTest)(BloopDefaults.configSettings))
+  .settings(
+    ComponentTest / unmanagedSourceDirectories += baseDirectory.value / "component",
+    ComponentTest / unmanagedSourceDirectories += baseDirectory.value / "testcommon",
+    ComponentTest / testGrouping := oneForkedJvmPerTest((definedTests in ComponentTest).value),
+  )
+  .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
+
+
+lazy val playPublishingSettings: Seq[sbt.Setting[_]] = Seq(
+  publishArtifact in (Compile, packageDoc) := false,
+  publishArtifact in (Compile, packageSrc) := false
+)
+
+def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
+  tests map { test =>
+    Group(
+      test.name,
+      Seq(test),
+      SubProcess(
+        ForkOptions().withRunJVMOptions(Vector(s"-Dtest.name=${test.name}"))
+      )
+    )
+  }
+
+coverageMinimum := 74
+coverageFailOnMinimum := true
+coverageExcludedPackages := Seq(
+  "<empty>",
+  "com.kenshoo.play.metrics",
+  ".*definition.*",
+  "prod",
+  "testOnlyDoNotUseInAppConf",
+  "uk.gov.hmrc.gatekeeperemail.*",
+  "uk.gov.hmrc.BuildInfo"
+).mkString(";")
