@@ -20,10 +20,13 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
+import play.api.Play.materializer
 import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest
 
 class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {
   override def fakeApplication(): Application =
@@ -33,8 +36,15 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
         "metrics.enabled" -> false
       )
       .build()
+  val parameters: Map[String, String] = Map("subject" -> s"$subject",
+    "fromAddress" -> "gateKeeper",
+    "body" -> "Body to be used in the email template",
+    "service" -> "gatekeeper")
 
-  private val fakeRequest = FakeRequest("POST", "/")
+  val emailId = "email@example.com"
+  val subject = "Email subject"
+  val emailRequest = SendEmailRequest(List(emailId), "gatekeeper", parameters)
+  private val fakeRequest = FakeRequest("POST", "/gatekeeper-email").withBody(Json.toJson(emailRequest))
 
   private val controller = app.injector.instanceOf[GatekeeperComposeEmailController]
 

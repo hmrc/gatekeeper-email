@@ -25,7 +25,9 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.OK
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
+import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, UpstreamErrorResponse}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite {
@@ -84,7 +86,7 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach
       "body" -> "Body to be used in the email template",
       "service" -> "gatekeeper")
     "send gatekeeper email" in new Setup with WorkingHttp {
-      await(underTest.sendEmail(emailId, parameters))
+      await(underTest.sendEmail(SendEmailRequest(List(emailId), "gatekeeper", parameters)))
 
       wireMockVerify(1, postRequestedFor(
         urlEqualTo(emailServicePath))
@@ -107,7 +109,7 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach
 
     "fail to send gatekeeper email" in new Setup with FailingHttp {
       intercept[UpstreamErrorResponse] {
-        await(underTest.sendEmail(emailId, parameters))
+        await(underTest.sendEmail(SendEmailRequest(List(emailId), "gatekeeper", parameters)))
       }
     }
   }
