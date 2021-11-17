@@ -28,10 +28,10 @@ case class SendEmailRequest(to: List[String],
 object SendEmailRequest {
   implicit val sendEmailRequestFmt = Json.format[SendEmailRequest]
 
-  def createEmailRequest(emailAddress: String, parameters: Map[String, String]) = {
+  def createEmailRequest(emailAddress: List[String], parameters: Map[String, String]) = {
 
     SendEmailRequest(
-      to = List(emailAddress),
+      to = emailAddress,
       templateId = "gatekeeper", //"gatekeeperEmailRequestTemplateId",
       parameters
     )
