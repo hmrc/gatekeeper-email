@@ -17,8 +17,8 @@
 package uk.gov.hmrc.gatekeeperemail.connectors
 
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest
-import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest.createEmailRequest
+import uk.gov.hmrc.gatekeeperemail.model.SendEmailRequest
+import uk.gov.hmrc.gatekeeperemail.model.SendEmailRequest.createEmailRequest
 import uk.gov.hmrc.gatekeeperemail.util.ApplicationLogger
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
