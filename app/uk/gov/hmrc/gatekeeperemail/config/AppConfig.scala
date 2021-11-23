@@ -21,7 +21,8 @@ import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class AppConfig @Inject()(config: Configuration)
+class AppConfig @Inject()(config: Configuration,
+                          servicesConfig: ServicesConfig)
   extends ServicesConfig(config)
     with EmailConnectorConfig
 {
@@ -31,6 +32,24 @@ class AppConfig @Inject()(config: Configuration)
 
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
+
+
+  lazy val initiateUrl              = servicesConfig.baseUrl("upscan-initiate") + "/upscan/initiate"
+  lazy val initiateV2Url            = servicesConfig.baseUrl("upscan-initiate") + "/upscan/v2/initiate"
+  lazy val uploadRedirectTargetBase = loadConfig("upload-redirect-target-base")
+  lazy val callbackEndpointTarget   = loadConfig("upscan.callback-endpoint")
+
+  lazy val assetsPrefix   = loadConfig(s"assets.url") + loadConfig(s"assets.version")
+  lazy val analyticsToken = loadConfig(s"google-analytics.token")
+  lazy val analyticsHost  = loadConfig(s"google-analytics.host")
+
+  lazy val reportAProblemPartialUrl = s"$contactHost/contact/problem_reports_ajax?service=$contactFormServiceIdentifier"
+  lazy val reportAProblemNonJSUrl   = s"$contactHost/contact/problem_reports_nonjs?service=$contactFormServiceIdentifier"
+  private val contactHost                  = config.getOptional[String](s"contact-frontend.host").getOrElse("")
+  private val contactFormServiceIdentifier = "MyService"
+
+  private def loadConfig(key: String) =
+    config.getOptional[String](key).getOrElse(throw new Exception(s"Missing configuration key: $key"))
 }
 
 trait EmailConnectorConfig {

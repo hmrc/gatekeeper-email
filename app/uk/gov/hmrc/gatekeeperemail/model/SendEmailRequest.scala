@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.gatekeeperemail.models
+package uk.gov.hmrc.gatekeeperemail.model
 
 import play.api.libs.json.Json
 
