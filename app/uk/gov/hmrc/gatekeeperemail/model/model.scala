@@ -25,17 +25,12 @@ sealed trait UploadStatus
 case object InProgress extends UploadStatus
 case object Failed extends UploadStatus
 case class UploadedSuccessfully(name: String, mimeType: String, downloadUrl: String, size: Option[Long]) extends UploadStatus
+case class UploadedFailedWithErrors(errorCode: String, errorMessage: String, errorRequestId: String, key: String) extends UploadStatus
 
 case class UploadId(value : String) extends AnyVal
 
 object UploadId {
   def generate = UploadId(UUID.randomUUID().toString)
-
-  implicit val uploadStatus = Json.writes[UploadStatus]
-  implicit val inProgress = Json.writes[InProgress.type]
-  implicit val failed = Json.writes[Failed.type]
-  implicit val uploadSuccess = Json.writes[UploadedSuccessfully.type]
-
 
   implicit def queryBinder(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[UploadId] =
     stringBinder.transform(UploadId(_),_.value)

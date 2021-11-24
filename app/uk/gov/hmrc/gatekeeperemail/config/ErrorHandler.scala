@@ -22,7 +22,4 @@ import play.twirl.api.Html
 
 import javax.inject.{Inject, Singleton}
 
-@Singleton
-class ErrorHandler @Inject()(val messagesApi: MessagesApi, implicit val appConfig: AppConfig)  {
-  override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit request: Request[_]): Unit = Unit
-}
+
