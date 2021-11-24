@@ -28,7 +28,7 @@ import play.api.mvc._
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.{Reference, UpscanInitiateConnector}
 import uk.gov.hmrc.gatekeeperemail.controllers.routes.UploadFormController
-import uk.gov.hmrc.gatekeeperemail.model.{UploadId, UploadedSuccessfully}
+import uk.gov.hmrc.gatekeeperemail.model.{UploadId, UploadedFailedWithErrors, UploadedSuccessfully}
 import uk.gov.hmrc.gatekeeperemail.services.UploadProgressTracker
 import uk.gov.hmrc.gatekeeperemail.util.ApplicationLogger
 import uk.gov.hmrc.http.HeaderCarrier
@@ -77,9 +77,9 @@ class UploadFormController @Inject()(upscanInitiateConnector: UpscanInitiateConn
     handleOption(result)
   }
 
-  def showError(errorCode: String, errorMessage: String, errorRequestId: String, key: String)(implicit w: Writeable[ErrorRedirect] ): Action[AnyContent] = Action {
-    implicit request =>
-      BadRequest(ErrorRedirect("Upload Error", errorMessage, s"Code: $errorCode, RequestId: $errorRequestId, FileReference: $key"))
+  def showError(errorCode: String, errorMessage: String, errorRequestId: String, key: String): Action[AnyContent] = Action.async { implicit request =>
+      uploadProgressTracker.registerUploadResult(Reference(key), UploadedFailedWithErrors(errorCode, errorMessage,errorRequestId, key))
+    Future.successful(Ok(s"Captured Errors $errorCode"))
   }
 
   private case class SampleForm(field1: String, field2: String, uploadedFileId: UploadId)

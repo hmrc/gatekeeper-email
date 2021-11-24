@@ -2,7 +2,6 @@
 
 GET        /gatekeeper-email             uk.gov.hmrc.gatekeeperemail.controllers.MicroserviceHelloWorldController.hello
 # microservice specific routes
-GET        /gatekeeper-email                        uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.show
 GET        /v2/gatekeeper-email                     uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.showV2
 
 GET        /gatekeeper-email/submission-form        uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.showSubmissionForm(uploadId: uk.gov.hmrc.gatekeeperemail.model.UploadId)

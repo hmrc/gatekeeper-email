@@ -24,7 +24,7 @@ import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.gatekeeperemail.connectors.Reference
-import uk.gov.hmrc.gatekeeperemail.model.{Failed, InProgress, UploadId, UploadStatus, UploadedSuccessfully}
+import uk.gov.hmrc.gatekeeperemail.model.{Failed, InProgress, UploadId, UploadStatus, UploadedFailedWithErrors, UploadedSuccessfully}
 import uk.gov.hmrc.gatekeeperemail.repository.UploadDetails._
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
@@ -39,6 +39,7 @@ object UploadDetails {
   val status = "status"
 
   val uploadedSuccessfullyFormat: OFormat[UploadedSuccessfully] = Json.format[UploadedSuccessfully]
+  val uploadedFailed: OFormat[UploadedFailedWithErrors] = Json.format[UploadedFailedWithErrors]
 
   val read: Reads[UploadStatus] = new Reads[UploadStatus] {
     override def reads(json: JsValue): JsResult[UploadStatus] = {
@@ -47,6 +48,7 @@ object UploadDetails {
         case Some(JsString("InProgress")) => JsSuccess(InProgress)
         case Some(JsString("Failed")) => JsSuccess(Failed)
         case Some(JsString("UploadedSuccessfully")) => Json.fromJson[UploadedSuccessfully](jsObject)(uploadedSuccessfullyFormat)
+        case Some(JsString("UploadedFailedWithErrors")) => Json.fromJson[UploadedFailedWithErrors](jsObject)(uploadedFailed)
         case Some(value) => JsError(s"Unexpected value of _type: $value")
         case None => JsError("Missing _type field")
       }
@@ -59,6 +61,7 @@ object UploadDetails {
         case InProgress => JsObject(Map("_type" -> JsString("InProgress")))
         case Failed => JsObject(Map("_type" -> JsString("Failed")))
         case s : UploadedSuccessfully => Json.toJson(s)(uploadedSuccessfullyFormat).as[JsObject] + ("_type" -> JsString("UploadedSuccessfully"))
+        case f : UploadedFailedWithErrors => Json.toJson(f)(uploadedFailed).as[JsObject] + ("_type" -> JsString("uploadedFailed"))
       }
     }
   }
