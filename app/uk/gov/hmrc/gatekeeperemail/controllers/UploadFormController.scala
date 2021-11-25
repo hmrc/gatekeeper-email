@@ -77,6 +77,16 @@ class UploadFormController @Inject()(upscanInitiateConnector: UpscanInitiateConn
     handleOption(result)
   }
 
+  def addUploadedFileStatus(uploadId: UploadId, reference: Reference) : Action[AnyContent] = Action.async { implicit request =>
+    for (uploadResult <- uploadProgressTracker.requestUpload(uploadId, reference)) yield uploadResult
+    Future.successful(Ok(s"File with uploadId: ${uploadId}, reference: ${reference} is inserted with status: InProgress"))
+  }
+
+  def fetchUploadedFileStatus(uploadId: UploadId) : Action[AnyContent] = Action.async { implicit request =>
+    val result = for (uploadResult <- uploadProgressTracker.getUploadResult(uploadId)) yield uploadResult
+    handleOption(result)
+  }
+
   def showError(errorCode: String, errorMessage: String, errorRequestId: String, key: String): Action[AnyContent] = Action.async { implicit request =>
       uploadProgressTracker.registerUploadResult(Reference(key), UploadedFailedWithErrors(errorCode, errorMessage,errorRequestId, key))
     Future.successful(Ok(s"Captured Errors $errorCode"))
