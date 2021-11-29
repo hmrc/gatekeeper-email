@@ -42,7 +42,7 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
 
   private def post(request: SendEmailRequest)(implicit hc: HeaderCarrier) = {
     logger.info(s"*******sendEmailRequest:$request")
-    http.POST[SendEmailRequest, ErrorOrUnit](s"$serviceUrl/gatekeeper/email", request)
+    http.POST[SendEmailRequest, ErrorOrUnit](s"$serviceUrl/developer/email", request)
     .map(throwOrUnit)
   }
 }
