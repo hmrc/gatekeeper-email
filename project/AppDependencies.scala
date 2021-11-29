@@ -17,6 +17,7 @@ object AppDependencies {
     "uk.gov.hmrc"             %% "bootstrap-test-play-28"     % "5.16.0"            % Test,
     "uk.gov.hmrc.mongo"       %% "hmrc-mongo-test-play-28"    % "0.56.0"            % Test,
     "com.vladsch.flexmark"    %  "flexmark-all"               % "0.36.8"            % "test, it",
-    "org.mockito"             %%  "mockito-scala-scalatest"   % "1.7.1"             % Test
+    "org.mockito"             %%  "mockito-scala-scalatest"   % "1.7.1"             % Test,
+    "uk.gov.hmrc"             %% "reactivemongo-test"       % "5.0.0-play-28"        % Test
   )
 }

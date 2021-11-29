@@ -2,15 +2,6 @@
 
 GET        /gatekeeper-email             uk.gov.hmrc.gatekeeperemail.controllers.MicroserviceHelloWorldController.hello
 # microservice specific routes
-GET        /v2/gatekeeper-email                     uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.showV2
-
-GET        /gatekeeper-email/submission-form        uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.showSubmissionForm(uploadId: uk.gov.hmrc.gatekeeperemail.model.UploadId)
-POST       /gatekeeper-email/submission-form        uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.submitFormWithFile
-GET        /gatekeeper-email/submission-form/result uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.showSubmissionResult
-
-# upload file redirects
-GET        /gatekeeper-email/success                uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.showResult(uploadId: uk.gov.hmrc.gatekeeperemail.model.UploadId)
-GET        /gatekeeper-email/error                  uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.showError(errorCode: String, errorMessage: String, errorRequestId: String, key: String)
 
 # upload file notification callback
 #NOCSRF
@@ -18,4 +9,5 @@ POST       /gatekeeper-email/upscan-callback        uk.gov.hmrc.gatekeeperemail.
 
 # Mongo insert/update
 POST /gatekeeper-email/:id/insert-fileupload-status/:reference    uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.addUploadedFileStatus(id: uk.gov.hmrc.gatekeeperemail.model.UploadId, reference: uk.gov.hmrc.gatekeeperemail.connectors.Reference)
-GET /gatekeeper-email/:id/insert-fileupload-status     uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.fetchUploadedFileStatus(id: uk.gov.hmrc.gatekeeperemail.model.UploadId)
+POST /gatekeeper-email/:id/update-fileupload-status/:reference   uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.updateUploadedFileStatus(id: uk.gov.hmrc.gatekeeperemail.model.UploadId, reference: uk.gov.hmrc.gatekeeperemail.connectors.Reference)
+GET /gatekeeper-email/:id/fetch-fileupload-status     uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.fetchUploadedFileStatus(id: uk.gov.hmrc.gatekeeperemail.model.UploadId)

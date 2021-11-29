@@ -38,10 +38,10 @@ case class UploadDetails(id : BSONObjectID, uploadId : UploadId, reference : Ref
 object UploadDetails {
   val status = "status"
 
-  val uploadedSuccessfullyFormat: OFormat[UploadedSuccessfully] = Json.format[UploadedSuccessfully]
-  val uploadedFailed: OFormat[UploadedFailedWithErrors] = Json.format[UploadedFailedWithErrors]
+  implicit val uploadedSuccessfullyFormat: OFormat[UploadedSuccessfully] = Json.format[UploadedSuccessfully]
+  implicit val uploadedFailed: OFormat[UploadedFailedWithErrors] = Json.format[UploadedFailedWithErrors]
 
-  val read: Reads[UploadStatus] = new Reads[UploadStatus] {
+  implicit val read: Reads[UploadStatus] = new Reads[UploadStatus] {
     override def reads(json: JsValue): JsResult[UploadStatus] = {
       val jsObject = json.asInstanceOf[JsObject]
       jsObject.value.get("_type") match {
