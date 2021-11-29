@@ -17,8 +17,7 @@
 package uk.gov.hmrc.gatekeeperemail.connectors
 
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest
-import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest.createEmailRequest
+import uk.gov.hmrc.gatekeeperemail.models.{EmailRequest, SendEmailRequest}
 import uk.gov.hmrc.gatekeeperemail.util.ApplicationLogger
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
@@ -35,9 +34,15 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
   val api = API("email")
   lazy val serviceUrl = config.emailBaseUrl
 
-  def sendEmail(emailTo: String, params: Map[String, String])(implicit hc: HeaderCarrier): Future[Unit] = {
-    logger.info(s"*****sendEmailTo*********:$emailTo")
-    post(createEmailRequest(emailTo, params))
+  def sendEmail(emailRequest: EmailRequest)(implicit hc: HeaderCarrier): Future[Unit] = {
+    logger.info(s"*****receiveEmailRequest.to*********:${emailRequest.to}")
+    val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
+      "fromAddress" -> "gateKeeper",
+      "body" -> s"${emailRequest.emailData.emailBody}",
+      "service" -> "gatekeeper")
+    val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, parameters, emailRequest.force,
+      emailRequest.auditData, emailRequest.eventUrl)
+    post(sendEmailRequest)
   }
 
   private def post(request: SendEmailRequest)(implicit hc: HeaderCarrier) = {

@@ -25,7 +25,9 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.OK
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
+import uk.gov.hmrc.gatekeeperemail.models.{EmailData, EmailRequest}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, UpstreamErrorResponse}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite {
@@ -54,6 +56,7 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach
   val gatekeeperLink = "http://some.url"
   val emailId = "email@example.com"
   val subject = "Email subject"
+  val emailBody = "Body to be used in the email template"
   val emailServicePath = "/gatekeeper/email"
    
   trait Setup {
@@ -79,12 +82,9 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach
   }
   
   "emailConnector" should {
-    val parameters: Map[String, String] = Map("subject" -> s"$subject",
-      "fromAddress" -> "gateKeeper",
-      "body" -> "Body to be used in the email template",
-      "service" -> "gatekeeper")
+    val emailRequest = EmailRequest(List(emailId), "gatekeeper", EmailData(emailId, subject, emailBody))
     "send gatekeeper email" in new Setup with WorkingHttp {
-      await(underTest.sendEmail(emailId, parameters))
+      await(underTest.sendEmail(emailRequest))
 
       wireMockVerify(1, postRequestedFor(
         urlEqualTo(emailServicePath))
@@ -96,7 +96,7 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach
               |  "parameters": {
               |    "subject": "$subject",
               |    "fromAddress": "gateKeeper",
-              |    "body": "Body to be used in the email template",
+              |    "body": "$emailBody",
               |    "service": "gatekeeper"
               |  },
               |  "force": false,
@@ -107,7 +107,7 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach
 
     "fail to send gatekeeper email" in new Setup with FailingHttp {
       intercept[UpstreamErrorResponse] {
-        await(underTest.sendEmail(emailId, parameters))
+        await(underTest.sendEmail(emailRequest))
       }
     }
   }

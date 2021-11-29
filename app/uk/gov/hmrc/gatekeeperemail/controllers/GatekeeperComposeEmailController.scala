@@ -16,30 +16,47 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import org.joda.time.DateTime
+import play.api.libs.json.JsValue
+import play.api.mvc.{Action, MessagesControllerComponents, PlayBodyParsers, Result}
 import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailConnector
+import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailRequest, ErrorCode, JsErrorResponse}
+import uk.gov.hmrc.gatekeeperemail.services.EmailService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class GatekeeperComposeEmailController @Inject()(
   mcc: MessagesControllerComponents,
   emailConnector: GatekeeperEmailConnector,
-  )(implicit val appConfig: AppConfig, val ec: ExecutionContext)
-    extends BackendController(mcc)  {
+  playBodyParsers: PlayBodyParsers,
+  emailService: EmailService
+  )(implicit val ec: ExecutionContext)
+    extends BackendController(mcc) with WithJson {
 
-  val sendEmail: Action[AnyContent] = Action.async { implicit request =>
-    val emailTo: String = "test.user@digital.hmrc.gov.uk"
-    val params: Map[String, String] = Map("subject" -> "subject",
-                                          "fromAddress" -> "gateKeeper",
-                                          "body" -> "Body to be used in the email template",
-                                          "service" -> "gatekeeper")
-
-    emailConnector.sendEmail(emailTo, params)
-    Future.successful(Ok("Email sent successfully"))
+  def sendEmail: Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
+    withJson[EmailRequest] { receiveEmailRequest =>
+      val recepientsTitle = "TL API PLATFORM TEAM"
+//      val emailTo: String = "test.user@digital.hmrc.gov.uk"
+//      val params: Map[String, String] = Map("subject" -> "subject",
+//        "fromAddress" -> "gateKeeper",
+//        "body" -> "Body to be used in the email template",
+//        "service" -> "gatekeeper")
+      val email = Email(recepientsTitle, receiveEmailRequest.to, None, "markdownEmailBody", Some(receiveEmailRequest.emailData.emailBody),
+    receiveEmailRequest.emailData.emailSubject, "composedBy",
+        Some("approvedBy"), DateTime.now())
+      for {
+          result <- emailService.saveEmail(email)
+          sent <- emailConnector.sendEmail(receiveEmailRequest)
+        } yield Ok("Email sent successfully")
+    } recover recovery
   }
 
+  private def recovery: PartialFunction[Throwable, Result] = {
+    case e: IllegalArgumentException =>
+      logger.info(s"Invalid request due to ${e.getMessage}")
+      BadRequest(JsErrorResponse(ErrorCode.INVALID_REQUEST_PAYLOAD, e.getMessage))
+  }
 }
