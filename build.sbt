@@ -81,7 +81,7 @@ def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
     )
   }
 
-coverageMinimum := 42
+coverageMinimum := 66
 coverageFailOnMinimum := true
 coverageExcludedPackages := Seq(
   "<empty>",
@@ -89,6 +89,5 @@ coverageExcludedPackages := Seq(
   ".*definition.*",
   "prod",
   "testOnlyDoNotUseInAppConf",
-  "uk.gov.hmrc.gatekeeperemail.*",
   "uk.gov.hmrc.BuildInfo"
 ).mkString(";")

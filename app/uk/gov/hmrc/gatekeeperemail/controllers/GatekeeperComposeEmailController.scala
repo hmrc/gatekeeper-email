@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
+import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailConnector
+import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
@@ -31,15 +33,12 @@ class GatekeeperComposeEmailController @Inject()(
   )(implicit val appConfig: AppConfig, val ec: ExecutionContext)
     extends BackendController(mcc)  {
 
-  val sendEmail: Action[AnyContent] = Action.async { implicit request =>
-    val emailTo: String = "test.user@digital.hmrc.gov.uk"
-    val params: Map[String, String] = Map("subject" -> "subject",
-                                          "fromAddress" -> "gateKeeper",
-                                          "body" -> "Body to be used in the email template",
-                                          "service" -> "gatekeeper")
+  val sendEmail: Action[JsValue] = Action.async(parse.json) { implicit request =>
+    withJsonBody[SendEmailRequest] { emailRequest =>
 
-    emailConnector.sendEmail(emailTo, params)
-    Future.successful(Ok("Email sent successfully"))
+      emailConnector.sendEmail(emailRequest)
+      Future.successful(Ok("Email sent successfully"))
+    }
   }
 
 }

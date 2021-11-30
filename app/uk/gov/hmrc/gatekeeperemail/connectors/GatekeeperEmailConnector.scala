@@ -35,9 +35,9 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
   val api = API("email")
   lazy val serviceUrl = config.emailBaseUrl
 
-  def sendEmail(emailTo: String, params: Map[String, String])(implicit hc: HeaderCarrier): Future[Unit] = {
-    logger.info(s"*****sendEmailTo*********:$emailTo")
-    post(createEmailRequest(emailTo, params))
+  def sendEmail(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Unit] = {
+    logger.info(s"*****sendEmailTo*********:${request.to}")
+    post(request)
   }
 
   private def post(request: SendEmailRequest)(implicit hc: HeaderCarrier) = {
