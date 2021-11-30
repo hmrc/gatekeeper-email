@@ -1,3 +1,3 @@
 # microservice specific routes
 
-GET        /hello-world             uk.gov.hmrc.gatekeeperemail.controllers.MicroserviceHelloWorldController.hello
+POST /gatekeeper-email uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.sendEmail

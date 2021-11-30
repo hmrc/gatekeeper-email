@@ -32,7 +32,7 @@ class GatekeeperComposeEmailController @Inject()(
     extends BackendController(mcc)  {
 
   val sendEmail: Action[AnyContent] = Action.async { implicit request =>
-    val emailTo: String = "test.user@digital.hmrc.gov.uk"
+    val emailTo: String = "imran.akram@digital.hmrc.gov.uk"
     val params: Map[String, String] = Map("subject" -> "subject",
                                           "fromAddress" -> "gateKeeper",
                                           "body" -> "Body to be used in the email template",
