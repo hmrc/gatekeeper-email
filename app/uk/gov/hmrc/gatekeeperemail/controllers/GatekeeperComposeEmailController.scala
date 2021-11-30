@@ -29,7 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class GatekeeperComposeEmailController @Inject()(
   mcc: MessagesControllerComponents,
-  emailConnector: GatekeeperEmailConnector,
+  emailConnector: GatekeeperEmailConnector
   )(implicit val appConfig: AppConfig, val ec: ExecutionContext)
     extends BackendController(mcc)  {
 
