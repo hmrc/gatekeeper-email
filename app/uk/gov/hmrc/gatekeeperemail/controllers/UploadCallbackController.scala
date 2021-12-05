@@ -50,6 +50,8 @@ object CallbackBody {
   private implicit val urlFormat: Format[URL] = HttpUrlFormat.format
 
   implicit val uploadDetailsReads = Json.reads[UploadDetails]
+  implicit val uploadDetailsWrites = Json.writes[UploadDetails]
+  implicit val uploadDetails = Format(uploadDetailsReads, uploadDetailsWrites)
 
   implicit val errorDetailsReads = Json.reads[ErrorDetails]
 

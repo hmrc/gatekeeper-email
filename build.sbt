@@ -40,7 +40,7 @@ lazy val microservice = (project in file("."))
     Test / fork := false,
     Test / parallelExecution := false,
     Test / unmanagedSourceDirectories += baseDirectory.value / "test" / "common",
-    Test / unmanagedSourceDirectories += baseDirectory.value / "testcommon"
+    Test / unmanagedSourceDirectories += baseDirectory.value / "testcommon",
   )
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)

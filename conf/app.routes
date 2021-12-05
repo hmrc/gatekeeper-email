@@ -5,9 +5,9 @@ GET        /gatekeeper-email             uk.gov.hmrc.gatekeeperemail.controllers
 
 # upload file notification callback
 #NOCSRF
-POST       /gatekeeper-email/upscan-callback        uk.gov.hmrc.gatekeeperemail.controllers.UploadCallbackController.callback
+POST       /gatekeeperemail/upscancallback        uk.gov.hmrc.gatekeeperemail.controllers.UploadCallbackController.callback
 
 # Mongo insert/update
-POST /gatekeeper-email/:id/insert-fileupload-status/:reference    uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.addUploadedFileStatus(id: uk.gov.hmrc.gatekeeperemail.model.UploadId, reference: uk.gov.hmrc.gatekeeperemail.connectors.Reference)
-POST /gatekeeper-email/:id/update-fileupload-status/:reference   uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.updateUploadedFileStatus(id: uk.gov.hmrc.gatekeeperemail.model.UploadId, reference: uk.gov.hmrc.gatekeeperemail.connectors.Reference)
-GET /gatekeeper-email/:id/fetch-fileupload-status     uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.fetchUploadedFileStatus(id: uk.gov.hmrc.gatekeeperemail.model.UploadId)
+POST /gatekeeperemail/insertfileuploadstatus/:id/:reference    uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.addUploadedFileStatus(id, reference)
+POST /gatekeeperemail/updatefileuploadstatus/:reference/:id/   uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.updateUploadedFileStatus(id, reference)
+GET /gatekeeperemail/fetchfileuploadstatus/:id     uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.fetchUploadedFileStatus(id)

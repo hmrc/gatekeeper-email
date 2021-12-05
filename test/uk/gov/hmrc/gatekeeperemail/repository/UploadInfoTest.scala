@@ -21,52 +21,52 @@ import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.gatekeeperemail.connectors.Reference
 import uk.gov.hmrc.gatekeeperemail.model.{Failed, InProgress, UploadId, UploadedSuccessfully}
 
-class UploadDetailsTest extends WordSpec with Matchers {
+class UploadInfoTest extends WordSpec with Matchers {
 
   "Serialization and deserialization of UploadDetails" should {
 
     "serialize and deserialize InProgress status" in {
-      val input = UploadDetails(BSONObjectID.generate(), UploadId.generate, Reference("ABC"), InProgress)
+      val input = UploadInfo(BSONObjectID.generate(), UploadId.generate, Reference("ABC"), InProgress)
 
-      val serialized = UploadDetails.format.writes(input)
-      val output = UploadDetails.format.reads(serialized)
+      val serialized = UploadInfo.format.writes(input)
+      val output = UploadInfo.format.reads(serialized)
 
       output.get shouldBe input
     }
 
     "serialize and deserialize Failed status" in {
-      val input = UploadDetails(BSONObjectID.generate(), UploadId.generate, Reference("ABC"), Failed)
+      val input = UploadInfo(BSONObjectID.generate(), UploadId.generate, Reference("ABC"), Failed)
 
-      val serialized = UploadDetails.format.writes(input)
-      val output = UploadDetails.format.reads(serialized)
+      val serialized = UploadInfo.format.writes(input)
+      val output = UploadInfo.format.reads(serialized)
 
       output.get shouldBe input
     }
 
     "serialize and deserialize UploadedSuccessfully status when size is unknown" in {
-      val input = UploadDetails(
+      val input = UploadInfo(
         BSONObjectID.generate(),
         UploadId.generate,
         Reference("ABC"),
         UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = None)
       )
 
-      val serialized = UploadDetails.format.writes(input)
-      val output = UploadDetails.format.reads(serialized)
+      val serialized = UploadInfo.format.writes(input)
+      val output = UploadInfo.format.reads(serialized)
 
       output.get shouldBe input
     }
 
     "serialize and deserialize UploadedSuccessfully status when size is known" in {
-      val input = UploadDetails(
+      val input = UploadInfo(
         BSONObjectID.generate(),
         UploadId.generate,
         Reference("ABC"),
         UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = Some(123456))
       )
 
-      val serialized = UploadDetails.format.writes(input)
-      val output = UploadDetails.format.reads(serialized)
+      val serialized = UploadInfo.format.writes(input)
+      val output = UploadInfo.format.reads(serialized)
 
       output.get shouldBe input
     }

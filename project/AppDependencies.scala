@@ -14,10 +14,12 @@ object AppDependencies {
   )
 
   val test = Seq(
-    "uk.gov.hmrc"             %% "bootstrap-test-play-28"     % "5.16.0"            % Test,
-    "uk.gov.hmrc.mongo"       %% "hmrc-mongo-test-play-28"    % "0.56.0"            % Test,
-    "com.vladsch.flexmark"    %  "flexmark-all"               % "0.36.8"            % "test, it",
-    "org.mockito"             %%  "mockito-scala-scalatest"   % "1.7.1"             % Test,
-    "uk.gov.hmrc"             %% "reactivemongo-test"       % "5.0.0-play-28"        % Test
+    "uk.gov.hmrc"             %% "bootstrap-test-play-28"     % "5.16.0",
+    "uk.gov.hmrc.mongo"       %% "hmrc-mongo-test-play-28"    % "0.56.0",
+    "com.vladsch.flexmark"    %  "flexmark-all"               % "0.36.8",
+    "org.mockito"             %%  "mockito-scala-scalatest"   % "1.16.42",
+    "uk.gov.hmrc"             %% "reactivemongo-test"       % "5.0.0-play-28",
+    "org.scalaj"                  %% "scalaj-http"                        % "2.3.0",
+    "com.github.tomakehurst"      %  "wiremock-jre8-standalone"           % "2.27.2"
   )
 }

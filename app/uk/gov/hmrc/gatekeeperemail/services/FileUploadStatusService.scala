@@ -16,24 +16,27 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
+import akka.actor.ActorSystem
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.gatekeeperemail.connectors.Reference
 import uk.gov.hmrc.gatekeeperemail.model.{InProgress, UploadId, UploadStatus}
-import uk.gov.hmrc.gatekeeperemail.repository.{UploadDetails, UserSessionRepository}
+import uk.gov.hmrc.gatekeeperemail.repository.{FileUploadStatusRepository, UploadInfo}
+import uk.gov.hmrc.play.audit.http.connector.AuditResult
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class MongoBackedUploadProgressTracker @Inject()(repository : UserSessionRepository)(implicit ec : ExecutionContext) extends UploadProgressTracker {
+class FileUploadStatusService @Inject()(repository : FileUploadStatusRepository,
+                                        system: ActorSystem)(implicit ec : ExecutionContext) extends UploadProgressTracker {
 
   override def requestUpload(uploadId : UploadId, fileReference : Reference): Future[Unit] =
-    repository.insert(UploadDetails(BSONObjectID.generate(), uploadId, fileReference, InProgress)).map(_ => ())
+    repository.requestUpload(UploadInfo(BSONObjectID.generate(), uploadId, fileReference, InProgress)).map(_ => ())
 
   override def registerUploadResult(fileReference: Reference, uploadStatus: UploadStatus): Future[Unit] =
     repository.updateStatus(fileReference, uploadStatus).map(_ => ())
 
-  override def getUploadResult(id: UploadId): Future[Option[UploadStatus]] =
+  override def getUploadResult(id: UploadId): Future[Option[UploadInfo]] =
     for (result <- repository.findByUploadId(id)) yield {
-      result.map(_.status)
+      result
     }
 }

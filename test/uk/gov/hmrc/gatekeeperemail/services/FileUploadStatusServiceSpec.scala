@@ -20,16 +20,16 @@ import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import play.api.test.Helpers.await
 import play.modules.reactivemongo.ReactiveMongoComponent
 import uk.gov.hmrc.gatekeeperemail.model.{UploadId, UploadedSuccessfully}
-import uk.gov.hmrc.gatekeeperemail.repository.UserSessionRepository
+import uk.gov.hmrc.gatekeeperemail.repository.FileUploadStatusRepository
 import uk.gov.hmrc.mongo.{Awaiting, MongoConnector, MongoSpecSupport}
 import uk.gov.hmrc.gatekeeperemail.connectors.Reference
 
 
-class MongoBackedUploadProgressTrackerSpec extends WordSpec with MongoSpecSupport with Awaiting with Matchers with BeforeAndAfterEach {
+class FileUploadStatusServiceSpec extends WordSpec with MongoSpecSupport with Awaiting with Matchers with BeforeAndAfterEach {
 
   val mongoComponent = new MongoComponent(mongoUri)
-  val repo = new UserSessionRepository(mongoComponent)
-  val t = new MongoBackedUploadProgressTracker(repo)
+  val repo = new FileUploadStatusRepository(mongoComponent)
+  val t = new FileUploadStatusService(repo)
 
   override def beforeEach(): Unit = {
     await(repo.removeAll())

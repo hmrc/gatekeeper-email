@@ -17,27 +17,29 @@
 package uk.gov.hmrc.gatekeeperemail.controllers
 
 import play.api.libs.json.Json.toJson
-import play.api.libs.json.{JsValue, Writes}
+import play.api.libs.json.{Format, JsValue, Writes}
 import play.api.mvc._
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.connectors.{Reference, UpscanInitiateConnector}
+import uk.gov.hmrc.gatekeeperemail.connectors.Reference
 import uk.gov.hmrc.gatekeeperemail.model.{UploadId, UploadStatus}
-import uk.gov.hmrc.gatekeeperemail.services.UploadProgressTracker
+import uk.gov.hmrc.gatekeeperemail.services.FileUploadStatusService
 import uk.gov.hmrc.gatekeeperemail.util.ApplicationLogger
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.gatekeeperemail.repository.UploadDetails._
+import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UploadFormController @Inject()(
-                                     uploadProgressTracker: UploadProgressTracker,
-                                     cc: ControllerComponents)
+                                      uploadProgressTracker: FileUploadStatusService,
+                                      cc: ControllerComponents,
+                                      playBodyParsers: PlayBodyParsers)
                                     (implicit appConfig: AppConfig,
-                                     ec: ExecutionContext,
-                                     hc: HeaderCarrier) extends BackendController(cc) with ApplicationLogger {
+                                     ec: ExecutionContext
+                                     ) extends BackendController(cc) with ApplicationLogger {
+  implicit val uploadInfo = Format(uploadInfoReads, uploadInfoWrites)
+
 
   private def handleOption[T](future: Future[Option[T]])(implicit writes: Writes[T]): Future[Result] = {
     future.map {
@@ -46,20 +48,22 @@ class UploadFormController @Inject()(
     }
   }
 
-  def addUploadedFileStatus(uploadId: UploadId, reference: Reference) : Action[AnyContent] = Action.async { implicit request =>
-    for (uploadResult <- uploadProgressTracker.requestUpload(uploadId, reference)) yield uploadResult
+  def addUploadedFileStatus(uploadId: String, reference: String) : Action[AnyContent] = Action.async { implicit request =>
+    logger.info(s"Got a insert request for uploadId: $uploadId")
+    for (uploadResult <- uploadProgressTracker.requestUpload(UploadId(uploadId), Reference(reference))) yield uploadResult
     Future.successful(Ok(s"File with uploadId: ${uploadId}, reference: ${reference} is inserted with status: InProgress"))
   }
 
-  def updateUploadedFileStatus(uploadId: UploadId, reference: Reference) : Action[JsValue] = Action.async(parse.json) { implicit request =>
+  def updateUploadedFileStatus(uploadId: String, reference: String) : Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
     withJsonBody[UploadStatus] { uploadStatus =>
-      uploadProgressTracker.registerUploadResult(reference, uploadStatus)
+      uploadProgressTracker.registerUploadResult(Reference(reference), uploadStatus)
       Future.successful(Ok(s"File with uploadId: ${uploadId}, reference: ${reference} is inserted with status: ${uploadStatus}"))
     }
   }
 
-  def fetchUploadedFileStatus(uploadId: UploadId) : Action[AnyContent] = Action.async { implicit request =>
-    val result = for (uploadResult <- uploadProgressTracker.getUploadResult(uploadId)) yield uploadResult
+  def fetchUploadedFileStatus(uploadId: String) : Action[AnyContent] = Action.async { implicit request =>
+    logger.info(s"Got a fetch request for uploadId: $uploadId")
+    val result = for (uploadResult <- uploadProgressTracker.getUploadResult(UploadId(uploadId))) yield uploadResult
     handleOption(result)
   }
 }
