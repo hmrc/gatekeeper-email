@@ -54,5 +54,15 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
       email.subject shouldBe "Test subject"
       email.composedBy shouldBe "composedBy"
     }
+
+    "save the email data into mongodb repo even when fails to send" in new Setup {
+      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(400))
+      when(emailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+      val emailRequest = EmailRequest(List("test@digital.hmrc.gov.uk"), "gatekeeper",
+        EmailData("Recipient Title", "Test subject", "Dear Mr XYZ, This is test email"), false, Map())
+      val email: Email = await(underTest.saveEmail(emailRequest))
+      email.subject shouldBe "Test subject"
+      email.composedBy shouldBe "composedBy"
+    }
   }
 }

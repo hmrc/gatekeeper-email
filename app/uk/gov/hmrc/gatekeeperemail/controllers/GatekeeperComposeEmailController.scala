@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
-import org.apache.http.HttpStatus
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, MessagesControllerComponents, PlayBodyParsers, Result}
 import uk.gov.hmrc.gatekeeperemail.models.{EmailRequest, ErrorCode, JsErrorResponse}
@@ -26,7 +25,6 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import java.io.IOException
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
-import scala.util.control.NonFatal
 
 @Singleton
 class GatekeeperComposeEmailController @Inject()(
@@ -45,14 +43,8 @@ class GatekeeperComposeEmailController @Inject()(
   }
 
   private def recovery: PartialFunction[Throwable, Result] = {
-    case e: IllegalArgumentException =>
-      logger.info(s"Invalid request due to ${e.getMessage}")
-      BadRequest(JsErrorResponse(ErrorCode.INVALID_REQUEST_PAYLOAD, e.getMessage))
     case e: IOException =>
       logger.warn(s"IOException ${e.getMessage}")
-      InternalServerError(JsErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage))
-    case NonFatal(e) =>
-      logger.warn(s"NonFatal error ${e.getMessage}")
       InternalServerError(JsErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage))
   }
 }

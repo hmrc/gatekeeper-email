@@ -28,7 +28,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.PlayBodyParsers
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
@@ -86,6 +86,15 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
 
       val result = controller.sendEmail(fakeRequest)
       status(result) shouldBe Status.OK
+    }
+
+    "return 400 if json parse fails" in new Setup {
+      val message: JsObject = Json.obj("to" -> "test@digital.hmrc.gov.uk", "templateId"-> "gatekeeper",
+        "emailData" -> Json.obj("emailRecipient" -> "test@digital.hmrc.gov.uk", "emailSubject" -> "test subject",
+          "emailBody" -> "test email"))
+
+      val result = controller.sendEmail()(fakeRequest.withBody(message))
+      status(result) shouldBe Status.BAD_REQUEST
     }
 
     "return 500" in new Setup {
