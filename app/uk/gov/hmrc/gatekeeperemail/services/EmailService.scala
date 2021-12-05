@@ -16,18 +16,31 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import org.mongodb.scala.result.InsertOneResult
-import uk.gov.hmrc.gatekeeperemail.models.Email
+import org.joda.time.DateTime
+import play.api.Logger
+import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailConnector
+import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailRequest}
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class EmailService @Inject()(emailRepository: EmailRepository)
-                                           (implicit ec: ExecutionContext) {
+class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
+                               emailRepository: EmailRepository)
+                                           (implicit val ec: ExecutionContext) {
 
-  def saveEmail(email: Email): Future[InsertOneResult] = {
-    emailRepository.persist(email)
+  val logger: Logger = Logger(getClass.getName)
+
+  def saveEmail(receiveEmailRequest: EmailRequest): Future[Email] = {
+    val recepientsTitle = "TL API PLATFORM TEAM"
+    val email = Email(recepientsTitle, receiveEmailRequest.to, None, "markdownEmailBody", Some(receiveEmailRequest.emailData.emailBody),
+      receiveEmailRequest.emailData.emailSubject, "composedBy",
+      Some("approvedBy"), DateTime.now())
+    logger.info(s"*******email before saving $email")
+    for {
+      _ <- emailConnector.sendEmail(receiveEmailRequest)
+      _ <- emailRepository.persist(email)
+    } yield email
   }
 }

@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.gatekeeperemail.connectors
 
+import play.api.Logging
+import play.api.http.HeaderNames.CONTENT_TYPE
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.models.{EmailRequest, SendEmailRequest}
-import uk.gov.hmrc.gatekeeperemail.util.ApplicationLogger
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpErrorFunctions, HttpResponse}
 import uk.gov.hmrc.play.http.metrics.common.API
 
 import javax.inject.{Inject, Singleton}
@@ -28,13 +29,14 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnectorConfig)(implicit ec: ExecutionContext)
-  extends CommonResponseHandlers
-  with ApplicationLogger {
+  extends HttpErrorFunctions with Logging {
 
   val api = API("email")
   lazy val serviceUrl = config.emailBaseUrl
 
-  def sendEmail(emailRequest: EmailRequest)(implicit hc: HeaderCarrier): Future[Unit] = {
+  def sendEmail(emailRequest: EmailRequest): Future[Int] = {
+    implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(CONTENT_TYPE -> "application/json")
+
     logger.info(s"*****receiveEmailRequest.to*********:${emailRequest.to}")
     val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
       "fromAddress" -> "gateKeeper",
@@ -42,12 +44,15 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
       "service" -> "gatekeeper")
     val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
-    post(sendEmailRequest)
+
+    postHttpRequest(sendEmailRequest)
   }
 
-  private def post(request: SendEmailRequest)(implicit hc: HeaderCarrier) = {
+  private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Int] = {
     logger.info(s"*******sendEmailRequest:$request")
-    http.POST[SendEmailRequest, ErrorOrUnit](s"$serviceUrl/gatekeeper/email", request)
-    .map(throwOrUnit)
+    http.POST[SendEmailRequest, HttpResponse](s"$serviceUrl/gatekeeper/email", request) map { response =>
+      logger.info("Requested email service to send email")
+      response.status
+    }
   }
 }

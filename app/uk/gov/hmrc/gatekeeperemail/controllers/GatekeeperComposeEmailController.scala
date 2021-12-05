@@ -16,21 +16,21 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
-import org.joda.time.DateTime
+import org.apache.http.HttpStatus
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, MessagesControllerComponents, PlayBodyParsers, Result}
-import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailConnector
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailRequest, ErrorCode, JsErrorResponse}
+import uk.gov.hmrc.gatekeeperemail.models.{EmailRequest, ErrorCode, JsErrorResponse}
 import uk.gov.hmrc.gatekeeperemail.services.EmailService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import java.io.IOException
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
+import scala.util.control.NonFatal
 
 @Singleton
 class GatekeeperComposeEmailController @Inject()(
   mcc: MessagesControllerComponents,
-  emailConnector: GatekeeperEmailConnector,
   playBodyParsers: PlayBodyParsers,
   emailService: EmailService
   )(implicit val ec: ExecutionContext)
@@ -38,25 +38,21 @@ class GatekeeperComposeEmailController @Inject()(
 
   def sendEmail: Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
     withJson[EmailRequest] { receiveEmailRequest =>
-      val recepientsTitle = "TL API PLATFORM TEAM"
-//      val emailTo: String = "test.user@digital.hmrc.gov.uk"
-//      val params: Map[String, String] = Map("subject" -> "subject",
-//        "fromAddress" -> "gateKeeper",
-//        "body" -> "Body to be used in the email template",
-//        "service" -> "gatekeeper")
-      val email = Email(recepientsTitle, receiveEmailRequest.to, None, "markdownEmailBody", Some(receiveEmailRequest.emailData.emailBody),
-    receiveEmailRequest.emailData.emailSubject, "composedBy",
-        Some("approvedBy"), DateTime.now())
-      for {
-          result <- emailService.saveEmail(email)
-          sent <- emailConnector.sendEmail(receiveEmailRequest)
-        } yield Ok("Email sent successfully")
-    } recover recovery
+      emailService.saveEmail(receiveEmailRequest)
+        .map(_ => Ok("Email sent successfully"))
+        .recover(recovery)
+    }
   }
 
   private def recovery: PartialFunction[Throwable, Result] = {
     case e: IllegalArgumentException =>
       logger.info(s"Invalid request due to ${e.getMessage}")
       BadRequest(JsErrorResponse(ErrorCode.INVALID_REQUEST_PAYLOAD, e.getMessage))
+    case e: IOException =>
+      logger.warn(s"IOException ${e.getMessage}")
+      InternalServerError(JsErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage))
+    case NonFatal(e) =>
+      logger.warn(s"NonFatal error ${e.getMessage}")
+      InternalServerError(JsErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage))
   }
 }

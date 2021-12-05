@@ -17,13 +17,16 @@
 package uk.gov.hmrc.gatekeeperemail.controllers
 
 import akka.stream.Materializer
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor, urlEqualTo}
+import com.github.tomakehurst.wiremock.http.Fault
+import com.mongodb.client.result.InsertOneResult
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
+import org.mongodb.scala.bson.BsonNumber
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.http.Status
-import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.mvc.PlayBodyParsers
@@ -31,11 +34,14 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailConnector
 import uk.gov.hmrc.gatekeeperemail.models.{EmailData, EmailRequest}
+import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
 import uk.gov.hmrc.gatekeeperemail.services.EmailService
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.io.IOException
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future.successful
+import scala.concurrent.Future
+import scala.concurrent.Future.{failed, successful}
 
 class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with ArgumentMatchersSugar {
   override def fakeApplication(): Application =
@@ -49,33 +55,45 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
   val emailId = "email@example.com"
   val subject = "Email subject"
   val emailBody = "Body to be used in the email template"
+  val emailServicePath = "/gatekeeper/email"
 
   val emailRequest = EmailRequest(List(emailId), "gatekeeper", EmailData(emailId, subject, emailBody))
-  private val fakeRequest = FakeRequest("POST", "/").withBody(Json.toJson(emailRequest))
+  private val fakeRequest = FakeRequest("POST", "/gatekeeper-email").withBody(Json.toJson(emailRequest))
   lazy implicit val mat: Materializer = app.materializer
   private val playBodyParsers: PlayBodyParsers = app.injector.instanceOf[PlayBodyParsers]
-  private val emailService: EmailService = app.injector.instanceOf[EmailService]
-
   val mockEmailConnector: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
+  val mockEmailRepository: EmailRepository = mock[EmailRepository]
   override lazy val app: Application = GuiceApplicationBuilder()
-    .overrides(bind[GatekeeperEmailConnector].to(mockEmailConnector))
-//    .overrides(bind[EmailService].to(emailService))
     .configure("metrics.enabled" -> false, "auditing.enabled" -> false)
     .build()
 
+  trait FailingHttp {
+    self: Setup =>
+    stubFor(post(urlEqualTo(emailServicePath)).willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)))
+  }
+
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
+    val emailService = new EmailService(mockEmailConnector, mockEmailRepository)
     val controller = new GatekeeperComposeEmailController(Helpers.stubMessagesControllerComponents(),
-      mockEmailConnector,
       playBodyParsers, emailService)
+
   }
-  "POST /" should {
+  "POST /gatekeeper-email" should {
     "return 200" in new Setup {
-      when(mockEmailConnector.sendEmail(*)(*)).thenReturn(
-        successful(Json.obj("matchFound" -> false, "availableForVerification" -> false)))
+      when(mockEmailConnector.sendEmail(*)).thenReturn(successful(200))
+      when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
 
       val result = controller.sendEmail(fakeRequest)
       status(result) shouldBe Status.OK
+    }
+
+    "return 500" in new Setup {
+      when(mockEmailConnector.sendEmail(*)).thenReturn(failed(new IOException("can not connect to email service")))
+      when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+
+      val result = controller.sendEmail(fakeRequest)
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
   }
 }
