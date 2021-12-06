@@ -1,0 +1,13 @@
+# microservice specific routes
+
+POST       /gatekeeper-email        uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.sendEmail
+# microservice specific routes
+
+# upload file notification callback
+#NOCSRF
+POST       /gatekeeperemail/upscancallback        uk.gov.hmrc.gatekeeperemail.controllers.UploadCallbackController.callback
+
+# Mongo insert/update
+POST /gatekeeperemail/insertfileuploadstatus  uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.addUploadedFileStatus(key, uploadid)
+POST /gatekeeperemail/updatefileuploadstatus uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.updateUploadedFileStatus(uploadid, key)
+GET /gatekeeperemail/fetchfileuploadstatus     uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.fetchUploadedFileStatus(uploadid)
