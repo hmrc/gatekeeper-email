@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.gatekeeperemail.repositories
+package uk.gov.hmrc.gatekeeperemail.models
 
-import org.joda.time.DateTime
-import play.api.libs.json.{Format, Json, OFormat}
-import uk.gov.hmrc.gatekeeperemail.models.Email
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
+import play.api.libs.json.{Json, OWrites}
 
-private[repositories] object MongoFormatter {
-  implicit val dateFormation  : Format[DateTime] = MongoJodaFormats.dateTimeFormat
-  implicit val emailFormatter: OFormat[Email] = Json.format[Email]
+case class TemplateRenderRequest(parameters: Map[String, String], email: Option[String])
+
+object TemplateRenderRequest {
+
+  implicit val writes: OWrites[TemplateRenderRequest] =
+    Json.writes[TemplateRenderRequest]
 }

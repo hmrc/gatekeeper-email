@@ -22,7 +22,7 @@ import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.mongodb.scala.result.InsertOneResult
 import uk.gov.hmrc.gatekeeperemail.models.Email
-import uk.gov.hmrc.gatekeeperemail.repositories.MongoFormatter.emailFormatter
+import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.emailFormatter
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
@@ -49,7 +49,7 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
         fromRegistries(
           fromCodecs(
             Codecs.playFormatCodec(domainFormat),
-            Codecs.playFormatCodec(MongoFormatter.emailFormatter)
+            Codecs.playFormatCodec(EmailMongoFormatter.emailFormatter)
           ),
           MongoClient.DEFAULT_CODEC_REGISTRY
         )

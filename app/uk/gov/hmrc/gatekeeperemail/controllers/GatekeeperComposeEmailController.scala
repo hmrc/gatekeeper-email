@@ -36,7 +36,7 @@ class GatekeeperComposeEmailController @Inject()(
 
   def sendEmail: Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
     withJson[EmailRequest] { receiveEmailRequest =>
-      emailService.saveEmail(receiveEmailRequest)
+      emailService.sendAndPersistEmail(receiveEmailRequest)
         .map(_ => Ok("Email sent successfully"))
         .recover(recovery)
     }

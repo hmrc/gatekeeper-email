@@ -17,30 +17,55 @@
 package uk.gov.hmrc.gatekeeperemail.services
 
 import org.joda.time.DateTime
+import org.mongodb.scala.bson.BsonValue
 import play.api.Logger
-import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailConnector
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailRequest}
+import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
+import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
+import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
+                             emailRendererConnector: GatekeeperEmailRendererConnector,
                                emailRepository: EmailRepository)
                                            (implicit val ec: ExecutionContext) {
 
   val logger: Logger = Logger(getClass.getName)
 
-  def saveEmail(receiveEmailRequest: EmailRequest): Future[Email] = {
-    val recepientsTitle = "TL API PLATFORM TEAM"
-    val email = Email(recepientsTitle, receiveEmailRequest.to, None, "markdownEmailBody", Some(receiveEmailRequest.emailData.emailBody),
-      receiveEmailRequest.emailData.emailSubject, "composedBy",
-      Some("approvedBy"), DateTime.now())
-    logger.info(s"*******email before saving $email")
+  def sendAndPersistEmail(emailRequest: EmailRequest): Future[BsonValue] = {
+    val email: Email = emailData(emailRequest)
+    logger.info(s"*******email data  before saving $email")
+    val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
+      "fromAddress" -> "gateKeeper",
+      "body" -> s"${emailRequest.emailData.emailBody}",
+      "service" -> "gatekeeper")
+    val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, parameters, emailRequest.force,
+      emailRequest.auditData, emailRequest.eventUrl)
+
     for {
-      _ <- emailConnector.sendEmail(receiveEmailRequest)
-      _ <- emailRepository.persist(email)
-    } yield email
+      renderResult <- emailRendererConnector.getTemplatedEmail(sendEmailRequest)
+      emailBody = getEmailBody(renderResult)
+      _ <- emailConnector.sendEmail(sendEmailRequest)
+      persistedEmail <- emailRepository.persist(email.copy(htmlEmailBody = Some(emailBody._1), markdownEmailBody = emailBody._2))
+    } yield persistedEmail.getInsertedId
+  }
+
+  private def emailData(emailRequest: EmailRequest): Email = {
+    val recepientsTitle = "TL API PLATFORM TEAM"
+    Email(recepientsTitle, emailRequest.to, None, emailRequest.emailData.emailBody, Some(emailRequest.emailData.emailBody),
+      emailRequest.emailData.emailSubject, "composedBy",
+      Some("approvedBy"), DateTime.now())
+  }
+
+  private def getEmailBody(rendererResult: Either[UpstreamErrorResponse, RenderResult]) = {
+    rendererResult match {
+      case Left(UpstreamErrorResponse(message, _, _, _)) =>
+        throw new EmailRendererConnectionError(message)
+      case Right(result: RenderResult) =>
+        Tuple2(result.html, result.plain)
+    }
   }
 }

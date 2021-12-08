@@ -25,10 +25,10 @@ import play.api.libs.json.{JsObject, JsString}
 import uk.gov.hmrc.gatekeeperemail.models.Email
 
 
-class MongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSugar with ArgumentMatchersSugar {
+class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSugar with ArgumentMatchersSugar {
 
   "format" should {
-    val formatter = MongoFormatter.emailFormatter
+    val formatter = EmailMongoFormatter.emailFormatter
     "correctly write a Email message" in {
       val email = Email("DL Team", List("test@digital.hmrc.gov.uk"), None, "markdownEmailBody", Some("This is test email"),
         "test subject", "composedBy", Some("approvedBy"), DateTime.now(UTC))

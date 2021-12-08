@@ -27,7 +27,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.OK
 import play.api.test.Helpers.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.{EmailData, EmailRequest}
+import uk.gov.hmrc.gatekeeperemail.models.{EmailData, EmailRequest, SendEmailRequest}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
 
 import java.io.IOException
@@ -60,6 +60,7 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach
   val gatekeeperLink = "http://some.url"
   val emailId = "email@example.com"
   val subject = "Email subject"
+  val fromAddress = "gateKeeper"
   val emailBody = "Body to be used in the email template"
   val emailServicePath = "/gatekeeper/email"
    
@@ -86,7 +87,9 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach
   }
   
   "emailConnector" should {
-    val emailRequest = EmailRequest(List(emailId), "gatekeeper", EmailData(emailId, subject, emailBody))
+    val parameters: Map[String, String] = Map("subject" -> s"$subject", "fromAddress" -> s"$fromAddress",
+                                              "body" -> s"$emailBody", "service" -> s"gatekeeper")
+    val emailRequest = SendEmailRequest(List(emailId), "gatekeeper", parameters)
     "send gatekeeper email" in new Setup with WorkingHttp {
       await(underTest.sendEmail(emailRequest))
 

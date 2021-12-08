@@ -34,18 +34,12 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
   val api = API("email")
   lazy val serviceUrl = config.emailBaseUrl
 
-  def sendEmail(emailRequest: EmailRequest): Future[Int] = {
+  def sendEmail(emailRequest: SendEmailRequest): Future[Int] = {
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(CONTENT_TYPE -> "application/json")
 
     logger.info(s"*****receiveEmailRequest.to*********:${emailRequest.to}")
-    val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
-      "fromAddress" -> "gateKeeper",
-      "body" -> s"${emailRequest.emailData.emailBody}",
-      "service" -> "gatekeeper")
-    val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, parameters, emailRequest.force,
-      emailRequest.auditData, emailRequest.eventUrl)
 
-    postHttpRequest(sendEmailRequest)
+    postHttpRequest(emailRequest)
   }
 
   private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Int] = {
