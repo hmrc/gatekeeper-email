@@ -27,7 +27,7 @@ case object Failed extends UploadStatus
 case class UploadedSuccessfully(name: String, mimeType: String, downloadUrl: String, size: Option[Long]) extends UploadStatus
 case class UploadedFailedWithErrors(errorCode: String, errorMessage: String, errorRequestId: String, key: String) extends UploadStatus
 
-case class UploadId(value : String) extends AnyVal
+case class UploadId(value : UUID) extends AnyVal
 
 case class Reference(value: String) extends AnyVal
 
@@ -36,8 +36,8 @@ object Reference {
 }
 
 object UploadId {
-  def generate = UploadId(UUID.randomUUID().toString)
+  def generate = UploadId(UUID.randomUUID())
 
-  implicit def queryBinder(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[UploadId] =
+  implicit def queryBinder(implicit stringBinder: QueryStringBindable[UUID]): QueryStringBindable[UploadId] =
     stringBinder.transform(UploadId(_),_.value)
 }

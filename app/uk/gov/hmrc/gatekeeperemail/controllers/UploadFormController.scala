@@ -29,6 +29,8 @@ import uk.gov.hmrc.gatekeeperemail.repository.UploadInfo
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.gatekeeperemail.models.{UploadId, UploadStatus}
 
+import java.util.UUID
+import java.util.UUID.randomUUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -52,7 +54,7 @@ class UploadFormController @Inject()(
 
   def addUploadedFileStatus(key: String, uploadId: String) : Action[AnyContent] = Action.async{
     logger.info(s"Got a insert request for uploadId: $uploadId")
-    for (uploadResult <- uploadProgressTracker.requestUpload(UploadId(uploadId), Reference(key))) yield uploadResult
+    for (uploadResult <- uploadProgressTracker.requestUpload(UploadId(UUID.nameUUIDFromBytes(uploadId.getBytes())), Reference(key))) yield uploadResult
     Future.successful(Ok(s"File with uploadId: ${uploadId}, reference: ${key} is inserted with status: InProgress"))
   }
 
@@ -63,9 +65,9 @@ class UploadFormController @Inject()(
     }
   }
 
-  def fetchUploadedFileStatus(uploadid: String) : Action[AnyContent] = Action.async {
-    logger.info(s"Got a fetch request for uploadId: $uploadid")
-    val result = for (uploadResult <- uploadProgressTracker.getUploadResult(UploadId(uploadid))) yield uploadResult
+  def fetchUploadedFileStatus(uploadId: String) : Action[AnyContent] = Action.async {
+    logger.info(s"Got a fetch request for uploadId: $uploadId")
+    val result = for (uploadResult <- uploadProgressTracker.getUploadResult(UploadId(UUID.nameUUIDFromBytes(uploadId.getBytes()))) )yield uploadResult
     handleOption(result)
   }
 }

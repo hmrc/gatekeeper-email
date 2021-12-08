@@ -28,6 +28,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.gatekeeperemail.models.{UploadId, UploadedSuccessfully}
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
+import java.util.UUID.randomUUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
 
@@ -48,7 +49,7 @@ class FileUploadStatusServiceSpec extends AnyWordSpec with PlayMongoRepositorySu
   "MongoBackedUploadProgressTracker" should {
     "coordinate workflow" in {
       val reference = Reference("reference")
-      val id = UploadId("upload-id")
+      val id = UploadId(randomUUID)
       val str = "61adf36cda0000130b757df9".getBytes()
       val expectedStatus = UploadedSuccessfully("name","mimeType","downloadUrl",Some(123))
 

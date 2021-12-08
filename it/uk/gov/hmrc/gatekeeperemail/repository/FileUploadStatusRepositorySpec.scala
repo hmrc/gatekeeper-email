@@ -18,6 +18,7 @@ import uk.gov.hmrc.gatekeeperemail.models.{InProgress, UploadId, UploadedSuccess
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
 import java.util.UUID
+import java.util.UUID.randomUUID
 class FileUploadStatusRepositorySpec
   extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll
     with IndexVerification with PlayMongoRepositorySupport[UploadInfo] with
@@ -46,7 +47,7 @@ class FileUploadStatusRepositorySpec
 
   "save" should {
     "create a file upload status and retrieve it from database" in {
-      val uploadId = UploadId.generate
+      val uploadId = UploadId(randomUUID)
       val fileReference = Reference(UUID.randomUUID().toString)
       val fileStatus = UploadInfo(uploadId, fileReference, InProgress)
       await(repository.requestUpload(fileStatus))
@@ -59,7 +60,7 @@ class FileUploadStatusRepositorySpec
   }
 
   "update a fileStatus" in {
-    val uploadId = UploadId.generate
+    val uploadId = UploadId(randomUUID)
     val fileReference = Reference(UUID.randomUUID().toString)
     val fileStatus = UploadInfo(uploadId, fileReference, InProgress)
     await(repository.requestUpload(fileStatus))
