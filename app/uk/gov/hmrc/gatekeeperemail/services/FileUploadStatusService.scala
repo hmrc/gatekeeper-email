@@ -24,11 +24,10 @@ import uk.gov.hmrc.gatekeeperemail.repository.{FileUploadStatusRepository, Uploa
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class FileUploadStatusService @Inject()(repository : FileUploadStatusRepository,
-                                        system: ActorSystem)(implicit ec : ExecutionContext) extends UploadProgressTracker {
+class FileUploadStatusService @Inject()(repository : FileUploadStatusRepository)(implicit ec : ExecutionContext) extends UploadProgressTracker {
 
   override def requestUpload(uploadId : UploadId, fileReference : Reference): Future[Unit] =
-    repository.requestUpload(UploadInfo(BSONObjectID.generate(), uploadId, fileReference, InProgress)).map(_ => ())
+    repository.requestUpload(UploadInfo(uploadId, fileReference, InProgress)).map(_ => ())
 
   override def registerUploadResult(fileReference: Reference, uploadStatus: UploadStatus): Future[Unit] =
     repository.updateStatus(fileReference, uploadStatus).map(_ => ())

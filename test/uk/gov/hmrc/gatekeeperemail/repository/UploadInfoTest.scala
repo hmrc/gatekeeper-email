@@ -19,6 +19,7 @@ package uk.gov.hmrc.gatekeeperemail.repository
 import org.scalatest.{Matchers, WordSpec}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.gatekeeperemail.models.Reference
+import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
 import uk.gov.hmrc.gatekeeperemail.models.{Failed, InProgress, UploadId, UploadedSuccessfully}
 
 class UploadInfoTest extends WordSpec with Matchers {
@@ -26,7 +27,7 @@ class UploadInfoTest extends WordSpec with Matchers {
   "Serialization and deserialization of UploadDetails" should {
 
     "serialize and deserialize InProgress status" in {
-      val input = UploadInfo(BSONObjectID.generate(), UploadId.generate, Reference("ABC"), InProgress)
+      val input = UploadInfo(UploadId.generate, Reference("ABC"), InProgress)
 
       val serialized = UploadInfo.format.writes(input)
       val output = UploadInfo.format.reads(serialized)
@@ -35,7 +36,7 @@ class UploadInfoTest extends WordSpec with Matchers {
     }
 
     "serialize and deserialize Failed status" in {
-      val input = UploadInfo(BSONObjectID.generate(), UploadId.generate, Reference("ABC"), Failed)
+      val input = UploadInfo( UploadId.generate, Reference("ABC"), Failed)
 
       val serialized = UploadInfo.format.writes(input)
       val output = UploadInfo.format.reads(serialized)
@@ -45,7 +46,6 @@ class UploadInfoTest extends WordSpec with Matchers {
 
     "serialize and deserialize UploadedSuccessfully status when size is unknown" in {
       val input = UploadInfo(
-        BSONObjectID.generate(),
         UploadId.generate,
         Reference("ABC"),
         UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = None)
@@ -59,7 +59,6 @@ class UploadInfoTest extends WordSpec with Matchers {
 
     "serialize and deserialize UploadedSuccessfully status when size is known" in {
       val input = UploadInfo(
-        BSONObjectID.generate(),
         UploadId.generate,
         Reference("ABC"),
         UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = Some(123456))

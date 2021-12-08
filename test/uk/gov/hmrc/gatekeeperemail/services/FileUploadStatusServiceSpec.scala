@@ -18,25 +18,35 @@ package uk.gov.hmrc.gatekeeperemail.services
 
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import play.api.test.Helpers.await
-import play.modules.reactivemongo.ReactiveMongoComponent
 import uk.gov.hmrc.gatekeeperemail.repository.{FileUploadStatusRepository, UploadInfo}
-import uk.gov.hmrc.mongo.{Awaiting, MongoConnector, MongoSpecSupport}
 import uk.gov.hmrc.gatekeeperemail.models.Reference
 import akka.actor.ActorSystem
+import akka.util.Timeout
 import org.mockito.MockitoSugar.mock
-import reactivemongo.bson.BSONObjectID
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.gatekeeperemail.models.{UploadId, UploadedSuccessfully}
+import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
 
-class FileUploadStatusServiceSpec extends WordSpec with MongoSpecSupport with Awaiting with Matchers with BeforeAndAfterEach {
+class FileUploadStatusServiceSpec extends AnyWordSpec with PlayMongoRepositorySupport[UploadInfo] with
+  Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
 
   val system = mock[ActorSystem]
-  val mongoComponent = new MongoComponent(mongoUri)
-  val repo = new FileUploadStatusRepository(mongoComponent)
-  val t = new FileUploadStatusService(repo, system)
+
+  protected def appBuilder: GuiceApplicationBuilder =
+    new GuiceApplicationBuilder()
+
+  override implicit lazy val app: Application = appBuilder.build()
+  override protected def repository = app.injector.instanceOf[FileUploadStatusRepository]
+  val t = new FileUploadStatusService(repository)
 
   override def beforeEach(): Unit = {
-    await(repo.removeAll())
+    prepareDatabase()
   }
 
   "MongoBackedUploadProgressTracker" should {
@@ -46,13 +56,10 @@ class FileUploadStatusServiceSpec extends WordSpec with MongoSpecSupport with Aw
       val str = "61adf36cda0000130b757df9".getBytes()
       val expectedStatus = UploadedSuccessfully("name","mimeType","downloadUrl",Some(123))
 
+      implicit val timeout = Timeout(FiniteDuration(20, SECONDS))
       await(t.requestUpload(id, reference))
       await(t.registerUploadResult(reference, UploadedSuccessfully("name","mimeType","downloadUrl",Some(123))))
       await(t.getUploadResult(id)).get.status shouldBe expectedStatus
     }
   }
-}
-
-class MongoComponent(mongoConnectionUri: String) extends ReactiveMongoComponent {
-  override def mongoConnector: MongoConnector = MongoConnector(mongoConnectionUri)
 }

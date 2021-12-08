@@ -63,8 +63,8 @@ object CallbackBody {
     override def reads(json: JsValue): JsResult[CallbackBody] = json \ "fileStatus" match {
       case JsDefined(JsString("READY")) => implicitly[Reads[ReadyCallbackBody]].reads(json)
       case JsDefined(JsString("FAILED")) => implicitly[Reads[FailedCallbackBody]].reads(json)
-      case JsDefined(value) => JsError(s"Invalid type distriminator: $value")
-      case JsUndefined() => JsError(s"Missing type distriminator")
+      case JsDefined(value) => JsError(s"Invalid file upload status type: $value")
+      case JsUndefined() => JsError(s"Missing file upload status type")
     }
   }
 }

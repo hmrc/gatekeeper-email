@@ -41,7 +41,6 @@ class UploadFormController @Inject()(
                                     (implicit appConfig: AppConfig,
                                      ec: ExecutionContext
                                     ) extends BackendController(cc) with ApplicationLogger {
-  implicit val uploadInfo = Json.format[UploadInfo]
 
 
   private def handleOption[T](future: Future[Option[T]])(implicit writes: Writes[T]): Future[Result] = {
@@ -51,12 +50,10 @@ class UploadFormController @Inject()(
     }
   }
 
-  def addUploadedFileStatus(key: String, uploadid: String) : Action[AnyContent] = Action.async{
-    //val uploadId = "23e423423"
-    //val reference = "3434q32424r324"
-    logger.info(s"Got a insert request for uploadId: $uploadid")
-    for (uploadResult <- uploadProgressTracker.requestUpload(UploadId(uploadid), Reference(key))) yield uploadResult
-    Future.successful(Ok(s"File with uploadId: ${uploadid}, reference: ${key} is inserted with status: InProgress"))
+  def addUploadedFileStatus(key: String, uploadId: String) : Action[AnyContent] = Action.async{
+    logger.info(s"Got a insert request for uploadId: $uploadId")
+    for (uploadResult <- uploadProgressTracker.requestUpload(UploadId(uploadId), Reference(key))) yield uploadResult
+    Future.successful(Ok(s"File with uploadId: ${uploadId}, reference: ${key} is inserted with status: InProgress"))
   }
 
   def updateUploadedFileStatus(uploadId: String, reference: String) : Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
@@ -67,10 +64,8 @@ class UploadFormController @Inject()(
   }
 
   def fetchUploadedFileStatus(uploadid: String) : Action[AnyContent] = Action.async {
-    //val uploadId = "23e423423"
     logger.info(s"Got a fetch request for uploadId: $uploadid")
     val result = for (uploadResult <- uploadProgressTracker.getUploadResult(UploadId(uploadid))) yield uploadResult
-    //logger.info(s"${Await.result(result, Duration.Inf)}")
     handleOption(result)
   }
 }

@@ -10,53 +10,59 @@ import reactivemongo.api.indexes.IndexType.Ascending
 import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcSpec
 import uk.gov.hmrc.gatekeeperemail.models.Reference
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random.nextString
 import akka.actor.ActorSystem
 import akka.util.Timeout
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.await
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.gatekeeperemail.connectors
 
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
 import uk.gov.hmrc.gatekeeperemail.models.{InProgress, UploadId, UploadedSuccessfully}
+import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
+
+import java.util.UUID
 class FileUploadStatusRepositorySpec
-  extends AsyncHmrcSpec with MongoSpecSupport
-    with BeforeAndAfterEach with BeforeAndAfterAll
-    with IndexVerification
+  extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll
+    with IndexVerification with PlayMongoRepositorySupport[UploadInfo] with
+    Matchers with GuiceOneAppPerSuite
 {
 
   implicit var s : ActorSystem = ActorSystem("test")
   implicit var m : Materializer = Materializer(s)
   implicit val timeOut = Timeout(FiniteDuration(20, SECONDS))
-  private val reactiveMongoComponent = new ReactiveMongoComponent {
-    override def mongoConnector: MongoConnector = mongoConnectorForTest
-  }
 
-  private val fileuploadStatusRepo = new FileUploadStatusRepository(reactiveMongoComponent)
+
+  protected def appBuilder: GuiceApplicationBuilder =
+    new GuiceApplicationBuilder()
+
+  override implicit lazy val app: Application = appBuilder.build()
+
+  def repository = app.injector.instanceOf[FileUploadStatusRepository]
 
   override def beforeEach() {
-    List(fileuploadStatusRepo).foreach { db =>
-      await(db.drop)
-      await(db.ensureIndexes)
-    }
+    prepareDatabase()
   }
 
   override protected def afterAll() {
-    List(fileuploadStatusRepo).foreach { db =>
-      await(db.drop)
-      await(s.terminate)
-    }
+    prepareDatabase()
   }
 
   "save" should {
     "create a file upload status and retrieve it from database" in {
-      val uploadId = UploadId("123sdr5423")
-      val fileReference = Reference("232232")
-      val fileStatus = UploadInfo(BSONObjectID.generate(), uploadId, fileReference, InProgress)
-      await(fileuploadStatusRepo.requestUpload(fileStatus))
+      val uploadId = UploadId.generate
+      val fileReference = Reference(UUID.randomUUID().toString)
+      val fileStatus = UploadInfo(uploadId, fileReference, InProgress)
+      await(repository.requestUpload(fileStatus))
 
-      val retrieved  = await(fileuploadStatusRepo.findByUploadId(uploadId)).get
+      val retrieved  = await(repository.findByUploadId(uploadId)).get
 
       retrieved shouldBe fileStatus
 
@@ -64,23 +70,21 @@ class FileUploadStatusRepositorySpec
   }
 
   "update a fileStatus" in {
-    val uploadId = UploadId("123sdr5423")
-    val fileReference = Reference("232232")
-    val fileStatus = UploadInfo(BSONObjectID.generate(), uploadId, fileReference, InProgress)
-    await(fileuploadStatusRepo.requestUpload(fileStatus))
+    val uploadId = UploadId.generate
+    val fileReference = Reference(UUID.randomUUID().toString)
+    val fileStatus = UploadInfo(uploadId, fileReference, InProgress)
+    await(repository.requestUpload(fileStatus))
 
-    val retrieved  = await(fileuploadStatusRepo.findByUploadId(uploadId)).get
+    val retrieved  = await(repository.findByUploadId(uploadId)).get
 
     retrieved shouldBe fileStatus
 
     val updated = fileStatus.copy(status = UploadedSuccessfully("abc.jpeg", "jpeg", "http://s3/abc.jpeg", Some(234)))
 
-    val newRetrieved = await(fileuploadStatusRepo.updateStatus(reference = fileReference, UploadedSuccessfully("abc.jpeg", "jpeg", "http://s3/abc.jpeg", Some(234))))
+    val newRetrieved = await(repository.updateStatus(reference = fileReference, UploadedSuccessfully("abc.jpeg", "jpeg", "http://s3/abc.jpeg", Some(234))))
 
-    val fetch = await(fileuploadStatusRepo.findByUploadId(uploadId).map(_.get))
+    val fetch = await(repository.findByUploadId(uploadId).map(_.get))
     fetch shouldBe updated
-
-
   }
 
 }

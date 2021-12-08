@@ -45,12 +45,12 @@ trait JsonFormatters  {
   }
 
   val write: Writes[UploadStatus] = new Writes[UploadStatus] {
-    override def writes(p: UploadStatus): JsValue = {
+    override def writes(p: UploadStatus): JsObject = {
       p match {
         case InProgress => JsObject(Map("_type" -> JsString("InProgress")))
         case Failed => JsObject(Map("_type" -> JsString("Failed")))
-        case s : UploadedSuccessfully => Json.toJson(s)(uploadedSuccessfullyFormat).as[JsObject] + ("_type" -> JsString("UploadedSuccessfully"))
-        case f : UploadedFailedWithErrors => Json.toJson(f)(uploadedFailed).as[JsObject] + ("_type" -> JsString("uploadedFailed"))
+        case s : UploadedSuccessfully => uploadedSuccessfullyFormat.writes(s) ++ Json.obj("_type" -> "UploadedSuccessfully")
+        case f : UploadedFailedWithErrors => uploadedFailed.writes(f) ++ Json.obj("_type" -> "uploadedFailed")
       }
     }
   }
@@ -58,6 +58,8 @@ trait JsonFormatters  {
   val uploadInfoReads = Json.reads[UploadInfo]
   val uploadInfoWrites = Json.writes[UploadInfo]
   implicit val uploadStatusFormat: Format[UploadStatus] = Format(read,write)
+  implicit val uploadInfo = Json.format[UploadInfo]
+
 }
 
 
