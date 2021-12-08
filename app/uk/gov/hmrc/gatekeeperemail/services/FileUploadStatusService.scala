@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import akka.actor.ActorSystem
-import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.gatekeeperemail.models.{InProgress, Reference, UploadId, UploadStatus}
 import uk.gov.hmrc.gatekeeperemail.repository.{FileUploadStatusRepository, UploadInfo}
 

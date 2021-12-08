@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.gatekeeperemail.repository
 
-import play.api.libs.json.{Format, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OFormat, OWrites, Reads, Writes}
-import uk.gov.hmrc.gatekeeperemail.models.{Failed, InProgress, Reference, UploadId, UploadStatus, UploadedFailedWithErrors, UploadedSuccessfully}
+import play.api.libs.json._
+import uk.gov.hmrc.gatekeeperemail.models._
 object MongoFormatter {
   implicit val bsonFormat: OFormat[UploadId] = Json.format[UploadId]
 

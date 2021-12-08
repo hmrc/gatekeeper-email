@@ -20,9 +20,7 @@ import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import play.api.test.Helpers.await
 import uk.gov.hmrc.gatekeeperemail.repository.{FileUploadStatusRepository, UploadInfo}
 import uk.gov.hmrc.gatekeeperemail.models.Reference
-import akka.actor.ActorSystem
 import akka.util.Timeout
-import org.mockito.MockitoSugar.mock
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
@@ -31,12 +29,10 @@ import uk.gov.hmrc.gatekeeperemail.models.{UploadId, UploadedSuccessfully}
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
+import scala.concurrent.duration.{FiniteDuration, SECONDS}
 
 class FileUploadStatusServiceSpec extends AnyWordSpec with PlayMongoRepositorySupport[UploadInfo] with
   Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
-
-  val system = mock[ActorSystem]
 
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()

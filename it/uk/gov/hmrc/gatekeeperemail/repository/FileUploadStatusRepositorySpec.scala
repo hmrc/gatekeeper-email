@@ -1,28 +1,17 @@
 package uk.gov.hmrc.gatekeeperemail.repository
 
 import akka.stream.Materializer
-import org.joda.time.DateTime
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import play.api.libs.json.Json
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.indexes.Index
-import reactivemongo.api.indexes.IndexType.Ascending
-import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcSpec
 import uk.gov.hmrc.gatekeeperemail.models.Reference
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Random.nextString
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.Helpers.await
-import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.gatekeeperemail.connectors
 
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
 import uk.gov.hmrc.gatekeeperemail.models.{InProgress, UploadId, UploadedSuccessfully}

@@ -17,8 +17,6 @@
 package uk.gov.hmrc.gatekeeperemail.models
 import play.api.libs.json._
 import uk.gov.hmrc.gatekeeperemail.repository.UploadInfo
-import reactivemongo.bson.{BSONObjectID, BSONRegex}
-import reactivemongo.play.json.ImplicitBSONHandlers._
 
 trait JsonFormatters  {
 

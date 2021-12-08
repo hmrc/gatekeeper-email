@@ -21,7 +21,6 @@ import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries
 import org.mongodb.scala.{MongoClient, MongoCollection}
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument, Updates}
 import org.mongodb.scala.model.Indexes.ascending
-import play.api.libs.json._
 import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadId, UploadStatus}
 import uk.gov.hmrc.gatekeeperemail.repository.MongoFormatter._
 import uk.gov.hmrc.mongo.MongoComponent
@@ -31,9 +30,9 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Updates.set
-import views.html.helper.options
+import play.api.libs.json.Format
 case class UploadInfo(uploadId : UploadId, reference : Reference, status : UploadStatus)
-import play.api.libs.json.{Format, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OFormat, Reads, Writes}
+import play.api.libs.json.Json
 
 object UploadInfo {
   val status = "status"
