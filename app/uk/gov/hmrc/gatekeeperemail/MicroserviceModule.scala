@@ -34,7 +34,7 @@ package uk.gov.hmrc.gatekeeperemail
 
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.gatekeeperemail.config.{AppConfig, EmailConnectorConfig}
+import uk.gov.hmrc.gatekeeperemail.config.{AppConfig, EmailConnectorConfig, EmailRendererConnectorConfig}
 
 /**
   * This class is a Guice module that tells Guice how to bind several
@@ -50,7 +50,8 @@ class MicroserviceModule(val environment: Environment, val configuration: Config
   override def bindings(environment: Environment,
                         configuration: Configuration): Seq[Binding[_]] = {
     Seq(
-      bind[EmailConnectorConfig].to[AppConfig]
+      bind[EmailConnectorConfig].to[AppConfig],
+      bind[EmailRendererConnectorConfig].to[AppConfig]
     )
   }
 }

@@ -25,14 +25,12 @@ import common.AsyncHmrcSpec
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.OK
-import play.api.test.Helpers.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.{EmailData, EmailRequest, SendEmailRequest}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import java.io.IOException
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future.successful
 
 class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite {
 
@@ -90,6 +88,7 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach
     val parameters: Map[String, String] = Map("subject" -> s"$subject", "fromAddress" -> s"$fromAddress",
                                               "body" -> s"$emailBody", "service" -> s"gatekeeper")
     val emailRequest = SendEmailRequest(List(emailId), "gatekeeper", parameters)
+
     "send gatekeeper email" in new Setup with WorkingHttp {
       await(underTest.sendEmail(emailRequest))
 

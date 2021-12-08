@@ -24,10 +24,12 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 class AppConfig @Inject()(config: Configuration)
   extends ServicesConfig(config)
     with EmailConnectorConfig
+    with EmailRendererConnectorConfig
 {
 
   val authBaseUrl: String = baseUrl("auth")
   val emailBaseUrl: String = baseUrl("email")
+  val emailRendererBaseUrl: String = baseUrl("developer-email-renderer")
 
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
@@ -37,3 +39,6 @@ trait EmailConnectorConfig {
   val emailBaseUrl: String
 }
 
+trait EmailRendererConnectorConfig {
+  val emailRendererBaseUrl: String
+}
