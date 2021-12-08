@@ -56,7 +56,7 @@ class FileUploadStatusServiceSpec extends AnyWordSpec with PlayMongoRepositorySu
       implicit val timeout = Timeout(FiniteDuration(20, SECONDS))
       await(t.requestUpload(id, reference))
       await(t.registerUploadResult(reference, UploadedSuccessfully("name","mimeType","downloadUrl",Some(123))))
-      await(t.getUploadResult(id)).get.status shouldBe expectedStatus
+      await(t.getUploadResult(reference)).get.status shouldBe expectedStatus
     }
   }
 }

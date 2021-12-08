@@ -72,8 +72,8 @@ class FileUploadStatusRepository @Inject()(mongoComponent: MongoComponent)
         )
       )
 
-  def findByUploadId(uploadId: UploadId): Future[Option[UploadInfo]] =
-    collection.find(equal("uploadId" , Codecs.toBson(uploadId))).headOption()
+  def findByUploadId(reference: Reference): Future[Option[UploadInfo]] =
+    collection.find(equal("reference" , Codecs.toBson(reference))).headOption()
 
   def updateStatus(reference : Reference, newStatus : UploadStatus): Future[UploadInfo] = {
     collection.findOneAndUpdate(equal("reference", Codecs.toBson(reference)),

@@ -52,7 +52,7 @@ class FileUploadStatusRepositorySpec
       val fileStatus = UploadInfo(uploadId, fileReference, InProgress)
       await(repository.requestUpload(fileStatus))
 
-      val retrieved  = await(repository.findByUploadId(uploadId)).get
+      val retrieved  = await(repository.findByUploadId(fileReference)).get
 
       retrieved shouldBe fileStatus
 
@@ -65,7 +65,7 @@ class FileUploadStatusRepositorySpec
     val fileStatus = UploadInfo(uploadId, fileReference, InProgress)
     await(repository.requestUpload(fileStatus))
 
-    val retrieved  = await(repository.findByUploadId(uploadId)).get
+    val retrieved  = await(repository.findByUploadId(fileReference)).get
 
     retrieved shouldBe fileStatus
 
@@ -73,7 +73,7 @@ class FileUploadStatusRepositorySpec
 
     val newRetrieved = await(repository.updateStatus(reference = fileReference, UploadedSuccessfully("abc.jpeg", "jpeg", "http://s3/abc.jpeg", Some(234))))
 
-    val fetch = await(repository.findByUploadId(uploadId).map(_.get))
+    val fetch = await(repository.findByUploadId(fileReference).map(_.get))
     fetch shouldBe updated
   }
 

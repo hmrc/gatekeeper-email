@@ -30,8 +30,8 @@ class FileUploadStatusService @Inject()(repository : FileUploadStatusRepository)
   override def registerUploadResult(fileReference: Reference, uploadStatus: UploadStatus): Future[Unit] =
     repository.updateStatus(fileReference, uploadStatus).map(_ => ())
 
-  override def getUploadResult(id: UploadId): Future[Option[UploadInfo]] =
-    for (result <- repository.findByUploadId(id)) yield {
+  override def getUploadResult(key: Reference): Future[Option[UploadInfo]] =
+    for (result <- repository.findByUploadId(key)) yield {
       result
     }
 }

@@ -52,22 +52,23 @@ class UploadFormController @Inject()(
     }
   }
 
-  def addUploadedFileStatus(key: String, uploadId: String) : Action[AnyContent] = Action.async{
-    logger.info(s"Got a insert request for uploadId: $uploadId")
-    for (uploadResult <- uploadProgressTracker.requestUpload(UploadId(UUID.nameUUIDFromBytes(uploadId.getBytes())), Reference(key))) yield uploadResult
-    Future.successful(Ok(s"File with uploadId: ${uploadId}, reference: ${key} is inserted with status: InProgress"))
+  def addUploadedFileStatus(key: String) : Action[AnyContent] = Action.async{
+    logger.info(s"Got a insert request for key: $key")
+    val uploadId = UploadId(randomUUID)
+    for (uploadResult <- uploadProgressTracker.requestUpload(UploadId(randomUUID), Reference(key))) yield uploadResult
+    Future.successful(Ok(s"File with uploadId: ${uploadId.value.toString}, reference: ${key} is inserted with status: InProgress"))
   }
 
-  def updateUploadedFileStatus(uploadId: String, reference: String) : Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
+  def updateUploadedFileStatus(reference: String) : Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
     withJsonBody[UploadStatus] { uploadStatus =>
       uploadProgressTracker.registerUploadResult(Reference(reference), uploadStatus)
-      Future.successful(Ok(s"File with uploadId: ${uploadId}, reference: ${reference} is updated with status: ${uploadStatus}"))
+      Future.successful(Ok(s"File with reference: ${reference} is updated with status: ${uploadStatus}"))
     }
   }
 
-  def fetchUploadedFileStatus(uploadId: String) : Action[AnyContent] = Action.async {
-    logger.info(s"Got a fetch request for uploadId: $uploadId")
-    val result = for (uploadResult <- uploadProgressTracker.getUploadResult(UploadId(UUID.nameUUIDFromBytes(uploadId.getBytes()))) )yield uploadResult
+  def fetchUploadedFileStatus(key: String) : Action[AnyContent] = Action.async {
+    logger.info(s"Got a fetch request for key: $key")
+    val result = for (uploadResult <- uploadProgressTracker.getUploadResult(Reference(key))) yield uploadResult
     handleOption(result)
   }
 }
