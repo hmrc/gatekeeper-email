@@ -83,6 +83,4 @@ class FileUploadStatusRepository @Inject()(mongoComponent: MongoComponent)
   }
   def requestUpload(uploadInfo : UploadInfo): Future[Unit] =
     collection.insertOne(uploadInfo).toFuture().map(_ => UploadInfo)
-
-
 }

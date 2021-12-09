@@ -32,4 +32,4 @@ trait UploadProgressTracker {
 
   def getUploadResult(id : Reference): Future[Option[UploadInfo]]
 
-} 
+}
