@@ -19,20 +19,20 @@ package uk.gov.hmrc.gatekeeperemail.connectors
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.{verify => wireMockVerify, _}
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.http.Fault
 import common.AsyncHmrcSpec
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.OK
-import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
+import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import java.io.IOException
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite {
+class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite {
 
   val stubPort = sys.env.getOrElse("WIREMOCK", "22222").toInt
   val stubHost = "localhost"
@@ -60,61 +60,63 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach
   val subject = "Email subject"
   val fromAddress = "gateKeeper"
   val emailBody = "Body to be used in the email template"
-  val emailServicePath = "/gatekeeper/email"
-   
+  val templateId = "gatekeeper"
+  val emailRendererPath = s"/templates/$templateId"
+
   trait Setup {
     val httpClient = app.injector.instanceOf[HttpClient]
-    
-    val fakeEmailConnectorConfig = new EmailConnectorConfig {
-      val emailBaseUrl = wireMockUrl
+
+    val fakeEmailRendererConnectorConfig = new EmailRendererConnectorConfig {
+      val emailRendererBaseUrl = wireMockUrl
     }
 
     implicit val hc = HeaderCarrier()
 
-    lazy val underTest = new GatekeeperEmailConnector(httpClient, fakeEmailConnectorConfig)
+    lazy val underTest = new GatekeeperEmailRendererConnector(httpClient, fakeEmailRendererConnectorConfig)
   }
 
   trait WorkingHttp {
-      self: Setup =>
-    stubFor(post(urlEqualTo(emailServicePath)).willReturn(aResponse().withStatus(OK)))
+    self: Setup =>
+    stubFor(post(urlEqualTo(emailRendererPath)).willReturn(aResponse().withBody(
+      s"""{"plain": "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
+         |"html": "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "fromAddress": "fromAddress",
+         |"service": "service", "subject": "subject"}""".stripMargin).withStatus(OK)))
   }
 
   trait FailingHttp {
-      self: Setup =>
-    stubFor(post(urlEqualTo(emailServicePath)).willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)))
+    self: Setup =>
+    stubFor(post(urlEqualTo(emailRendererPath)).willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)))
   }
-  
-  "emailConnector" should {
-    val parameters: Map[String, String] = Map("subject" -> s"$subject", "fromAddress" -> s"$fromAddress",
-                                              "body" -> s"$emailBody", "service" -> s"gatekeeper")
-    val emailRequest = SendEmailRequest(List(emailId), "gatekeeper", parameters)
 
-    "send gatekeeper email" in new Setup with WorkingHttp {
-      await(underTest.sendEmail(emailRequest))
+  "emailRendererConnector" should {
+    val parameters: Map[String, String] = Map("subject" -> s"$subject", "fromAddress" -> s"$fromAddress",
+      "body" -> s"$emailBody", "service" -> s"gatekeeper")
+    val emailRequest = SendEmailRequest(List(emailId), templateId, parameters)
+
+    "get gatekeeper email template renderer" in new Setup with WorkingHttp {
+      await(underTest.getTemplatedEmail(emailRequest))
 
       wireMockVerify(1, postRequestedFor(
-        urlEqualTo(emailServicePath))
+        urlEqualTo(emailRendererPath))
         .withRequestBody(equalToJson(
           s"""
-              |{
-              |  "to": ["$emailId"],
-              |  "templateId": "gatekeeper",
-              |  "parameters": {
-              |    "subject": "$subject",
-              |    "fromAddress": "gateKeeper",
-              |    "body": "$emailBody",
-              |    "service": "gatekeeper"
-              |  },
-              |  "force": false,
-              |  "auditData": {}
-              |}""".stripMargin))
+             |{
+             |  "email": "$emailId",
+             |  "parameters": {
+             |    "subject": "$subject",
+             |    "fromAddress": "gateKeeper",
+             |    "body": "$emailBody",
+             |    "service": "gatekeeper"
+             |  }
+             |}""".stripMargin))
       )
     }
 
-    "fail to send gatekeeper email" in new Setup with FailingHttp {
+    "fail to get gatekeeper email template renderer" in new Setup with FailingHttp {
       intercept[IOException] {
-        await(underTest.sendEmail(emailRequest))
+        await(underTest.getTemplatedEmail(emailRequest))
       }
     }
   }
 }
+

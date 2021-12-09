@@ -17,28 +17,34 @@
 package uk.gov.hmrc.gatekeeperemail.controllers
 
 import play.api.libs.json.JsValue
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailConnector
-import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest
+import play.api.mvc.{Action, MessagesControllerComponents, PlayBodyParsers, Result}
+import uk.gov.hmrc.gatekeeperemail.models.{EmailRequest, ErrorCode, JsErrorResponse}
+import uk.gov.hmrc.gatekeeperemail.services.EmailService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import java.io.IOException
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class GatekeeperComposeEmailController @Inject()(
   mcc: MessagesControllerComponents,
-  emailConnector: GatekeeperEmailConnector
-  )(implicit val appConfig: AppConfig, val ec: ExecutionContext)
-    extends BackendController(mcc)  {
+  playBodyParsers: PlayBodyParsers,
+  emailService: EmailService
+  )(implicit val ec: ExecutionContext)
+    extends BackendController(mcc) with WithJson {
 
-  val sendEmail: Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[SendEmailRequest] { emailRequest =>
-
-      emailConnector.sendEmail(emailRequest)
-      Future.successful(Ok("Email sent successfully"))
+  def sendEmail: Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
+    withJson[EmailRequest] { receiveEmailRequest =>
+      emailService.sendAndPersistEmail(receiveEmailRequest)
+        .map(_ => Ok("Email sent successfully"))
+        .recover(recovery)
     }
   }
 
+  private def recovery: PartialFunction[Throwable, Result] = {
+    case e: IOException =>
+      logger.warn(s"IOException ${e.getMessage}")
+      InternalServerError(JsErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage))
+  }
 }

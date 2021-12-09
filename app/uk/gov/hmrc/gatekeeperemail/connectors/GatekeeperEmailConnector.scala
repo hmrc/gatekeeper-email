@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.gatekeeperemail.connectors
 
+import play.api.Logging
+import play.api.http.HeaderNames.CONTENT_TYPE
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest
-import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest.createEmailRequest
-import uk.gov.hmrc.gatekeeperemail.util.ApplicationLogger
+import uk.gov.hmrc.gatekeeperemail.models.{EmailRequest, SendEmailRequest}
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpErrorFunctions, HttpResponse}
 import uk.gov.hmrc.play.http.metrics.common.API
 
 import javax.inject.{Inject, Singleton}
@@ -29,20 +29,24 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnectorConfig)(implicit ec: ExecutionContext)
-  extends CommonResponseHandlers
-  with ApplicationLogger {
+  extends HttpErrorFunctions with Logging {
 
   val api = API("email")
   lazy val serviceUrl = config.emailBaseUrl
 
-  def sendEmail(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Unit] = {
-    logger.info(s"*****sendEmailTo*********:${request.to}")
-    post(request)
+  def sendEmail(emailRequest: SendEmailRequest): Future[Int] = {
+    implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(CONTENT_TYPE -> "application/json")
+
+    logger.info(s"*****receiveEmailRequest.to*********:${emailRequest.to}")
+
+    postHttpRequest(emailRequest)
   }
 
-  private def post(request: SendEmailRequest)(implicit hc: HeaderCarrier) = {
+  private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Int] = {
     logger.info(s"*******sendEmailRequest:$request")
-    http.POST[SendEmailRequest, ErrorOrUnit](s"$serviceUrl/developer/email", request)
-    .map(throwOrUnit)
+    http.POST[SendEmailRequest, HttpResponse](s"$serviceUrl/gatekeeper/email", request) map { response =>
+      logger.info("Requested email service to send email")
+      response.status
+    }
   }
 }

@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
+
+case class EmailData(emailRecipient: String, emailSubject: String, emailBody: String)
 
 case class SendEmailRequest(to: List[String],
                             templateId: String,
@@ -25,16 +27,20 @@ case class SendEmailRequest(to: List[String],
                             auditData: Map[String, String] = Map.empty,
                             eventUrl: Option[String] = None)
 
+case class EmailRequest(to: List[String],
+                        templateId: String,
+                        emailData: EmailData,
+                        force: Boolean = false,
+                        auditData: Map[String, String] = Map.empty,
+                        eventUrl: Option[String] = None)
+
+
 object SendEmailRequest {
-  implicit val sendEmailRequestFmt = Json.format[SendEmailRequest]
-
-  def createEmailRequest(emailAddress: List[String], parameters: Map[String, String]) = {
-
-    SendEmailRequest(
-      to = emailAddress,
-      templateId = "gatekeeper", //"gatekeeperEmailRequestTemplateId",
-      parameters
-    )
-  }
-
+  implicit val sendEmailRequestFmt: OFormat[SendEmailRequest] = Json.format[SendEmailRequest]
+}
+object EmailRequest {
+  implicit val receiveEmailRequestFmt: OFormat[EmailRequest] = Json.format[EmailRequest]
+}
+object EmailData {
+  implicit val emailDataFmt: OFormat[EmailData] = Json.format[EmailData]
 }
