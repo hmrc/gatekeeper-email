@@ -1,3 +1,6 @@
+import play.core.PlayVersion
+import play.sbt.PlayImport._
+import sbt.Keys.libraryDependencies
 import sbt._
 
 object AppDependencies {
@@ -16,6 +19,8 @@ object AppDependencies {
     "uk.gov.hmrc"             %% "bootstrap-test-play-28"     % "5.16.0"            % "test, it",
     "uk.gov.hmrc.mongo"       %% "hmrc-mongo-test-play-28"    % "0.56.0"            % "test, it",
     "com.vladsch.flexmark"    %  "flexmark-all"               % "0.36.8"            % "test, it",
-    "org.mockito"             %%  "mockito-scala-scalatest"   % "1.7.1"             % "test, it"
+    "org.mockito"             %%  "mockito-scala-scalatest"   % "1.7.1"             % "test, it",
+    "org.scalaj"              %% "scalaj-http"                        % "2.3.0" % "test, it",
+    "com.github.tomakehurst"  %  "wiremock-jre8-standalone"           % "2.27.2" % "test, it"
   )
 }

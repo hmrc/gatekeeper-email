@@ -20,6 +20,7 @@ lazy val microservice = (project in file("."))
   .settings(playSettings: _*)
   .settings(scalaSettings: _*)
   .settings(publishingSettings: _*)
+  .settings(playPublishingSettings: _*)
   .settings(ScoverageSettings())
   .settings(defaultSettings(): _*)
   .settings(
@@ -32,13 +33,61 @@ lazy val microservice = (project in file("."))
     routesImport += "uk.gov.hmrc.gatekeeperemail.controllers.binders._"
   )
   .settings(SilencerSettings())
-  .settings(publishingSettings: _*)
+  .settings(
+    Compile / unmanagedResourceDirectories += baseDirectory.value / "resources"
+  )
+  .settings(
+    Test / fork := false,
+    Test / parallelExecution := false,
+    Test / unmanagedSourceDirectories += baseDirectory.value / "test" / "common",
+    Test / unmanagedSourceDirectories += baseDirectory.value / "testcommon"
+  )
   .configs(IntegrationTest)
-  .settings(integrationTestSettings(): _*)
+  .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(
-    unmanagedResourceDirectories in IntegrationTest += baseDirectory.value / "test" / "resources"
+    IntegrationTest / fork := false,
+    IntegrationTest / parallelExecution := false,
+    IntegrationTest / unmanagedSourceDirectories += baseDirectory.value / "it",
+    IntegrationTest / unmanagedSourceDirectories += baseDirectory.value / "testcommon",
+    IntegrationTest / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-eT"),
+    IntegrationTest / testGrouping := oneForkedJvmPerTest(
+      (definedTests in IntegrationTest).value
+    ),
+    addTestReportOption(IntegrationTest, "int-test-reports")
   )
+  .configs(ComponentTest)
+  .settings(inConfig(ComponentTest)(Defaults.testSettings): _*)
   .settings(
-    unmanagedResourceDirectories in Compile += baseDirectory.value / "app" / "resources"
+    ComponentTest / unmanagedSourceDirectories += baseDirectory.value / "component",
+    ComponentTest / unmanagedSourceDirectories += baseDirectory.value / "testcommon",
+    ComponentTest / testGrouping := oneForkedJvmPerTest((definedTests in ComponentTest).value),
   )
-  .settings(scalacOptions ++= Seq("-Ypartial-unification"))
+  .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
+
+
+lazy val playPublishingSettings: Seq[sbt.Setting[_]] = Seq(
+  publishArtifact in (Compile, packageDoc) := false,
+  publishArtifact in (Compile, packageSrc) := false
+)
+
+def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
+  tests map { test =>
+    Group(
+      test.name,
+      Seq(test),
+      SubProcess(
+        ForkOptions().withRunJVMOptions(Vector(s"-Dtest.name=${test.name}"))
+      )
+    )
+  }
+
+coverageMinimum := 42
+coverageFailOnMinimum := true
+coverageExcludedPackages := Seq(
+  "<empty>",
+  "com.kenshoo.play.metrics",
+  ".*definition.*",
+  "prod",
+  "testOnlyDoNotUseInAppConf",
+  "uk.gov.hmrc.BuildInfo"
+).mkString(";")
