@@ -25,15 +25,11 @@ import uk.gov.hmrc.gatekeeperemail.services.FileUploadStatusService
 import uk.gov.hmrc.gatekeeperemail.util.ApplicationLogger
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
-import uk.gov.hmrc.gatekeeperemail.repository.UploadInfo
-import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.gatekeeperemail.models.{UploadId, UploadStatus}
 
-import java.util.UUID
 import java.util.UUID.randomUUID
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UploadFormController @Inject()(

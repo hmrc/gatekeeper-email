@@ -17,9 +17,7 @@
 package uk.gov.hmrc.gatekeeperemail.repository
 
 import org.scalatest.{Matchers, WordSpec}
-import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.gatekeeperemail.models.Reference
-import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
 import uk.gov.hmrc.gatekeeperemail.models.{Failed, InProgress, UploadId, UploadedSuccessfully}
 
 import java.util.UUID.randomUUID
