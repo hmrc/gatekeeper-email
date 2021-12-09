@@ -30,6 +30,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Updates.set
+import org.mongodb.scala.result.InsertOneResult
 import play.api.libs.json.Format
 case class UploadInfo(uploadId : UploadId, reference : Reference, status : UploadStatus)
 import play.api.libs.json.Json
@@ -81,6 +82,6 @@ class FileUploadStatusRepository @Inject()(mongoComponent: MongoComponent)
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
       ).map(_.asInstanceOf[UploadInfo]).head()
   }
-  def requestUpload(uploadInfo : UploadInfo): Future[Unit] =
-    collection.insertOne(uploadInfo).toFuture().map(_ => UploadInfo)
+  def requestUpload(uploadInfo : UploadInfo): Future[UploadInfo] =
+    collection.insertOne(uploadInfo).toFuture().map(res => uploadInfo)
 }

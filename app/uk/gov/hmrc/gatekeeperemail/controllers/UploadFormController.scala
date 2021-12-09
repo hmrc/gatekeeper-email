@@ -21,7 +21,7 @@ import play.api.libs.json.{Format, JsValue, Json, Writes}
 import play.api.mvc._
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.models.Reference
-import uk.gov.hmrc.gatekeeperemail.services.FileUploadStatusService
+import uk.gov.hmrc.gatekeeperemail.services.{FileUploadStatusService, UploadProgressTracker}
 import uk.gov.hmrc.gatekeeperemail.util.ApplicationLogger
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
@@ -29,7 +29,8 @@ import uk.gov.hmrc.gatekeeperemail.models.{UploadId, UploadStatus}
 
 import java.util.UUID.randomUUID
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 @Singleton
 class UploadFormController @Inject()(
@@ -47,11 +48,17 @@ class UploadFormController @Inject()(
     }
   }
 
-  def addUploadedFileStatus(key: String) : Action[AnyContent] = Action.async{
+  private def handleFuture[T](future: Future[T])(implicit writes: Writes[T]): Future[Result] = {
+    future map { v =>
+      Ok(toJson(v))
+    }
+  }
+
+
+  def addUploadedFileStatus(key: String) : Action[AnyContent] = Action.async {
     logger.info(s"Got a insert request for key: $key")
-    val uploadId = UploadId(randomUUID)
-    for (uploadResult <- uploadProgressTracker.requestUpload(UploadId(randomUUID), Reference(key))) yield uploadResult
-    Future.successful(Ok(s"File with uploadId: ${uploadId.value.toString}, reference: ${key} is inserted with status: InProgress"))
+    val result = uploadProgressTracker.requestUpload(key)
+    handleFuture(result)
   }
 
   def updateUploadedFileStatus(reference: String) : Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>

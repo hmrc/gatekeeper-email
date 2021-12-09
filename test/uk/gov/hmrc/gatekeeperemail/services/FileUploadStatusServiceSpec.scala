@@ -48,15 +48,15 @@ class FileUploadStatusServiceSpec extends AnyWordSpec with PlayMongoRepositorySu
 
   "MongoBackedUploadProgressTracker" should {
     "coordinate workflow" in {
-      val reference = Reference(randomUUID().toString)
+      val reference = randomUUID().toString
       val id = UploadId(randomUUID)
       val str = "61adf36cda0000130b757df9".getBytes()
       val expectedStatus = UploadedSuccessfully("name","mimeType","downloadUrl",Some(123))
 
       implicit val timeout = Timeout(FiniteDuration(20, SECONDS))
-      await(t.requestUpload(id, reference))
-      await(t.registerUploadResult(reference, UploadedSuccessfully("name","mimeType","downloadUrl",Some(123))))
-      await(t.getUploadResult(reference)).get.status shouldBe expectedStatus
+      await(t.requestUpload(reference))
+      await(t.registerUploadResult(Reference(reference), UploadedSuccessfully("name","mimeType","downloadUrl",Some(123))))
+      await(t.getUploadResult(Reference(reference))).get.status shouldBe expectedStatus
     }
   }
 }

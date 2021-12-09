@@ -56,7 +56,7 @@ trait JsonFormatters  {
   val uploadInfoReads = Json.reads[UploadInfo]
   val uploadInfoWrites = Json.writes[UploadInfo]
   implicit val uploadStatusFormat: Format[UploadStatus] = Format(read,write)
-  implicit val uploadInfo = Json.format[UploadInfo]
+  implicit val uploadInfoFormat = Format(uploadInfoReads,uploadInfoWrites)
 
 }
 
