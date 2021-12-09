@@ -81,7 +81,7 @@ def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
     )
   }
 
-coverageMinimum := 66
+coverageMinimum := 42
 coverageFailOnMinimum := true
 coverageExcludedPackages := Seq(
   "<empty>",
