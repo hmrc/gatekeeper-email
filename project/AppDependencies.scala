@@ -17,7 +17,6 @@ object AppDependencies {
     "uk.gov.hmrc"             %% "bootstrap-test-play-28"     % "5.16.0" % "test, it",
     "uk.gov.hmrc.mongo"       %% "hmrc-mongo-test-play-28"    % "0.56.0" % "test, it",
     "org.mockito"             %%  "mockito-scala-scalatest"   % "1.7.1" % "test, it",
-    "uk.gov.hmrc"             %% "reactivemongo-test"       % "5.0.0-play-28" % "test, it",
     "org.scalaj"                  %% "scalaj-http"                        % "2.3.0" % "test, it",
     "com.github.tomakehurst"      %  "wiremock-jre8-standalone"           % "2.27.2" % "test, it"
   )

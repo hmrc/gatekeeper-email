@@ -21,7 +21,7 @@ import java.util.UUID
 import java.util.UUID.randomUUID
 class FileUploadStatusRepositorySpec
   extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll
-    with IndexVerification with PlayMongoRepositorySupport[UploadInfo] with
+    with PlayMongoRepositorySupport[UploadInfo] with
     Matchers with GuiceOneAppPerSuite
 {
 
