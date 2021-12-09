@@ -36,8 +36,7 @@ class UploadFormController @Inject()(
                                       uploadProgressTracker: FileUploadStatusService,
                                       cc: ControllerComponents,
                                       playBodyParsers: PlayBodyParsers)
-                                    (implicit appConfig: AppConfig,
-                                     ec: ExecutionContext
+                                    ( implicit ec: ExecutionContext
                                     ) extends BackendController(cc) with ApplicationLogger {
 
 
