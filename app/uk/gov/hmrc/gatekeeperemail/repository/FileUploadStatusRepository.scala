@@ -48,9 +48,9 @@ class FileUploadStatusRepository @Inject()(mongoComponent: MongoComponent)
     collectionName = "gatekeeper-fileuploads",
     domainFormat = uploadInfo,
     indexes = Seq(IndexModel(ascending("reference"),
-      IndexOptions().name("referenceIndex").background(true)),
+      IndexOptions().name("referenceIndex").background(true).unique(true)),
       IndexModel(ascending("uploadId"),
-        IndexOptions().name("uploadIdIndex").background(true).unique(false)))
+        IndexOptions().name("uploadIdIndex").background(true).unique(true)))
   ) {
 
   override lazy val collection: MongoCollection[UploadInfo] =
