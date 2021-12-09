@@ -85,6 +85,7 @@ class UploadCallbackController @Inject()(upscanCallbackDispatcher : UpscanCallba
 
   private val logger = Logger(this.getClass)
 
+
   val callback = Action.async(parse.json) { implicit request =>
     logger.info(s"Received callback notification [${Json.stringify(request.body)}]")
     withJsonBody[CallbackBody] { feedback: CallbackBody =>

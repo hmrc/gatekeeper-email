@@ -16,12 +16,59 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
-import org.scalatest.{Matchers, WordSpec}
+import akka.stream.Materializer
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
+import play.api.mvc.ControllerComponents
+import play.api.test.{FakeRequest, StubControllerComponentsFactory, StubPlayBodyParsersFactory}
+import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcSpec
 import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
-import uk.gov.hmrc.gatekeeperemail.models.{Failed, UploadStatus, UploadedFailedWithErrors, UploadedSuccessfully}
+import uk.gov.hmrc.gatekeeperemail.models.{Failed, Reference, UploadId, UploadStatus, UploadedFailedWithErrors, UploadedSuccessfully}
+import uk.gov.hmrc.gatekeeperemail.services.FileUploadStatusService
 
-class UploadFormControllerSpec extends WordSpec with Matchers {
+import scala.concurrent.ExecutionContext.Implicits.global
+import java.util.UUID.randomUUID
+import scala.concurrent.Future.successful
+
+class UploadFormControllerSpec extends AsyncHmrcSpec with AnyWordSpec
+  with Matchers with GuiceOneAppPerSuite
+  with StubControllerComponentsFactory
+  with StubPlayBodyParsersFactory {
+
+  implicit lazy val materializer: Materializer = mock[Materializer]
+
+  trait Setup {
+    val mockFileUploadStatusService: FileUploadStatusService = mock[FileUploadStatusService]
+    val controllerComponents: ControllerComponents = stubControllerComponents()
+
+    val underTest = new UploadFormController(mockFileUploadStatusService, controllerComponents,
+      stubPlayBodyParsers(materializer))
+  implicit lazy val request = FakeRequest()
+
+    when(mockFileUploadStatusService.requestUpload(UploadId(randomUUID), Reference(randomUUID.toString))).thenReturn(successful("String"))
+  }
+  override def fakeApplication(): Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        "metrics.jvm"     -> false,
+        "metrics.enabled" -> false
+      )
+      .build()
+
+  private val fakeRequest = FakeRequest("POST", s"/gatekeeper-email/insertfileuploadstatus?key=${randomUUID}")
+
+  private val controller = app.injector.instanceOf[UploadFormController]
+
+  "UploadFormController should" {
+
+    "be able to insert a FileUploadStatus Record" in {
+      val result = controller.addUploadedFileStatus(key)
+    }
+  }
 
   "UploadFormController BODY JSON reader" should {
 
