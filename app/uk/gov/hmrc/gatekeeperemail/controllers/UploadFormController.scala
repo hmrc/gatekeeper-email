@@ -63,8 +63,8 @@ class UploadFormController @Inject()(
 
   def updateUploadedFileStatus(reference: String) : Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
     withJsonBody[UploadStatus] { uploadStatus =>
-      uploadProgressTracker.registerUploadResult(Reference(reference), uploadStatus)
-      Future.successful(Ok(s"File with reference: ${reference} is updated with status: ${uploadStatus}"))
+      val result = uploadProgressTracker.registerUploadResult(reference, uploadStatus)
+      handleFuture(result)
     }
   }
 

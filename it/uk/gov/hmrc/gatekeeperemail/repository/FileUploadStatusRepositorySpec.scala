@@ -3,7 +3,7 @@ package uk.gov.hmrc.gatekeeperemail.repository
 import akka.stream.Materializer
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcSpec
-import uk.gov.hmrc.gatekeeperemail.models.Reference
+import uk.gov.hmrc.gatekeeperemail.models._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import akka.actor.ActorSystem
@@ -14,9 +14,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
-import uk.gov.hmrc.gatekeeperemail.models.{InProgress, UploadId, UploadedSuccessfully}
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
-
 import java.util.UUID
 import java.util.UUID.randomUUID
 class FileUploadStatusRepositorySpec
@@ -59,7 +57,7 @@ class FileUploadStatusRepositorySpec
     }
   }
 
-  "update a fileStatus" in {
+  "update a fileStatus to success" in {
     val uploadId = UploadId(randomUUID)
     val fileReference = Reference(UUID.randomUUID().toString)
     val fileStatus = UploadInfo(uploadId, fileReference, InProgress)
@@ -74,6 +72,60 @@ class FileUploadStatusRepositorySpec
     val newRetrieved = await(repository.updateStatus(reference = fileReference, UploadedSuccessfully("abc.jpeg", "jpeg", "http://s3/abc.jpeg", Some(234))))
 
     val fetch = await(repository.findByUploadId(fileReference).map(_.get))
+    fetch shouldBe updated
+  }
+
+  "update a fileStatus to failedwithErrors" in {
+    val uploadId = UploadId(randomUUID)
+    val fileReference = Reference(UUID.randomUUID().toString)
+    val fileStatus = UploadInfo(uploadId, fileReference, InProgress)
+    await(repository.requestUpload(fileStatus))
+
+    val retrieved  = await(repository.findByUploadId(fileReference)).get
+
+    retrieved shouldBe fileStatus
+
+    val updated = fileStatus.copy(status = UploadedFailedWithErrors("VIRUS", "found Virus", "1233", fileReference.value))
+
+    await(repository.updateStatus(reference = fileReference, UploadedFailedWithErrors("VIRUS", "found Virus", "1233", fileReference.value)))
+    val fetch = await(repository.findByUploadId(fileReference).map(_.get))
+
+    fetch shouldBe updated
+  }
+
+  "update a fileStatus to failed" in {
+    val uploadId = UploadId(randomUUID)
+    val fileReference = Reference(UUID.randomUUID().toString)
+    val fileStatus = UploadInfo(uploadId, fileReference, InProgress)
+    await(repository.requestUpload(fileStatus))
+
+    val retrieved  = await(repository.findByUploadId(fileReference)).get
+
+    retrieved shouldBe fileStatus
+
+    val updated = fileStatus.copy(status = Failed)
+
+    await(repository.updateStatus(reference = fileReference, Failed))
+    val fetch = await(repository.findByUploadId(fileReference).map(_.get))
+
+    fetch shouldBe updated
+  }
+
+  "update a fileStatus to InProgress" in {
+    val uploadId = UploadId(randomUUID)
+    val fileReference = Reference(UUID.randomUUID().toString)
+    val fileStatus = UploadInfo(uploadId, fileReference, InProgress)
+    await(repository.requestUpload(fileStatus))
+
+    val retrieved  = await(repository.findByUploadId(fileReference)).get
+
+    retrieved shouldBe fileStatus
+
+    val updated = fileStatus.copy(status = InProgress)
+
+    await(repository.updateStatus(reference = fileReference, InProgress))
+    val fetch = await(repository.findByUploadId(fileReference).map(_.get))
+
     fetch shouldBe updated
   }
 

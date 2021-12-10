@@ -17,38 +17,36 @@
 package uk.gov.hmrc.gatekeeperemail.controllers
 
 import play.api.Logger
+import play.api.libs.json.Json.toJson
 import play.api.libs.json._
 import play.api.mvc._
-import uk.gov.hmrc.gatekeeperemail.services.UpscanCallbackDispatcher
-import uk.gov.hmrc.gatekeeperemail.util.HttpUrlFormat
+import uk.gov.hmrc.gatekeeperemail.services.UpscanCallbackService
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import uk.gov.hmrc.gatekeeperemail.controllers.CallbackBody._
 import uk.gov.hmrc.gatekeeperemail.models.Reference
-
-import java.net.URL
+import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
-sealed trait CallbackBody {
-  def reference : Reference
+trait CallbackBody {
+  def reference : String
 }
 
 case class ReadyCallbackBody(
-                              reference: Reference,
-                              downloadUrl: URL,
+                              reference: String,
+                              downloadUrl: String,
                               uploadDetails: UploadDetails
                             ) extends CallbackBody
 
 case class FailedCallbackBody(
-                               reference: Reference,
+                               reference: String,
+                               fileStatus: String,
                                failureDetails: ErrorDetails
                              ) extends CallbackBody
 
 object CallbackBody {
   // must be in scope to create Reads for ReadyCallbackBody
-  private implicit val urlFormat: Format[URL] = HttpUrlFormat.format
-
   implicit val uploadDetailsReads = Json.reads[UploadDetails]
   implicit val uploadDetailsWrites = Json.writes[UploadDetails]
   implicit val uploadDetails = Format(uploadDetailsReads, uploadDetailsWrites)
@@ -79,17 +77,21 @@ case class ErrorDetails(failureReason: String, message: String)
 
 
 @Singleton
-class UploadCallbackController @Inject()(upscanCallbackDispatcher : UpscanCallbackDispatcher,
+class UploadCallbackController @Inject()(upscanCallbackDispatcher : UpscanCallbackService,
                                          cc: ControllerComponents)
                                         (implicit ec : ExecutionContext) extends BackendController(cc) {
 
   private val logger = Logger(this.getClass)
-
+  private def handleFuture[T](future: Future[T])(implicit writes: Writes[T]): Future[Result] = {
+    future map { v =>
+      Ok(toJson(v))
+    }
+  }
 
   val callback = Action.async(parse.json) { implicit request =>
     logger.info(s"Received callback notification [${Json.stringify(request.body)}]")
     withJsonBody[CallbackBody] { feedback: CallbackBody =>
-      upscanCallbackDispatcher.handleCallback(feedback).map(_ => Ok)
+      handleFuture(upscanCallbackDispatcher.handleCallback(feedback))
     }
   }
 }

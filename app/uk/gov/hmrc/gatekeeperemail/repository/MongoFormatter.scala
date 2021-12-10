@@ -18,6 +18,7 @@ package uk.gov.hmrc.gatekeeperemail.repository
 
 import play.api.libs.json._
 import uk.gov.hmrc.gatekeeperemail.models._
+
 object MongoFormatter {
   implicit val bsonFormat: OFormat[UploadId] = Json.format[UploadId]
 
@@ -62,8 +63,6 @@ object MongoFormatter {
         case Some(JsString("Failed")) => JsSuccess(Failed)
         case Some(JsString("UploadedSuccessfully")) => Json.fromJson[UploadedSuccessfully](jsObject)(uploadedSuccessfullyFormat)
         case Some(JsString("UploadedFailedWithErrors")) => Json.fromJson[UploadedFailedWithErrors](jsObject)(uploadedFailedFormat)
-        case Some(value) => JsError(s"Unexpected value of _type: $value")
-        case None => JsError("Missing _type field")
       }
     }
   }
@@ -75,16 +74,14 @@ object MongoFormatter {
         case Failed => JsObject(Map("_type" -> JsString("Failed")))
         case s : UploadedSuccessfully => {
           val result = uploadedSuccessfullyFormat.writes(s) ++ Json.obj("_type" -> "UploadedSuccessfully")
-          println(s"********* $result ********")
           result
         }
-        case f : UploadedFailedWithErrors => uploadedFailedFormat.writes(f) ++ Json.obj("_type" -> "uploadedFailed")
+        case f : UploadedFailedWithErrors => uploadedFailedFormat.writes(f) ++ Json.obj("_type" -> "UploadedFailedWithErrors")
       }
     }
   }
-
+  implicit val uploadStatusFormat: Format[UploadStatus] = Format(read,write)
   val uploadInfoReads = Json.reads[UploadInfo]
   val uploadInfoWrites = Json.writes[UploadInfo]
-  implicit val uploadStatusFormat: Format[UploadStatus] = Format(read,write)
   implicit val uploadInfo = Json.format[UploadInfo]
 }
