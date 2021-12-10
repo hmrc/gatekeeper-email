@@ -74,6 +74,7 @@ object FileUploadMongoFormatter {
         case Failed => JsObject(Map("_type" -> JsString("Failed")))
         case s : UploadedSuccessfully => {
           val result = uploadedSuccessfullyFormat.writes(s) ++ Json.obj("_type" -> "UploadedSuccessfully")
+          println(s"********* $result ********")
           result
         }
         case f : UploadedFailedWithErrors => uploadedFailedFormat.writes(f) ++ Json.obj("_type" -> "UploadedFailedWithErrors")
