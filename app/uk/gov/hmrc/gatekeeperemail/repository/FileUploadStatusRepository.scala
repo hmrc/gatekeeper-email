@@ -22,7 +22,7 @@ import org.mongodb.scala.{MongoClient, MongoCollection}
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument, Updates}
 import org.mongodb.scala.model.Indexes.ascending
 import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadId, UploadStatus}
-import uk.gov.hmrc.gatekeeperemail.repository.MongoFormatter._
+import uk.gov.hmrc.gatekeeperemail.repository.FileUploadMongoFormatter._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 

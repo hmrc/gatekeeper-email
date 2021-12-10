@@ -19,7 +19,7 @@ package uk.gov.hmrc.gatekeeperemail.repository
 import play.api.libs.json._
 import uk.gov.hmrc.gatekeeperemail.models._
 
-object MongoFormatter {
+object FileUploadMongoFormatter {
   implicit val bsonFormat: OFormat[UploadId] = Json.format[UploadId]
 
   implicit val referenceFormat: OFormat[Reference] = Json.format[Reference]
