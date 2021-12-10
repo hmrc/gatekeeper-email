@@ -29,7 +29,7 @@ trait UploadProgressTracker {
 
   def requestUpload(fileReference : String) : Future[UploadInfo]
 
-  def registerUploadResult(reference : Reference, uploadStatus : UploadStatus): Future[UploadInfo]
+  def registerUploadResult(reference : String, uploadStatus : UploadStatus): Future[UploadInfo]
 
   def getUploadResult(id : Reference): Future[Option[UploadInfo]]
 
