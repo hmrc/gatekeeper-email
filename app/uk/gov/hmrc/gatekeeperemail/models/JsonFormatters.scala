@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 import play.api.libs.json._
-import uk.gov.hmrc.gatekeeperemail.repository.UploadInfo
+import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 
 trait JsonFormatters  {
 

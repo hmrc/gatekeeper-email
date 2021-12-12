@@ -11,6 +11,7 @@ object ScoverageSettings {
       "prod.*",
       "testOnly-DoNotUseInAppConf.*",
       "app.*",
+      "*app.*",
       ".*Reverse.*",
       ".*Routes.*",
       "com.kenshoo.play.metrics.*",

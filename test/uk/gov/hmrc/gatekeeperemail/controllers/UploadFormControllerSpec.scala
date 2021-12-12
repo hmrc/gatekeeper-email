@@ -29,7 +29,7 @@ import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
 import uk.gov.hmrc.gatekeeperemail.models.{Failed, InProgress, Reference, UploadId, UploadStatus, UploadedFailedWithErrors, UploadedSuccessfully}
 import uk.gov.hmrc.gatekeeperemail.services.{FileUploadStatusService, UploadProgressTracker}
 import play.api.test.Helpers.{contentAsJson, contentAsString, status}
-import uk.gov.hmrc.gatekeeperemail.repository.UploadInfo
+import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import java.util.UUID.randomUUID
@@ -88,11 +88,11 @@ class UploadFormControllerSpec extends AsyncHmrcSpec  with GuiceOneAppPerSuite
       contentAsJson(result) shouldEqual Json.toJson(uploadInfo1)
     }
 
-    "return 404 (not found) when the scope does not exist" in new Setup {
+    "return 404 (not found) when the fileUploadStatus does not exist" in new Setup {
 
-      when(mockFileUploadStatusService.getUploadResult(Reference("key1"))).thenReturn(successful(None))
+      when(mockFileUploadStatusService.getUploadResult(Reference("reference1"))).thenReturn(successful(None))
 
-      val result = underTest.fetchUploadedFileStatus("key1")(request)
+      val result = underTest.fetchUploadedFileStatus("reference1")(request)
       status(result) shouldBe BAD_REQUEST
       contentAsString(result) shouldBe "No uploadInfo found"
 
@@ -167,7 +167,7 @@ class UploadFormControllerSpec extends AsyncHmrcSpec  with GuiceOneAppPerSuite
       result shouldBe Failed
     }
 
-    "be able to serialise unknown type" in {
+    "be not able to serialise unknown type" in {
 
       val body =
         """
@@ -182,7 +182,7 @@ class UploadFormControllerSpec extends AsyncHmrcSpec  with GuiceOneAppPerSuite
       exception.getMessage.contains("Unexpected value of _type: UNKNOWN")
     }
 
-    "be able to serialise when no type" in {
+    "be able to not serialise when no type" in {
 
       val body =
         """

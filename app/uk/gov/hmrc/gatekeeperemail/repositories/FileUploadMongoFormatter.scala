@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.gatekeeperemail.repository
+package uk.gov.hmrc.gatekeeperemail.repositories
 
 import play.api.libs.json._
 import uk.gov.hmrc.gatekeeperemail.models._
@@ -28,16 +28,16 @@ object FileUploadMongoFormatter {
   //implicit val uploadedSuccessfullyFormat: OFormat[UploadedSuccessfully] = Json.format[UploadedSuccessfully]
 
   implicit val initiateReads: Reads[InProgress.type] =
-    Json.reads[InProgress.type ]
+    Json.reads[InProgress.type]
   implicit val initiateWrites: OWrites[InProgress.type] =
-    Json.writes[InProgress.type ].transform(_ ++ Json.obj("_type" -> "InProgress"))
+    Json.writes[InProgress.type].transform(_ ++ Json.obj("_type" -> "InProgress"))
   implicit val initiateFormat: OFormat[InProgress.type] =
     OFormat(initiateReads, initiateWrites)
 
   implicit val failedReads: Reads[Failed.type] =
-    Json.reads[Failed.type ]
+    Json.reads[Failed.type]
   implicit val failedWrites: OWrites[Failed.type] =
-    Json.writes[Failed.type ].transform(_ ++ Json.obj("_type" -> "Failed"))
+    Json.writes[Failed.type].transform(_ ++ Json.obj("_type" -> "Failed"))
   implicit val failedFormat: OFormat[Failed.type] =
     OFormat(failedReads, failedWrites)
 
@@ -47,7 +47,7 @@ object FileUploadMongoFormatter {
     Json.writes[UploadedSuccessfully].transform(_ ++ Json.obj("_type" -> "UploadedSuccessfully"))
   implicit val uploadedSuccessfullyFormat: OFormat[UploadedSuccessfully] =
     OFormat(uploadedSuccessfullyReads, uploadedSuccessfullyWrites)
-//  implicit val uploadedFailed: OFormat[UploadedFailedWithErrors] = Json.format[UploadedFailedWithErrors]
+  //  implicit val uploadedFailed: OFormat[UploadedFailedWithErrors] = Json.format[UploadedFailedWithErrors]
   implicit val uploadedFailedReads: Reads[UploadedFailedWithErrors] =
     Json.reads[UploadedFailedWithErrors]
   implicit val uploadedFailedWrites: OWrites[UploadedFailedWithErrors] =
@@ -72,16 +72,15 @@ object FileUploadMongoFormatter {
       p match {
         case InProgress => JsObject(Map("_type" -> JsString("InProgress")))
         case Failed => JsObject(Map("_type" -> JsString("Failed")))
-        case s : UploadedSuccessfully => {
+        case s: UploadedSuccessfully => {
           val result = uploadedSuccessfullyFormat.writes(s) ++ Json.obj("_type" -> "UploadedSuccessfully")
-          println(s"********* $result ********")
           result
         }
-        case f : UploadedFailedWithErrors => uploadedFailedFormat.writes(f) ++ Json.obj("_type" -> "UploadedFailedWithErrors")
+        case f: UploadedFailedWithErrors => uploadedFailedFormat.writes(f) ++ Json.obj("_type" -> "UploadedFailedWithErrors")
       }
     }
   }
-  implicit val uploadStatusFormat: Format[UploadStatus] = Format(read,write)
+  implicit val uploadStatusFormat: Format[UploadStatus] = Format(read, write)
   val uploadInfoReads = Json.reads[UploadInfo]
   val uploadInfoWrites = Json.writes[UploadInfo]
   implicit val uploadInfo = Json.format[UploadInfo]

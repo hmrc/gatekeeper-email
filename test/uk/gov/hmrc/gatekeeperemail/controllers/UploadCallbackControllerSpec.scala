@@ -31,7 +31,7 @@ import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
 import uk.gov.hmrc.gatekeeperemail.models.{Failed, InProgress, Reference, UploadId, UploadStatus, UploadedFailedWithErrors, UploadedSuccessfully}
 import uk.gov.hmrc.gatekeeperemail.services.{FileUploadStatusService, UploadProgressTracker, UpscanCallbackService}
 import play.api.test.Helpers.{contentAsJson, contentAsString, status}
-import uk.gov.hmrc.gatekeeperemail.repository.UploadInfo
+import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 
 import java.net.{URI, URL}
 import java.time.Instant

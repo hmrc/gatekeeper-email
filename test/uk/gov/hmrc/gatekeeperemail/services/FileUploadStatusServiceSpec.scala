@@ -18,13 +18,13 @@ package uk.gov.hmrc.gatekeeperemail.services
 
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import play.api.test.Helpers.await
-import uk.gov.hmrc.gatekeeperemail.repository.{FileUploadStatusRepository, UploadInfo}
 import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadId, UploadedFailedWithErrors, UploadedSuccessfully}
 import akka.util.Timeout
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
 import java.util.UUID.randomUUID

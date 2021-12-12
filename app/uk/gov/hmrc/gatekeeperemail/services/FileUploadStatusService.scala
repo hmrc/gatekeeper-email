@@ -18,7 +18,7 @@ package uk.gov.hmrc.gatekeeperemail.services
 
 import org.mongodb.scala.result.InsertOneResult
 import uk.gov.hmrc.gatekeeperemail.models.{InProgress, Reference, UploadId, UploadStatus}
-import uk.gov.hmrc.gatekeeperemail.repository.{FileUploadStatusRepository, UploadInfo}
+import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 
 import java.util.UUID.randomUUID
 import javax.inject.Inject

@@ -25,7 +25,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.await
 import uk.gov.hmrc.gatekeeperemail.controllers.{CallbackBody, ErrorDetails, FailedCallbackBody, ReadyCallbackBody, UploadDetails}
 import uk.gov.hmrc.gatekeeperemail.models.{Failed, Reference, UploadId, UploadedFailedWithErrors, UploadedSuccessfully}
-import uk.gov.hmrc.gatekeeperemail.repository.{FileUploadStatusRepository, UploadInfo}
+import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
 import java.net.URL
