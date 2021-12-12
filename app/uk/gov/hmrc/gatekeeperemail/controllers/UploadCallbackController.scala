@@ -46,7 +46,6 @@ case class FailedCallbackBody(
                              ) extends CallbackBody
 
 object CallbackBody {
-  // must be in scope to create Reads for ReadyCallbackBody
   implicit val uploadDetailsReads = Json.reads[UploadDetails]
   implicit val uploadDetailsWrites = Json.writes[UploadDetails]
   implicit val uploadDetails = Format(uploadDetailsReads, uploadDetailsWrites)
