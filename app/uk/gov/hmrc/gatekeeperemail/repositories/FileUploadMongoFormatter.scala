@@ -24,9 +24,6 @@ object FileUploadMongoFormatter {
 
   implicit val referenceFormat: OFormat[Reference] = Json.format[Reference]
 
-  // NOTE - these override the defaults in order to push dates in non-mongo format
-  //implicit val uploadedSuccessfullyFormat: OFormat[UploadedSuccessfully] = Json.format[UploadedSuccessfully]
-
   implicit val initiateReads: Reads[InProgress.type] =
     Json.reads[InProgress.type]
   implicit val initiateWrites: OWrites[InProgress.type] =
@@ -47,7 +44,6 @@ object FileUploadMongoFormatter {
     Json.writes[UploadedSuccessfully].transform(_ ++ Json.obj("_type" -> "UploadedSuccessfully"))
   implicit val uploadedSuccessfullyFormat: OFormat[UploadedSuccessfully] =
     OFormat(uploadedSuccessfullyReads, uploadedSuccessfullyWrites)
-  //  implicit val uploadedFailed: OFormat[UploadedFailedWithErrors] = Json.format[UploadedFailedWithErrors]
   implicit val uploadedFailedReads: Reads[UploadedFailedWithErrors] =
     Json.reads[UploadedFailedWithErrors]
   implicit val uploadedFailedWrites: OWrites[UploadedFailedWithErrors] =
