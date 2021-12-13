@@ -44,7 +44,7 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
 
   private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Int] = {
     logger.info(s"*******sendEmailRequest:$request")
-    http.POST[SendEmailRequest, HttpResponse](s"$serviceUrl/gatekeeper/email", request) map { response =>
+    http.POST[SendEmailRequest, HttpResponse](s"$serviceUrl/developer/email", request) map { response =>
       logger.info("Requested email service to send email")
       response.status
     }

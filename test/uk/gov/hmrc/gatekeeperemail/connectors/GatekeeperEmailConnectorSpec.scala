@@ -60,7 +60,7 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach
   val subject = "Email subject"
   val fromAddress = "gateKeeper"
   val emailBody = "Body to be used in the email template"
-  val emailServicePath = "/gatekeeper/email"
+  val emailServicePath = "/developer/email"
    
   trait Setup {
     val httpClient = app.injector.instanceOf[HttpClient]
