@@ -31,12 +31,6 @@ case class UploadId(value : UUID) extends AnyVal
 
 case class Reference(value: String) extends AnyVal
 
-object Reference {
-  implicit val referenceReader: Reads[Reference] = Reads.StringReads.map(Reference(_))
-}
 
-object UploadId {
 
-  implicit def queryBinder(implicit stringBinder: QueryStringBindable[UUID]): QueryStringBindable[UploadId] =
-    stringBinder.transform(UploadId(_),_.value)
-}
+

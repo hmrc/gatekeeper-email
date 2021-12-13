@@ -19,6 +19,7 @@ package uk.gov.hmrc.gatekeeperemail.repository
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.gatekeeperemail.models.Reference
 import uk.gov.hmrc.gatekeeperemail.models.{Failed, InProgress, UploadId, UploadedSuccessfully}
+import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 
 import java.util.UUID.randomUUID
 

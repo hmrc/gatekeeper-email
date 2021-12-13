@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 import play.api.libs.json._
-import uk.gov.hmrc.gatekeeperemail.repository.UploadInfo
+import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 
 trait JsonFormatters  {
 
@@ -53,10 +53,11 @@ trait JsonFormatters  {
     }
   }
 
+
+  implicit val uploadStatusFormat: Format[UploadStatus] = Format(read,write)
   val uploadInfoReads = Json.reads[UploadInfo]
   val uploadInfoWrites = Json.writes[UploadInfo]
-  implicit val uploadStatusFormat: Format[UploadStatus] = Format(read,write)
-  implicit val uploadInfo = Json.format[UploadInfo]
+  implicit val uploadInfoFormat = Format(uploadInfoReads,uploadInfoWrites)
 
 }
 

@@ -17,8 +17,9 @@
 package uk.gov.hmrc.gatekeeperemail.services
 
 import com.google.inject.ImplementedBy
-import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadId, UploadStatus}
-import uk.gov.hmrc.gatekeeperemail.repository.UploadInfo
+import org.mongodb.scala.result.InsertOneResult
+import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadStatus}
+import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 
 import scala.concurrent.Future
 
@@ -26,9 +27,9 @@ import scala.concurrent.Future
 @ImplementedBy(classOf[FileUploadStatusService])
 trait UploadProgressTracker {
 
-  def requestUpload(uploadId : UploadId, fileReference : Reference) : Future[Unit]
+  def requestUpload(fileReference : String) : Future[UploadInfo]
 
-  def registerUploadResult(reference : Reference, uploadStatus : UploadStatus): Future[Unit]
+  def registerUploadResult(reference : String, uploadStatus : UploadStatus): Future[UploadInfo]
 
   def getUploadResult(id : Reference): Future[Option[UploadInfo]]
 

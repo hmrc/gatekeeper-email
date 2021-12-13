@@ -18,14 +18,13 @@ package uk.gov.hmrc.gatekeeperemail.services
 
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import play.api.test.Helpers.await
-import uk.gov.hmrc.gatekeeperemail.repository.{FileUploadStatusRepository, UploadInfo}
-import uk.gov.hmrc.gatekeeperemail.models.Reference
+import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadId, UploadedFailedWithErrors, UploadedSuccessfully}
 import akka.util.Timeout
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.gatekeeperemail.models.{UploadId, UploadedSuccessfully}
+import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
 import java.util.UUID.randomUUID
@@ -48,15 +47,25 @@ class FileUploadStatusServiceSpec extends AnyWordSpec with PlayMongoRepositorySu
 
   "MongoBackedUploadProgressTracker" should {
     "coordinate workflow" in {
-      val reference = Reference(randomUUID().toString)
+      val reference = randomUUID().toString
       val id = UploadId(randomUUID)
       val str = "61adf36cda0000130b757df9".getBytes()
       val expectedStatus = UploadedSuccessfully("name","mimeType","downloadUrl",Some(123))
 
       implicit val timeout = Timeout(FiniteDuration(20, SECONDS))
-      await(t.requestUpload(id, reference))
+      await(t.requestUpload(reference))
       await(t.registerUploadResult(reference, UploadedSuccessfully("name","mimeType","downloadUrl",Some(123))))
-      await(t.getUploadResult(reference)).get.status shouldBe expectedStatus
+      await(t.getUploadResult(Reference(reference))).get.status shouldBe expectedStatus
+    }
+
+    "update status as failedWithErrors workflow" in {
+      val reference = randomUUID().toString
+      val expectedStatus = UploadedFailedWithErrors("VIRUS", "found Virus", "1233", reference)
+
+      implicit val timeout = Timeout(FiniteDuration(20, SECONDS))
+      await(t.requestUpload(reference))
+      await(t.registerUploadResult(reference, UploadedFailedWithErrors("VIRUS", "found Virus", "1233", reference)))
+      await(t.getUploadResult(Reference(reference))).get.status shouldBe expectedStatus
     }
   }
 }

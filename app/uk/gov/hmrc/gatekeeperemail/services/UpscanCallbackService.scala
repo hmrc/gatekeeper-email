@@ -17,28 +17,29 @@
 package uk.gov.hmrc.gatekeeperemail.services
 
 import uk.gov.hmrc.gatekeeperemail.controllers.{CallbackBody, FailedCallbackBody, ReadyCallbackBody}
-import uk.gov.hmrc.gatekeeperemail.models.{Failed, UploadedSuccessfully}
+import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 
 import javax.inject.Inject
 import scala.concurrent.Future
 
-class UpscanCallbackDispatcher @Inject() (sessionStorage: UploadProgressTracker) {
+class UpscanCallbackService @Inject()(sessionStorage: FileUploadStatusRepository) {
 
-  def handleCallback(callback : CallbackBody): Future[Unit] = {
+  def handleCallback(callback : CallbackBody): Future[UploadInfo] = {
 
     val uploadStatus = callback match {
       case s: ReadyCallbackBody =>
         UploadedSuccessfully(
           s.uploadDetails.fileName,
           s.uploadDetails.fileMimeType,
-          s.downloadUrl.getFile,
+          s.downloadUrl,
           Some(s.uploadDetails.size)
         )
-      case _: FailedCallbackBody =>
-        Failed
+      case f: FailedCallbackBody =>
+        UploadedFailedWithErrors(f.fileStatus, f.failureDetails.failureReason, f.failureDetails.message, f.reference)
+      case _ => Failed
     }
-
-    sessionStorage.registerUploadResult(callback.reference, uploadStatus)
+    sessionStorage.updateStatus(Reference(callback.reference), uploadStatus)
   }
 
 }

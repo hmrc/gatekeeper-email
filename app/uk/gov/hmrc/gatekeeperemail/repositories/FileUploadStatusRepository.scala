@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.gatekeeperemail.repository
+package uk.gov.hmrc.gatekeeperemail.repositories
 
 import akka.stream.Materializer
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
-import org.mongodb.scala.{MongoClient, MongoCollection}
-import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument, Updates}
+import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.Updates.set
+import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
+import org.mongodb.scala.{MongoClient, MongoCollection}
+import play.api.libs.json.Format
 import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadId, UploadStatus}
-import uk.gov.hmrc.gatekeeperemail.repository.MongoFormatter._
+import uk.gov.hmrc.gatekeeperemail.repositories.FileUploadMongoFormatter._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.Updates.set
-import play.api.libs.json.Format
 case class UploadInfo(uploadId : UploadId, reference : Reference, status : UploadStatus)
 import play.api.libs.json.Json
 
@@ -81,6 +81,6 @@ class FileUploadStatusRepository @Inject()(mongoComponent: MongoComponent)
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
       ).map(_.asInstanceOf[UploadInfo]).head()
   }
-  def requestUpload(uploadInfo : UploadInfo): Future[Unit] =
-    collection.insertOne(uploadInfo).toFuture().map(_ => UploadInfo)
+  def requestUpload(uploadInfo : UploadInfo): Future[UploadInfo] =
+    collection.insertOne(uploadInfo).toFuture().map(res => uploadInfo)
 }

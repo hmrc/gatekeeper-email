@@ -16,19 +16,21 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
+import org.mongodb.scala.result.InsertOneResult
 import uk.gov.hmrc.gatekeeperemail.models.{InProgress, Reference, UploadId, UploadStatus}
-import uk.gov.hmrc.gatekeeperemail.repository.{FileUploadStatusRepository, UploadInfo}
+import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 
+import java.util.UUID.randomUUID
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class FileUploadStatusService @Inject()(repository : FileUploadStatusRepository)(implicit ec : ExecutionContext) extends UploadProgressTracker {
 
-  override def requestUpload(uploadId : UploadId, fileReference : Reference): Future[Unit] =
-    repository.requestUpload(UploadInfo(uploadId, fileReference, InProgress)).map(_ => ())
+  override def requestUpload(fileReference : String): Future[UploadInfo] =
+    repository.requestUpload(UploadInfo(UploadId(randomUUID), Reference(fileReference), InProgress))
 
-  override def registerUploadResult(fileReference: Reference, uploadStatus: UploadStatus): Future[Unit] =
-    repository.updateStatus(fileReference, uploadStatus).map(_ => ())
+  override def registerUploadResult(fileReference: String, uploadStatus: UploadStatus): Future[UploadInfo] =
+    repository.updateStatus(Reference(fileReference), uploadStatus)
 
   override def getUploadResult(key: Reference): Future[Option[UploadInfo]] =
     for (result <- repository.findByUploadId(key)) yield {
