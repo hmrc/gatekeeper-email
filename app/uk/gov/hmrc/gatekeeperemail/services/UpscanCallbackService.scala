@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.controllers.{CallbackBody, FailedCallbackBody, ReadyCallbackBody}
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.objectstore.client.Path
+import uk.gov.hmrc.objectstore.client.{Path, RetentionPeriod}
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 
 import java.net.URL
@@ -28,15 +29,18 @@ import javax.inject.Inject
 import scala.concurrent.Future
 
 class UpscanCallbackService @Inject()(sessionStorage: FileUploadStatusRepository,
-                                      objectStoreClient: PlayObjectStoreClient
+                                      objectStoreClient: PlayObjectStoreClient,
+                                      appConfig: AppConfig
                                      ) {
 
   def handleCallback(callback : CallbackBody): Future[UploadInfo] = {
     implicit val hc = HeaderCarrier()
 
-    def uploadToObjectStore(s: ReadyCallbackBody) = {
-      objectStoreClient.uploadFromUrl(from = new URL(s.downloadUrl),
-        to = Path.File(Path.Directory("gatekeeper-email"), s.uploadDetails.fileName)
+    def uploadToObjectStore(readyCallback: ReadyCallbackBody) = {
+      objectStoreClient.uploadFromUrl(from = new URL(readyCallback.downloadUrl),
+        to = Path.File(Path.Directory("gatekeeper-email"), readyCallback.uploadDetails.fileName),
+        retentionPeriod = RetentionPeriod.parse(appConfig.defaultRetentionPeriod).getOrElse(RetentionPeriod.OneYear),
+        owner = "gatekeeper"
       )
     }
 
