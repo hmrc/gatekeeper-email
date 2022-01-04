@@ -2,7 +2,7 @@
 
 POST       /gatekeeper-email        uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.sendEmail
 
-POST       /gatekeeperemail/upscancallback        uk.gov.hmrc.gatekeeperemail.controllers.UploadCallbackController.callback
+POST       /gatekeeperemail/upscancallback        uk.gov.hmrc.gatekeeperemail.controllers.UploadCallbackController.callbxack
 
 POST /gatekeeperemail/insertfileuploadstatus  uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.addUploadedFileStatus(key)
 POST /gatekeeperemail/updatefileuploadstatus uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.updateUploadedFileStatus(key)

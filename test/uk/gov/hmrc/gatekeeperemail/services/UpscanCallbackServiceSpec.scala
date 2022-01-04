@@ -28,7 +28,6 @@ import uk.gov.hmrc.gatekeeperemail.models.{Failed, Reference, UploadId, Uploaded
 import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
-import java.net.URL
 import java.time.Instant
 import java.util.UUID.randomUUID
 import scala.concurrent.ExecutionContext.Implicits.global
