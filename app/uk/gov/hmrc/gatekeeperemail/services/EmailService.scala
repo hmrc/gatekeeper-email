@@ -35,7 +35,7 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
 
   val logger: Logger = Logger(getClass.getName)
 
-  def sendAndPersistEmail(emailRequest: EmailRequest): Future[BsonValue] = {
+  def sendAndPersistEmail(emailRequest: EmailRequest): Future[Email] = {
     val email: Email = emailData(emailRequest)
     logger.info(s"*******email data  before saving $email")
     val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
@@ -49,13 +49,14 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
       renderResult <- emailRendererConnector.getTemplatedEmail(sendEmailRequest)
       emailBody = getEmailBody(renderResult)
       _ <- emailConnector.sendEmail(sendEmailRequest)
-      persistedEmail <- emailRepository.persist(email.copy(htmlEmailBody = Some(emailBody._1), markdownEmailBody = emailBody._2))
-    } yield persistedEmail.getInsertedId
+      renderedEmail = email.copy(htmlEmailBody = emailBody._1, markdownEmailBody = emailBody._2)
+      _ <- emailRepository.persist(renderedEmail)
+    } yield renderedEmail
   }
 
   private def emailData(emailRequest: EmailRequest): Email = {
     val recepientsTitle = "TL API PLATFORM TEAM"
-    Email(recepientsTitle, emailRequest.to, None, emailRequest.emailData.emailBody, Some(emailRequest.emailData.emailBody),
+    Email(recepientsTitle, emailRequest.to, None, emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
       emailRequest.emailData.emailSubject, "composedBy",
       Some("approvedBy"), DateTime.now())
   }

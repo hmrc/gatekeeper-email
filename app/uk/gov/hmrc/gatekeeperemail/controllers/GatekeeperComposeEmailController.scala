@@ -17,8 +17,9 @@
 package uk.gov.hmrc.gatekeeperemail.controllers
 
 import play.api.libs.json.JsValue
+import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, MessagesControllerComponents, PlayBodyParsers, Result}
-import uk.gov.hmrc.gatekeeperemail.models.{EmailRequest, ErrorCode, JsErrorResponse}
+import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailRequest, ErrorCode, JsErrorResponse, OutgoingEmail}
 import uk.gov.hmrc.gatekeeperemail.services.EmailService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -37,9 +38,15 @@ class GatekeeperComposeEmailController @Inject()(
   def sendEmail: Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
     withJson[EmailRequest] { receiveEmailRequest =>
       emailService.sendAndPersistEmail(receiveEmailRequest)
-        .map(_ => Ok("Email sent successfully"))
+        .map(email => Ok(toJson(outgoingEmail(email))))
         .recover(recovery)
     }
+  }
+
+  private def outgoingEmail(email: Email): OutgoingEmail = {
+    OutgoingEmail(email.recepientTitle, email.recepients, email.attachmentLink,
+      email.markdownEmailBody, email.htmlEmailBody, email.subject,
+      email.composedBy, email.approvedBy)
   }
 
   private def recovery: PartialFunction[Throwable, Result] = {

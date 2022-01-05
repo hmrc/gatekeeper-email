@@ -17,6 +17,15 @@
 package uk.gov.hmrc.gatekeeperemail.models
 
 import org.joda.time.DateTime
+import play.api.libs.json.{Format, Json, OFormat}
 
 case class Email(recepientTitle: String, recepients: List[String], attachmentLink: Option[String], markdownEmailBody: String,
-                 htmlEmailBody: Option[String], subject: String, composedBy: String, approvedBy: Option[String], createDateTime: DateTime)
+                 htmlEmailBody: String, subject: String, composedBy: String, approvedBy: Option[String], createDateTime: DateTime)
+
+case class OutgoingEmail(recepientTitle: String, recepients: List[String], attachmentLink: Option[String],
+                          markdownEmailBody: String, htmlEmailBody: String, subject: String,
+                         composedBy: String, approvedBy: Option[String])
+
+object OutgoingEmail {
+  implicit val emailFmt: OFormat[OutgoingEmail] = Json.format[OutgoingEmail]
+}
