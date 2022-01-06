@@ -34,6 +34,11 @@ case class EmailRequest(to: List[String],
                         auditData: Map[String, String] = Map.empty,
                         eventUrl: Option[String] = None)
 
+case class EmailSaved(emailId: String)
+
+object EmailSaved {
+  implicit val emailSavedFmt: OFormat[EmailSaved] = Json.format[EmailSaved]
+}
 
 object SendEmailRequest {
   implicit val sendEmailRequestFmt: OFormat[SendEmailRequest] = Json.format[SendEmailRequest]

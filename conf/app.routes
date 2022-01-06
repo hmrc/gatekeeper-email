@@ -1,6 +1,7 @@
 # microservice specific routes
 
-POST       /gatekeeper-email        uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.sendEmail
+POST       /gatekeeper-email/save-email             uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.saveEmail
+POST       /gatekeeper-email/send-email/:emailId    uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.sendEmail(emailId: String)
 
 POST       /gatekeeperemail/upscancallback        uk.gov.hmrc.gatekeeperemail.controllers.UploadCallbackController.callback
 

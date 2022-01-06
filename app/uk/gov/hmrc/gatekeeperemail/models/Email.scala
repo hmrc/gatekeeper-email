@@ -17,13 +17,19 @@
 package uk.gov.hmrc.gatekeeperemail.models
 
 import org.joda.time.DateTime
-import play.api.libs.json.{Format, Json, OFormat}
+import play.api.libs.json.{Json, OFormat}
 
-case class Email(recepientTitle: String, recepients: List[String], attachmentLink: Option[String], markdownEmailBody: String,
+case class EmailTemplateData(templateId: String, parameters: Map[String, String],
+                             force: Boolean = false,
+                             auditData: Map[String, String] = Map.empty,
+                             eventUrl: Option[String] = None)
+
+case class Email(emailId: String, templateData: EmailTemplateData, recepientTitle: String, recepients: List[String],
+                 attachmentLink: Option[String], markdownEmailBody: String,
                  htmlEmailBody: String, subject: String, composedBy: String, approvedBy: Option[String], createDateTime: DateTime)
 
-case class OutgoingEmail(recepientTitle: String, recepients: List[String], attachmentLink: Option[String],
-                          markdownEmailBody: String, htmlEmailBody: String, subject: String,
+case class OutgoingEmail(emailId: String, recepientTitle: String, recepients: List[String], attachmentLink: Option[String],
+                         markdownEmailBody: String, htmlEmailBody: String, subject: String,
                          composedBy: String, approvedBy: Option[String])
 
 object OutgoingEmail {

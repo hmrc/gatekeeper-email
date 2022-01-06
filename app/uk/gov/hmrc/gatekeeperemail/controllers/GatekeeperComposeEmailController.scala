@@ -18,8 +18,8 @@ package uk.gov.hmrc.gatekeeperemail.controllers
 
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
-import play.api.mvc.{Action, MessagesControllerComponents, PlayBodyParsers, Result}
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailRequest, ErrorCode, JsErrorResponse, OutgoingEmail}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, PlayBodyParsers, Result}
+import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailRequest, EmailSaved, ErrorCode, JsErrorResponse, OutgoingEmail}
 import uk.gov.hmrc.gatekeeperemail.services.EmailService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -35,16 +35,24 @@ class GatekeeperComposeEmailController @Inject()(
   )(implicit val ec: ExecutionContext)
     extends BackendController(mcc) with WithJson {
 
-  def sendEmail: Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
+  def saveEmail: Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
     withJson[EmailRequest] { receiveEmailRequest =>
-      emailService.sendAndPersistEmail(receiveEmailRequest)
+      emailService.persistEmail(receiveEmailRequest)
         .map(email => Ok(toJson(outgoingEmail(email))))
         .recover(recovery)
     }
   }
 
+  def sendEmail(emailId: String): Action[AnyContent] = Action.async{ implicit request =>
+//    withJson[EmailSaved] { emailRequestToSend =>
+      emailService.sendEmail(EmailSaved(emailId))
+        .map(email => Ok(toJson(outgoingEmail(email))))
+        .recover(recovery)
+//    }
+  }
+
   private def outgoingEmail(email: Email): OutgoingEmail = {
-    OutgoingEmail(email.recepientTitle, email.recepients, email.attachmentLink,
+    OutgoingEmail(email.emailId, email.recepientTitle, email.recepients, email.attachmentLink,
       email.markdownEmailBody, email.htmlEmailBody, email.subject,
       email.composedBy, email.approvedBy)
   }
