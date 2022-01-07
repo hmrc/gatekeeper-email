@@ -31,7 +31,7 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoReposito
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-case class UploadInfo(uploadId : UploadId, reference : Reference, status : UploadStatus)
+case class UploadInfo(reference : Reference, status : UploadStatus)
 import play.api.libs.json.Json
 
 object UploadInfo {
@@ -48,9 +48,7 @@ class FileUploadStatusRepository @Inject()(mongoComponent: MongoComponent)
     collectionName = "gatekeeper-fileuploads",
     domainFormat = uploadInfo,
     indexes = Seq(IndexModel(ascending("reference"),
-      IndexOptions().name("referenceIndex").background(true).unique(true)),
-      IndexModel(ascending("uploadId"),
-        IndexOptions().name("uploadIdIndex").background(true).unique(true)))
+      IndexOptions().name("referenceIndex").background(true).unique(true)))
   ) {
 
   override lazy val collection: MongoCollection[UploadInfo] =
