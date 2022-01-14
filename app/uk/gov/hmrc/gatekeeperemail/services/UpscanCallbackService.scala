@@ -35,20 +35,20 @@ class UpscanCallbackService @Inject()(sessionStorage: FileUploadStatusRepository
                                      )(implicit val ec: ExecutionContext) {
 
   private val logger = Logger(this.getClass)
+  implicit val hc = HeaderCarrier()
+
+  def uploadToObjectStore(readyCallback: ReadyCallbackBody) = {
+    logger.info(s"***uploadToObjectStore** $readyCallback")
+    objectStoreClient.uploadFromUrl(from = new URL(readyCallback.downloadUrl),
+      to = Path.File(Path.Directory("gatekeeper-email"), readyCallback.uploadDetails.fileName),
+      retentionPeriod = RetentionPeriod.parse(appConfig.defaultRetentionPeriod).getOrElse(RetentionPeriod.OneYear),
+      contentType = None,
+      contentMd5 = None,
+      owner = "gatekeeper-email"
+    )
+  }
 
   def handleCallback(callback : CallbackBody): Future[UploadInfo] = {
-    implicit val hc = HeaderCarrier()
-
-    def uploadToObjectStore(readyCallback: ReadyCallbackBody) = {
-      logger.info(s"***uploadToObjectStore** $readyCallback")
-      objectStoreClient.uploadFromUrl(from = new URL(readyCallback.downloadUrl),
-        to = Path.File(Path.Directory("gatekeeper-email"), readyCallback.uploadDetails.fileName),
-        retentionPeriod = RetentionPeriod.parse(appConfig.defaultRetentionPeriod).getOrElse(RetentionPeriod.OneYear),
-        contentType = None,
-        contentMd5 = None,
-        owner = "gatekeeper-email"
-      )
-    }
 
     callback match {
       case s: ReadyCallbackBody =>

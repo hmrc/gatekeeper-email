@@ -17,6 +17,7 @@
 package uk.gov.hmrc.gatekeeperemail.services
 
 import akka.util.Timeout
+import org.mockito.ArgumentMatchers.{any, anyObject}
 import org.mockito.MockitoSugar.{mock, when}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterEach, Matchers}
@@ -29,11 +30,11 @@ import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.controllers.{CallbackBody, ErrorDetails, FailedCallbackBody, ReadyCallbackBody, UploadDetails}
 import uk.gov.hmrc.gatekeeperemail.models.{Failed, Reference, UploadId, UploadedFailedWithErrors, UploadedSuccessfully}
 import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, RequestChain}
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path, RetentionPeriod}
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
-
+import org.mockito.ArgumentMatchersSugar.*
 import java.net.URL
 import java.time.Instant
 import java.util.UUID.randomUUID
@@ -59,7 +60,7 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
       size = 45678L
     ))
   val uploadStatusSuccess = UploadedSuccessfully("test.pdf", "application/pdf",
-    "https://bucketName.s3.eu-west-2.amazonaws.com?1235676", Some(45678L), "http://aws.s3.object-store-url")
+    "https://bucketName.s3.eu-west-2.amazonaws.com?1235676", Some(45678L), "gatekeeper-email/test.pdf")
   val uploadInfoSuccess = UploadInfo(Reference(reference), uploadStatusSuccess)
   val uploadStatusSFailedWithErrors = UploadedFailedWithErrors("FAILED", "QUARANTINE", "This file has a virus", reference)
 
@@ -99,22 +100,19 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
     implicit val hc: HeaderCarrier = HeaderCarrier()
     when(mockAppConfig.defaultRetentionPeriod).thenReturn("1-year")
     val toLocation = Path.File(Path.Directory("gatekeeper-email"), readyCallbackBody.uploadDetails.fileName)
-    when(objectStoreClient.uploadFromUrl(from = new URL(readyCallbackBody.downloadUrl), to = toLocation,
-      retentionPeriod = RetentionPeriod.OneYear,
-      contentType = None,
-      contentMd5 = None,
-      owner = "gatekeeper-email"
-    )
+    val retention = mock[RetentionPeriod]
+    when(
+      t.uploadToObjectStore(readyCallbackBody)
     ).thenReturn(successful(ObjectSummaryWithMd5(toLocation, readyCallbackBody.uploadDetails.size,
       Md5Hash(readyCallbackBody.uploadDetails.checksum), readyCallbackBody.uploadDetails.uploadTimestamp)))
   }
   "UpscanCallbackService" should {
 
-//    "handle successful file upload callbackbody" in new Setup {
-//      await(f.requestUpload(reference))
-//      await(t.handleCallback(readyCallbackBody)).status shouldBe uploadInfoSuccess.status
-//      await(t.handleCallback(readyCallbackBody)).reference shouldBe uploadInfoSuccess.reference
-//    }
+    "handle successful file upload callbackbody" in new Setup {
+      await(f.requestUpload(reference))
+      await(t.handleCallback(readyCallbackBody)).status shouldBe uploadInfoSuccess.status
+      await(t.handleCallback(readyCallbackBody)).reference shouldBe uploadInfoSuccess.reference
+    }
 
     "handle failed file upload callbackbody" in new Setup {
       await(t.handleCallback(failedCallbackBody)).status shouldBe uploadInfoFailed.status
