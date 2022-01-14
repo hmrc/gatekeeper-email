@@ -26,7 +26,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.gatekeeperemail.models.Email
+import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailTemplateData}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 import org.joda.time.DateTimeZone.UTC
@@ -52,8 +52,8 @@ class EmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[E
   override protected def repository: PlayMongoRepository[Email] = app.injector.instanceOf[EmailRepository]
 
   "persist" should {
-
-    val email = Email("DL Team", List("test@digital.hmrc.gov.uk"), None, "markdownEmailBody", Some("This is test email"),
+    val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
+    val email = Email("emailId-123", templateData, "DL Team", List("test@digital.hmrc.gov.uk"), None, "markdownEmailBody", "This is test email",
       "test subject", "composedBy", Some("approvedBy"), DateTime.now(UTC))
 
     "insert an Email message when it does not exist" in {
