@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models.{EmailData, EmailRequest, RenderResult}
+import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailData, EmailRequest, EmailTemplateData, RenderResult}
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -57,17 +57,21 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
       when(emailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       val emailRequest = EmailRequest(List("test@digital.hmrc.gov.uk"), "gatekeeper",
         EmailData("Recipient Title", "Test subject", "Dear Mr XYZ, This is test email"), false, Map())
-      val insertedId: BsonValue = await(underTest.sendAndPersistEmail(emailRequest))
-      insertedId.asInt32.intValue() shouldBe 1
+      val email: Email = await(underTest.persistEmail(emailRequest))
+      email.subject shouldBe "Test subject"
+      email.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
+      email.templateData.templateId shouldBe "gatekeeper"
     }
 
     "save the email data into mongodb repo even when fails to send" in new Setup {
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(400))
       when(emailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       val emailRequest = EmailRequest(List("test@digital.hmrc.gov.uk"), "gatekeeper",
-        EmailData("Recipient Title", "Test subject", "Dear Mr XYZ, This is test email"), false, Map())
-      val insertedId: BsonValue = await(underTest.sendAndPersistEmail(emailRequest))
-      insertedId.asInt32.intValue() shouldBe 1
+        EmailData("Recipient Title", "Test subject2", "Dear Mr XYZ, This is test email"), false, Map())
+      val email: Email = await(underTest.persistEmail(emailRequest))
+      email.subject shouldBe "Test subject2"
+      email.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
+      email.templateData.templateId shouldBe "gatekeeper"
     }
   }
 }

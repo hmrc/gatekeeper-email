@@ -44,11 +44,9 @@ class GatekeeperComposeEmailController @Inject()(
   }
 
   def sendEmail(emailId: String): Action[AnyContent] = Action.async{ implicit request =>
-//    withJson[EmailSaved] { emailRequestToSend =>
-      emailService.sendEmail(EmailSaved(emailId))
-        .map(email => Ok(toJson(outgoingEmail(email))))
-        .recover(recovery)
-//    }
+    emailService.sendEmail(EmailSaved(emailId))
+      .map(email => Ok(toJson(outgoingEmail(email))))
+      .recover(recovery)
   }
 
   private def outgoingEmail(email: Email): OutgoingEmail = {

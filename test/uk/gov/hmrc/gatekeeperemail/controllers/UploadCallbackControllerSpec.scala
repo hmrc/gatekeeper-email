@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,7 +67,7 @@ class UploadCallbackControllerSpec extends AsyncHmrcSpec  with GuiceOneAppPerSui
       fileName = "test.pdf",
       size = 45678L
     ))
-  val uploadStatusSuccess = UploadedSuccessfully("test.pdf", "pdf", "https://bucketName.s3.eu-west-2.amazonaws.com?1235676", Some(45678L))
+  val uploadStatusSuccess = UploadedSuccessfully("test.pdf", "pdf", "https://bucketName.s3.eu-west-2.amazonaws.com?1235676", Some(45678L), "http://aws.s3.object-store-url")
   val uploadStatusSFailedWithErrors = UploadedFailedWithErrors("FAILED", "There is Virus", "1234567", reference)
 
   val failedCallbackBody =         FailedCallbackBody(
@@ -89,8 +89,8 @@ class UploadCallbackControllerSpec extends AsyncHmrcSpec  with GuiceOneAppPerSui
                                  |}
         """.stripMargin
 
-  val uploadInfoSuccess = UploadInfo(uploadId, Reference(reference), uploadStatusSuccess)
-  val uploadInfoFailed = UploadInfo(uploadId, Reference(reference), uploadStatusSFailedWithErrors)
+  val uploadInfoSuccess = UploadInfo(Reference(reference), uploadStatusSuccess)
+  val uploadInfoFailed = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors)
 
   implicit lazy val materializer: Materializer = mock[Materializer]
 

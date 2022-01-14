@@ -49,7 +49,6 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
     for {
       renderResult <- emailRendererConnector.getTemplatedEmail(sendEmailRequest)
       emailBody = getEmailBody(renderResult)
-//      _ <- emailConnector.sendEmail(sendEmailRequest)
       templatedData = EmailTemplateData(sendEmailRequest.templateId, sendEmailRequest.parameters, sendEmailRequest.force,
         sendEmailRequest.auditData, sendEmailRequest.eventUrl)
       renderedEmail = email.copy(templateData = templatedData, htmlEmailBody = emailBody._1, markdownEmailBody = emailBody._2)

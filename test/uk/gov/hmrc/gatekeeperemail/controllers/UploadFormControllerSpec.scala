@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,12 +42,15 @@ class UploadFormControllerSpec extends AsyncHmrcSpec  with GuiceOneAppPerSuite
 
   val uploadId = UploadId(randomUUID)
   val reference = randomUUID.toString
-  val uploadStatusSuccess = UploadedSuccessfully("abc.txt", "pdf", "http://abcs3", Some(1234))
-  val uploadSuccesfulBody = """{"name" : "abc.txt", "mimeType" : "pdf", "downloadUrl" : "http://abcs3", "size" : 1234, "_type" : "UploadedSuccessfully"}"""
+  val uploadStatusSuccess = UploadedSuccessfully("abc.txt", "pdf", "http://abcs3",
+    Some(1234), "http://aws.s3.object-store-url")
+  val uploadSuccesfulBody =
+    """{"name" : "abc.txt", "mimeType" : "pdf", "downloadUrl" : "http://abcs3",
+      |"size" : 1234, "_type" : "UploadedSuccessfully", "objectStoreUrl": "http://aws.s3.object-store-url"}""".stripMargin
   val failedBody = """{"_type" : "Failed"}"""
-  val uploadInfo1 = UploadInfo(uploadId, Reference(reference), uploadStatusSuccess)
-  val uploadInfoInProgress = UploadInfo(uploadId, Reference(reference), InProgress)
-  val uploadInfoInFailed = UploadInfo(uploadId, Reference(reference), Failed)
+  val uploadInfo1 = UploadInfo(Reference(reference), uploadStatusSuccess)
+  val uploadInfoInProgress = UploadInfo(Reference(reference), InProgress)
+  val uploadInfoInFailed = UploadInfo(Reference(reference), Failed)
 
   implicit lazy val materializer: Materializer = mock[Materializer]
 
@@ -110,12 +113,13 @@ class UploadFormControllerSpec extends AsyncHmrcSpec  with GuiceOneAppPerSuite
           |        "mimeType" : "pdf",
           |        "downloadUrl" : "http://abcs3",
           |        "size" : 1234,
-          |        "_type" : "UploadedSuccessfully"
+          |        "_type" : "UploadedSuccessfully",
+          |        "objectStoreUrl" : "http://aws.s3.object-store-url"
           |}
         """.stripMargin
 
       val result = Json.parse(body).as[UploadStatus]
-     result shouldBe UploadedSuccessfully("abc.txt", "pdf", "http://abcs3", Some(1234))
+     result shouldBe UploadedSuccessfully("abc.txt", "pdf", "http://abcs3", Some(1234), "http://aws.s3.object-store-url")
 
 
     }
