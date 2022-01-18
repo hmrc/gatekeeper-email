@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,15 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsNumber, JsValue}
 import play.api.mvc.{Action, MessagesControllerComponents, PlayBodyParsers, Result}
 import uk.gov.hmrc.gatekeeperemail.models.{EmailRequest, ErrorCode, JsErrorResponse}
 import uk.gov.hmrc.gatekeeperemail.services.EmailService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
 import java.io.IOException
+
 import javax.inject.{Inject, Singleton}
+
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -37,7 +38,7 @@ class GatekeeperComposeEmailController @Inject()(
   def sendEmail: Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
     withJson[EmailRequest] { receiveEmailRequest =>
       emailService.sendAndPersistEmail(receiveEmailRequest)
-        .map(_ => Ok("Email sent successfully"))
+        .map(_ => Ok(JsNumber(ACCEPTED)))
         .recover(recovery)
     }
   }

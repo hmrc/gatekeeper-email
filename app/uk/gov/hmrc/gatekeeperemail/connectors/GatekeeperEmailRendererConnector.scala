@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package uk.gov.hmrc.gatekeeperemail.connectors
 import org.apache.http.HttpStatus
 import play.api.Logging
 import play.api.http.HeaderNames.CONTENT_TYPE
-import uk.gov.hmrc.gatekeeperemail.config.{EmailConnectorConfig, EmailRendererConnectorConfig}
+import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.models.{RenderResult, SendEmailRequest, TemplateRenderRequest, TemplateRenderResult}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpClient, HttpErrorFunctions, NotFoundException, UpstreamErrorResponse}
