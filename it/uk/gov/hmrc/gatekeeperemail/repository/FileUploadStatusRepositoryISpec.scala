@@ -29,7 +29,6 @@ class FileUploadStatusRepositorySpec
   implicit var m : Materializer = Materializer(s)
   implicit val timeOut = Timeout(FiniteDuration(20, SECONDS))
 
-
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
 
@@ -47,7 +46,6 @@ class FileUploadStatusRepositorySpec
 
   "save" should {
     "create a file upload status and retrieve it from database" in {
-      val uploadId = UploadId(randomUUID)
       val fileReference = Reference(UUID.randomUUID().toString)
       val fileStatus = UploadInfo(fileReference, InProgress)
       await(repository.requestUpload(fileStatus))
@@ -110,7 +108,6 @@ class FileUploadStatusRepositorySpec
   }
 
   "update a fileStatus to InProgress" in {
-    val uploadId = UploadId(randomUUID)
     val fileReference = Reference(UUID.randomUUID().toString)
     val fileStatus = UploadInfo(fileReference, InProgress)
     await(repository.requestUpload(fileStatus))

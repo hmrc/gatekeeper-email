@@ -17,25 +17,22 @@
 package uk.gov.hmrc.gatekeeperemail.services
 
 import akka.util.Timeout
-import org.mockito.ArgumentMatchers.{any, anyObject}
 import org.mockito.MockitoSugar.{mock, when}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterEach, Matchers}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
-import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.await
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.controllers.{CallbackBody, ErrorDetails, FailedCallbackBody, ReadyCallbackBody, UploadDetails}
-import uk.gov.hmrc.gatekeeperemail.models.{Failed, Reference, UploadId, UploadedFailedWithErrors, UploadedSuccessfully}
+import uk.gov.hmrc.gatekeeperemail.controllers._
+import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
-import uk.gov.hmrc.http.{HeaderCarrier, RequestChain}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
-import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path, RetentionPeriod}
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
-import org.mockito.ArgumentMatchersSugar.*
-import java.net.URL
+import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
+
 import java.time.Instant
 import java.util.UUID.randomUUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -78,11 +75,9 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
 
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
-//      .overrides(bind[AppConfig].to(mockAppConfig))
       .configure(
         "metrics.jvm"     -> false,
         "metrics.enabled" -> false
-//        "object-store.default-retention-period" -> "1-year"
       )
 
   override implicit lazy val app: Application = appBuilder.build()
@@ -100,7 +95,6 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
     implicit val hc: HeaderCarrier = HeaderCarrier()
     when(mockAppConfig.defaultRetentionPeriod).thenReturn("1-year")
     val toLocation = Path.File(Path.Directory("gatekeeper-email"), readyCallbackBody.uploadDetails.fileName)
-    val retention = mock[RetentionPeriod]
     when(
       t.uploadToObjectStore(readyCallbackBody)
     ).thenReturn(successful(ObjectSummaryWithMd5(toLocation, readyCallbackBody.uploadDetails.size,
