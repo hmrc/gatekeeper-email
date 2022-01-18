@@ -13,4 +13,4 @@ object SilencerSettings {
     // Make sure you only exclude warnings for the project directories, i.e. make builds reproducible
     scalacOptions += s"-P:silencer:sourceRoots=${baseDirectory.value.getCanonicalPath}"
   )
-} 
+}
