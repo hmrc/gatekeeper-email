@@ -22,7 +22,7 @@ import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsObject, JsString}
-import uk.gov.hmrc.gatekeeperemail.models.Email
+import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailTemplateData}
 
 
 class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSugar with ArgumentMatchersSugar {
@@ -30,10 +30,11 @@ class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSuga
   "format" should {
     val formatter = EmailMongoFormatter.emailFormatter
     "correctly write a Email message" in {
-      val email = Email("DL Team", List("test@digital.hmrc.gov.uk"), None, "markdownEmailBody", Some("This is test email"),
+      val data: EmailTemplateData = EmailTemplateData("gatekeeper", Map(), false, Map(), None);
+      val email = Email("61e00e08ed2f2471ce3126db", data, "DL Team", List("test@digital.hmrc.gov.uk"), None, "markdownEmailBody", "This is test email",
         "test subject", "composedBy", Some("approvedBy"), DateTime.now(UTC))
       val msgJson: JsObject = formatter.writes(email)
-      msgJson.values.size shouldBe 8
+      msgJson.values.size shouldBe 10
       msgJson.value.get("recepientTitle") shouldBe Some(JsString("DL Team"))
     }
   }

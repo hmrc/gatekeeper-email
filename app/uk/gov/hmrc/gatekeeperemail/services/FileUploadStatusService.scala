@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class FileUploadStatusService @Inject()(repository : FileUploadStatusRepository)(implicit ec : ExecutionContext) extends UploadProgressTracker {
 
   override def requestUpload(fileReference : String): Future[UploadInfo] =
-    repository.requestUpload(UploadInfo(UploadId(randomUUID), Reference(fileReference), InProgress))
+    repository.requestUpload(UploadInfo(Reference(fileReference), InProgress))
 
   override def registerUploadResult(fileReference: String, uploadStatus: UploadStatus): Future[UploadInfo] =
     repository.updateStatus(Reference(fileReference), uploadStatus)

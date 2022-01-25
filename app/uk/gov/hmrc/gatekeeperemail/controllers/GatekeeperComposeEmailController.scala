@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
-import play.api.libs.json.{JsNumber, JsValue}
-import play.api.mvc.{Action, MessagesControllerComponents, PlayBodyParsers, Result}
-import uk.gov.hmrc.gatekeeperemail.models.{EmailRequest, ErrorCode, JsErrorResponse}
+import play.api.libs.json.JsValue
+import play.api.libs.json.Json.toJson
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, PlayBodyParsers, Result}
+import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailRequest, EmailSaved, ErrorCode, JsErrorResponse, OutgoingEmail}
 import uk.gov.hmrc.gatekeeperemail.services.EmailService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+
 import java.io.IOException
-
 import javax.inject.{Inject, Singleton}
-
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -35,12 +35,24 @@ class GatekeeperComposeEmailController @Inject()(
   )(implicit val ec: ExecutionContext)
     extends BackendController(mcc) with WithJson {
 
-  def sendEmail: Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
+  def saveEmail: Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
     withJson[EmailRequest] { receiveEmailRequest =>
-      emailService.sendAndPersistEmail(receiveEmailRequest)
-        .map(_ => Ok(JsNumber(ACCEPTED)))
+      emailService.persistEmail(receiveEmailRequest)
+        .map(email => Ok(toJson(outgoingEmail(email))))
         .recover(recovery)
     }
+  }
+
+  def sendEmail(emailId: String): Action[AnyContent] = Action.async{ implicit request =>
+    emailService.sendEmail(EmailSaved(emailId))
+      .map(email => Ok(toJson(outgoingEmail(email))))
+      .recover(recovery)
+  }
+
+  private def outgoingEmail(email: Email): OutgoingEmail = {
+    OutgoingEmail(email.emailId, email.recipientTitle, email.recepients, email.attachmentLink,
+      email.markdownEmailBody, email.htmlEmailBody, email.subject,
+      email.composedBy, email.approvedBy)
   }
 
   private def recovery: PartialFunction[Throwable, Result] = {

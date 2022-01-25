@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ class UploadInfoTest extends WordSpec with Matchers {
   "Serialization and deserialization of UploadDetails" should {
 
     "serialize and deserialize InProgress status" in {
-      val input = UploadInfo(UploadId(randomUUID), Reference("ABC"), InProgress)
+      val input = UploadInfo(Reference("ABC"), InProgress)
 
       val serialized = UploadInfo.format.writes(input)
       val output = UploadInfo.format.reads(serialized)
@@ -37,7 +37,7 @@ class UploadInfoTest extends WordSpec with Matchers {
     }
 
     "serialize and deserialize Failed status" in {
-      val input = UploadInfo( UploadId(randomUUID), Reference("ABC"), Failed)
+      val input = UploadInfo(Reference("ABC"), Failed)
 
       val serialized = UploadInfo.format.writes(input)
       val output = UploadInfo.format.reads(serialized)
@@ -47,9 +47,8 @@ class UploadInfoTest extends WordSpec with Matchers {
 
     "serialize and deserialize UploadedSuccessfully status when size is unknown" in {
       val input = UploadInfo(
-        UploadId(randomUUID),
         Reference("ABC"),
-        UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = None)
+        UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = None, "http://aws.s3.object-store-url")
       )
 
       val serialized = UploadInfo.format.writes(input)
@@ -60,9 +59,8 @@ class UploadInfoTest extends WordSpec with Matchers {
 
     "serialize and deserialize UploadedSuccessfully status when size is known" in {
       val input = UploadInfo(
-        UploadId(randomUUID),
         Reference("ABC"),
-        UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = Some(123456))
+        UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = Some(123456), "http://aws.s3.object-store-url")
       )
 
       val serialized = UploadInfo.format.writes(input)

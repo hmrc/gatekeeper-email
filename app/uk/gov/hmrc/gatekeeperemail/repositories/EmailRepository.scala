@@ -17,11 +17,14 @@
 package uk.gov.hmrc.gatekeeperemail.repositories
 
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
+import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.{MongoClient, MongoCollection}
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.mongodb.scala.result.InsertOneResult
-import uk.gov.hmrc.gatekeeperemail.models.Email
+import play.api.libs.json.{JsObject, Json}
+import play.api.mvc.Results.BadRequest
+import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailSaved}
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.emailFormatter
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
@@ -59,4 +62,16 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
       collection.insertOne(entity).toFuture()
     }
 
+    def getEmailData(savedEmail: EmailSaved): Future[Email] = {
+      for (emailData <- findByEmailId(savedEmail.emailId)) yield {
+        emailData match {
+          case Some(email) => email
+          case None         => throw new Exception(s"Email with id ${savedEmail.emailId} not found")
+        }
+      }
+    }
+
+  def findByEmailId(emailId: String)(implicit executionContext: ExecutionContext): Future[Option[Email]] = {
+    collection.find(equal("emailId", Codecs.toBson(emailId))).headOption()
   }
+}

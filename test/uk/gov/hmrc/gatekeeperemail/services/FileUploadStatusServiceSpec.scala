@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,11 +50,11 @@ class FileUploadStatusServiceSpec extends AnyWordSpec with PlayMongoRepositorySu
       val reference = randomUUID().toString
       val id = UploadId(randomUUID)
       val str = "61adf36cda0000130b757df9".getBytes()
-      val expectedStatus = UploadedSuccessfully("name","mimeType","downloadUrl",Some(123))
+      val expectedStatus = UploadedSuccessfully("name","mimeType","downloadUrl",Some(123), "http://aws.s3.object-store-url")
 
       implicit val timeout = Timeout(FiniteDuration(20, SECONDS))
       await(t.requestUpload(reference))
-      await(t.registerUploadResult(reference, UploadedSuccessfully("name","mimeType","downloadUrl",Some(123))))
+      await(t.registerUploadResult(reference, UploadedSuccessfully("name","mimeType","downloadUrl",Some(123), "http://aws.s3.object-store-url")))
       await(t.getUploadResult(Reference(reference))).get.status shouldBe expectedStatus
     }
 

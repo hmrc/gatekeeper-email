@@ -29,7 +29,6 @@ class FileUploadStatusRepositorySpec
   implicit var m : Materializer = Materializer(s)
   implicit val timeOut = Timeout(FiniteDuration(20, SECONDS))
 
-
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
 
@@ -47,9 +46,8 @@ class FileUploadStatusRepositorySpec
 
   "save" should {
     "create a file upload status and retrieve it from database" in {
-      val uploadId = UploadId(randomUUID)
       val fileReference = Reference(UUID.randomUUID().toString)
-      val fileStatus = UploadInfo(uploadId, fileReference, InProgress)
+      val fileStatus = UploadInfo(fileReference, InProgress)
       await(repository.requestUpload(fileStatus))
 
       val retrieved  = await(repository.findByUploadId(fileReference)).get
@@ -60,27 +58,24 @@ class FileUploadStatusRepositorySpec
   }
 
   "update a fileStatus to success" in {
-    val uploadId = UploadId(randomUUID)
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus = UploadInfo(uploadId, fileReference, InProgress)
+    val fileStatus = UploadInfo(fileReference, InProgress)
     await(repository.requestUpload(fileStatus))
 
     val retrieved  = await(repository.findByUploadId(fileReference)).get
 
     retrieved shouldBe fileStatus
 
-    val updated = fileStatus.copy(status = UploadedSuccessfully("abc.jpeg", "jpeg", "http://s3/abc.jpeg", Some(234)))
-
-    val newRetrieved = await(repository.updateStatus(reference = fileReference, UploadedSuccessfully("abc.jpeg", "jpeg", "http://s3/abc.jpeg", Some(234))))
+    val updated = fileStatus.copy(status = UploadedSuccessfully("abc.jpeg", "jpeg", "http://s3/abc.jpeg", Some(234), "http://aws.object-url"))
+    await(repository.updateStatus(reference = fileReference, UploadedSuccessfully("abc.jpeg", "jpeg", "http://s3/abc.jpeg", Some(234), "http://aws.object-url")))
 
     val fetch = await(repository.findByUploadId(fileReference).map(_.get))
     fetch shouldBe updated
   }
 
   "update a fileStatus to failedwithErrors" in {
-    val uploadId = UploadId(randomUUID)
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus = UploadInfo(uploadId, fileReference, InProgress)
+    val fileStatus = UploadInfo(fileReference, InProgress)
     await(repository.requestUpload(fileStatus))
 
     val retrieved  = await(repository.findByUploadId(fileReference)).get
@@ -96,9 +91,8 @@ class FileUploadStatusRepositorySpec
   }
 
   "update a fileStatus to failed" in {
-    val uploadId = UploadId(randomUUID)
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus = UploadInfo(uploadId, fileReference, InProgress)
+    val fileStatus = UploadInfo(fileReference, InProgress)
     await(repository.requestUpload(fileStatus))
 
     val retrieved  = await(repository.findByUploadId(fileReference)).get
@@ -114,9 +108,8 @@ class FileUploadStatusRepositorySpec
   }
 
   "update a fileStatus to InProgress" in {
-    val uploadId = UploadId(randomUUID)
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus = UploadInfo(uploadId, fileReference, InProgress)
+    val fileStatus = UploadInfo(fileReference, InProgress)
     await(repository.requestUpload(fileStatus))
 
     val retrieved  = await(repository.findByUploadId(fileReference)).get
