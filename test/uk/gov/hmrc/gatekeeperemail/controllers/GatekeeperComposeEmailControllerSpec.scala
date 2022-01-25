@@ -100,11 +100,11 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
     val dummyEmailData = Email("", EmailTemplateData("", Map(), false, Map(), None), "", List(),
       None, "", "", "", "", None, DateTime.now)
     when(mockEmailRepository.getEmailData(EmailSaved(emailId))).thenReturn(Future(dummyEmailData))
-
   }
+
   "POST /gatekeeper-email/send-email" should {
     "return 200" in new Setup {
-      when(mockEmailConnector.sendEmail(*)).thenReturn(successful(200))
+      when(mockEmailConnector.sendEmail(*)).thenReturn(successful(Status.OK))
       when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       val result = controller.sendEmail(emailId)(fakeRequest)
       status(result) shouldBe Status.OK

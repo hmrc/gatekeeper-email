@@ -72,7 +72,8 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
     val emailTemplateData = EmailTemplateData(emailRequest.templateId, Map(), emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
-    Email(UUID.randomUUID().toString, emailTemplateData, recepientsTitle, emailRequest.to, None, emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
+    Email(UUID.randomUUID().toString, emailTemplateData, recepientsTitle, emailRequest.to, None,
+      emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
       emailRequest.emailData.emailSubject, "composedBy",
       Some("approvedBy"), DateTime.now())
   }
