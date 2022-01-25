@@ -35,7 +35,7 @@ class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSuga
         "test subject", "composedBy", Some("approvedBy"), DateTime.now(UTC))
       val msgJson: JsObject = formatter.writes(email)
       msgJson.values.size shouldBe 10
-      msgJson.value.get("recepientTitle") shouldBe Some(JsString("DL Team"))
+      msgJson.value.get("recipientTitle") shouldBe Some(JsString("DL Team"))
     }
   }
 }
