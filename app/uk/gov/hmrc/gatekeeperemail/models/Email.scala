@@ -17,7 +17,8 @@
 package uk.gov.hmrc.gatekeeperemail.models
 
 import org.joda.time.DateTime
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 
 case class EmailTemplateData(templateId: String, parameters: Map[String, String],
                              force: Boolean = false,
@@ -33,5 +34,10 @@ case class OutgoingEmail(emailId: String, recepientTitle: String, recepients: Li
                          composedBy: String, approvedBy: Option[String])
 
 object OutgoingEmail {
-  implicit val emailFmt: OFormat[OutgoingEmail] = Json.format[OutgoingEmail]
+  implicit val outGoingemailFmt: OFormat[OutgoingEmail] = Json.format[OutgoingEmail]
 }
+
+object Email {
+  implicit val dateFormation  : Format[DateTime] = MongoJodaFormats.dateTimeFormat
+  implicit val emailTemplateDataFormatter: OFormat[EmailTemplateData] = Json.format[EmailTemplateData]
+  implicit val emailFormatter: OFormat[Email] = Json.format[Email]}

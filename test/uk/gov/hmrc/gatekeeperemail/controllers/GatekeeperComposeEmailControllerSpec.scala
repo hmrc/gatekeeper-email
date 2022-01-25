@@ -21,6 +21,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor
 import com.github.tomakehurst.wiremock.http.Fault
 import com.mongodb.client.result.InsertOneResult
 import org.joda.time.DateTime
+import org.joda.time.DateTimeZone.UTC
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.mongodb.scala.bson.BsonNumber
 import org.scalatest.matchers.should.Matchers
@@ -58,9 +59,15 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
   val subject = "Email subject"
   val emailBody = "Body to be used in the email template"
   val emailServicePath = "/gatekeeper/email"
+  val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
+  val email = Email("emailId-123", templateData, "DL Team", List("test@digital.hmrc.gov.uk"), None, "markdownEmailBody", "This is test email",
+    "test subject", "composedBy", Some("approvedBy"), DateTime.now(UTC))
 
   val emailRequest = EmailRequest(List(emailId), "gatekeeper", EmailData(emailId, subject, emailBody))
+  val wrongEmailRequest = EmailRequest(List(emailId), "gatekeeper", EmailData(emailId, subject, emailBody))
   private val fakeRequest = FakeRequest("POST", "/gatekeeper-email").withBody(Json.toJson(emailRequest))
+  private val fakeSaveEmailRequest = FakeRequest("POST", "/gatekeeper-email/save-email").withBody(Json.toJson(emailRequest))
+  private val fakeWrongSaveEmailRequest = FakeRequest("POST", "/gatekeeper-email/save-email").withBody(Json.toJson(emailBody))
   lazy implicit val mat: Materializer = app.materializer
   private val playBodyParsers: PlayBodyParsers = app.injector.instanceOf[PlayBodyParsers]
   val mockEmailConnector: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
@@ -79,8 +86,11 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val emailService = new EmailService(mockEmailConnector, emailRendererConnectorMock, mockEmailRepository)
+    val mockEmailService = mock[EmailService]
     val controller = new GatekeeperComposeEmailController(Helpers.stubMessagesControllerComponents(),
       playBodyParsers, emailService)
+    val controller2 = new GatekeeperComposeEmailController(Helpers.stubMessagesControllerComponents(),
+      playBodyParsers, mockEmailService)
 
     when(emailRendererConnectorMock.getTemplatedEmail(*))
       .thenReturn(successful(Right(RenderResult("RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
@@ -92,7 +102,7 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
     when(mockEmailRepository.getEmailData(EmailSaved(emailId))).thenReturn(Future(dummyEmailData))
 
   }
-  "POST /gatekeeper-email" should {
+  "POST /gatekeeper-email/send-email" should {
     "return 200" in new Setup {
       when(mockEmailConnector.sendEmail(*)).thenReturn(successful(200))
       when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
@@ -105,6 +115,26 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
       when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       val result = controller.sendEmail(emailId)(fakeRequest)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+    }
+  }
+
+  "POST /gatekeeper-email/save-email" should {
+    "return 200" in new Setup {
+      when(mockEmailService.persistEmail(emailRequest)).thenReturn(successful(email))
+      val result = controller2.saveEmail()(fakeSaveEmailRequest)
+      status(result) shouldBe Status.OK
+    }
+
+    "return 500" in new Setup {
+      when(mockEmailService.persistEmail(emailRequest)).thenReturn(failed(new IOException("can not connect to email service")))
+      val result = controller2.saveEmail()(fakeSaveEmailRequest)
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+    }
+
+    "return 400" in new Setup {
+      when(mockEmailService.persistEmail(emailRequest)).thenReturn(successful(email))
+      val result = controller2.saveEmail()(fakeWrongSaveEmailRequest)
+      status(result) shouldBe Status.BAD_REQUEST
     }
   }
 }
