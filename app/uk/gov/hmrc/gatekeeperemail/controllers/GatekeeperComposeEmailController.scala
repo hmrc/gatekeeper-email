@@ -50,7 +50,7 @@ class GatekeeperComposeEmailController @Inject()(
   }
 
   private def outgoingEmail(email: Email): OutgoingEmail = {
-    OutgoingEmail(email.emailId, email.recipientTitle, email.recepients, email.attachmentLink,
+    OutgoingEmail(email.emailId, email.recipientTitle, email.recipients, email.attachmentLink,
       email.markdownEmailBody, email.htmlEmailBody, email.subject,
       email.composedBy, email.approvedBy)
   }

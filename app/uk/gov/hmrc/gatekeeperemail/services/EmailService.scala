@@ -59,7 +59,7 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
   def sendEmail(emailSaved: EmailSaved): Future[Email] = {
     for {
       email <- emailRepository.getEmailData(emailSaved)
-      emailRequestedData = SendEmailRequest(email.recepients, email.templateData.templateId, email.templateData.parameters,
+      emailRequestedData = SendEmailRequest(email.recipients, email.templateData.templateId, email.templateData.parameters,
         email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
       _ <- emailConnector.sendEmail(emailRequestedData)
     } yield email
@@ -67,12 +67,12 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
   }
 
   private def emailData(emailRequest: EmailRequest): Email = {
-    val recepientsTitle = "TL API PLATFORM TEAM"
+    val recipientsTitle = "TL API PLATFORM TEAM"
 
     val emailTemplateData = EmailTemplateData(emailRequest.templateId, Map(), emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
-    Email(UUID.randomUUID().toString, emailTemplateData, recepientsTitle, emailRequest.to, None,
+    Email(UUID.randomUUID().toString, emailTemplateData, recipientsTitle, emailRequest.to, None,
       emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
       emailRequest.emailData.emailSubject, "composedBy",
       Some("approvedBy"), DateTime.now())
