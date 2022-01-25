@@ -19,7 +19,7 @@ package uk.gov.hmrc.gatekeeperemail.connectors
 import play.api.Logging
 import play.api.http.HeaderNames.CONTENT_TYPE
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.{EmailRequest, SendEmailRequest}
+import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpErrorFunctions, HttpResponse}
 import uk.gov.hmrc.play.http.metrics.common.API
