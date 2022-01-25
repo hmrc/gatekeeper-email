@@ -37,13 +37,13 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
   def sendEmail(emailRequest: SendEmailRequest): Future[Int] = {
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(CONTENT_TYPE -> "application/json")
 
-    logger.info(s"*****receiveEmailRequest.to*********:${emailRequest.to}")
+    logger.info(s"receiveEmailRequest.to :${emailRequest.to}")
 
     postHttpRequest(emailRequest)
   }
 
   private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Int] = {
-    logger.info(s"*******sendEmailRequest:$request")
+    logger.info(s"sendEmailRequest:$request")
     http.POST[SendEmailRequest, HttpResponse](s"$serviceUrl/developer/email", request) map { response =>
       logger.info("Requested email service to send email")
       response.status

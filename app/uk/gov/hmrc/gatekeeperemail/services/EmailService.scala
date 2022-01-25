@@ -38,7 +38,7 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
 
   def persistEmail(emailRequest: EmailRequest): Future[Email] = {
     val email: Email = emailData(emailRequest)
-    logger.info(s"*******email data  before saving $email")
+    logger.info(s"email data  before saving $email")
     val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
       "fromAddress" -> "gateKeeper",
       "body" -> s"${emailRequest.emailData.emailBody}",
