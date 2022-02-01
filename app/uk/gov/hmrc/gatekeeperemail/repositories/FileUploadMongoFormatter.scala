@@ -16,13 +16,16 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
+import org.joda.time.DateTime
 import play.api.libs.json._
 import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 
 object FileUploadMongoFormatter {
   implicit val bsonFormat: OFormat[UploadId] = Json.format[UploadId]
 
   implicit val referenceFormat: OFormat[Reference] = Json.format[Reference]
+  implicit val dateFormation  : Format[DateTime] = MongoJodaFormats.dateTimeFormat
 
   implicit val initiateReads: Reads[InProgress.type] =
     Json.reads[InProgress.type]
@@ -76,6 +79,7 @@ object FileUploadMongoFormatter {
       }
     }
   }
+
   implicit val uploadStatusFormat: Format[UploadStatus] = Format(read, write)
   val uploadInfoReads = Json.reads[UploadInfo]
   val uploadInfoWrites = Json.writes[UploadInfo]

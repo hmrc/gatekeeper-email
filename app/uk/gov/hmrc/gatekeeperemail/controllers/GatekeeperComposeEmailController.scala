@@ -35,9 +35,9 @@ class GatekeeperComposeEmailController @Inject()(
   )(implicit val ec: ExecutionContext)
     extends BackendController(mcc) with WithJson {
 
-  def saveEmail: Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
+  def saveEmail(key: String): Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
     withJson[EmailRequest] { receiveEmailRequest =>
-      emailService.persistEmail(receiveEmailRequest)
+      emailService.persistEmail(receiveEmailRequest, key)
         .map(email => Ok(toJson(outgoingEmail(email))))
         .recover(recovery)
     }
