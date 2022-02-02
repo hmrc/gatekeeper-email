@@ -36,8 +36,8 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
 
   val logger: Logger = Logger(getClass.getName)
 
-  def persistEmail(emailRequest: EmailRequest): Future[Email] = {
-    val email: Email = emailData(emailRequest)
+  def persistEmail(emailRequest: EmailRequest, key: String): Future[Email] = {
+    val email: Email = emailData(emailRequest, key)
     logger.info(s"email data  before saving $email")
     val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
       "fromAddress" -> "gateKeeper",
@@ -63,16 +63,15 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
         email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
       _ <- emailConnector.sendEmail(emailRequestedData)
     } yield email
-
   }
 
-  private def emailData(emailRequest: EmailRequest): Email = {
+  private def emailData(emailRequest: EmailRequest, key: String): Email = {
     val recipientsTitle = "TL API PLATFORM TEAM"
 
     val emailTemplateData = EmailTemplateData(emailRequest.templateId, Map(), emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
-    Email(UUID.randomUUID().toString, emailTemplateData, recipientsTitle, emailRequest.to, None,
+    Email(UUID.randomUUID().toString, Some(List(key)), emailTemplateData, recipientsTitle, emailRequest.to, None,
       emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
       emailRequest.emailData.emailSubject, "composedBy",
       Some("approvedBy"), DateTime.now())

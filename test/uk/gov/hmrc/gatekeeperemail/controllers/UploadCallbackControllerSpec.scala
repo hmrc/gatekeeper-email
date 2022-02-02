@@ -27,6 +27,7 @@ import play.api.libs.json.{JsDefined, JsString, Json}
 import play.api.mvc.ControllerComponents
 import play.api.test.{FakeRequest, StubControllerComponentsFactory, StubPlayBodyParsersFactory}
 import common.AsyncHmrcSpec
+import org.joda.time.DateTime
 import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
 import uk.gov.hmrc.gatekeeperemail.models.{Failed, InProgress, Reference, UploadId, UploadStatus, UploadedFailedWithErrors, UploadedSuccessfully}
 import uk.gov.hmrc.gatekeeperemail.services.{FileUploadStatusService, UploadProgressTracker, UpscanCallbackService}
@@ -89,8 +90,8 @@ class UploadCallbackControllerSpec extends AsyncHmrcSpec  with GuiceOneAppPerSui
                                  |}
         """.stripMargin
 
-  val uploadInfoSuccess = UploadInfo(Reference(reference), uploadStatusSuccess)
-  val uploadInfoFailed = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors)
+  val uploadInfoSuccess = UploadInfo(Reference(reference), uploadStatusSuccess, DateTime.now())
+  val uploadInfoFailed = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors, DateTime.now())
 
   implicit lazy val materializer: Materializer = mock[Materializer]
 

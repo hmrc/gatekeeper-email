@@ -25,6 +25,7 @@ import play.api.libs.json.{JsDefined, JsError, JsResultException, JsString, Json
 import play.api.mvc.ControllerComponents
 import play.api.test.{FakeRequest, StubControllerComponentsFactory, StubPlayBodyParsersFactory}
 import common.AsyncHmrcSpec
+import org.joda.time.DateTime
 import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
 import uk.gov.hmrc.gatekeeperemail.models.{Failed, InProgress, Reference, UploadId, UploadStatus, UploadedFailedWithErrors, UploadedSuccessfully}
 import uk.gov.hmrc.gatekeeperemail.services.{FileUploadStatusService, UploadProgressTracker}
@@ -48,9 +49,9 @@ class UploadFormControllerSpec extends AsyncHmrcSpec  with GuiceOneAppPerSuite
     """{"name" : "abc.txt", "mimeType" : "pdf", "downloadUrl" : "http://abcs3",
       |"size" : 1234, "_type" : "UploadedSuccessfully", "objectStoreUrl": "http://aws.s3.object-store-url"}""".stripMargin
   val failedBody = """{"_type" : "Failed"}"""
-  val uploadInfo1 = UploadInfo(Reference(reference), uploadStatusSuccess)
-  val uploadInfoInProgress = UploadInfo(Reference(reference), InProgress)
-  val uploadInfoInFailed = UploadInfo(Reference(reference), Failed)
+  val uploadInfo1 = UploadInfo(Reference(reference), uploadStatusSuccess, DateTime.now())
+  val uploadInfoInProgress = UploadInfo(Reference(reference), InProgress, DateTime.now())
+  val uploadInfoInFailed = UploadInfo(Reference(reference), Failed, DateTime.now())
 
   implicit lazy val materializer: Materializer = mock[Materializer]
 

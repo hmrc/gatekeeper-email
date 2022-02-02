@@ -53,7 +53,7 @@ class EmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[E
 
   "persist" should {
     val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
-    val email = Email("emailId-123", templateData, "DL Team", List("test@digital.hmrc.gov.uk"), None, "markdownEmailBody", "This is test email",
+    val email = Email("emailId-123", None, templateData, "DL Team", List("test@digital.hmrc.gov.uk"), None, "markdownEmailBody", "This is test email",
       "test subject", "composedBy", Some("approvedBy"), DateTime.now(UTC))
 
     "insert an Email message when it does not exist" in {

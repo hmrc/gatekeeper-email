@@ -17,6 +17,7 @@
 package uk.gov.hmrc.gatekeeperemail.services
 
 import akka.util.Timeout
+import org.joda.time.DateTime
 import org.mockito.MockitoSugar.{mock, when}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterEach, Matchers}
@@ -58,7 +59,7 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
     ))
   val uploadStatusSuccess = UploadedSuccessfully("test.pdf", "application/pdf",
     "https://bucketName.s3.eu-west-2.amazonaws.com?1235676", Some(45678L), "gatekeeper-email/test.pdf")
-  val uploadInfoSuccess = UploadInfo(Reference(reference), uploadStatusSuccess)
+  val uploadInfoSuccess = UploadInfo(Reference(reference), uploadStatusSuccess, DateTime.now())
   val uploadStatusSFailedWithErrors = UploadedFailedWithErrors("FAILED", "QUARANTINE", "This file has a virus", reference)
 
   val failedCallbackBody = FailedCallbackBody(
@@ -70,7 +71,7 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
     )
   )
   val dummyCallBackBody = DummyCallBackBody(reference)
-  val uploadInfoFailed = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors)
+  val uploadInfoFailed = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors, DateTime.now())
   implicit val timeout = Timeout(FiniteDuration(20, SECONDS))
 
   protected def appBuilder: GuiceApplicationBuilder =

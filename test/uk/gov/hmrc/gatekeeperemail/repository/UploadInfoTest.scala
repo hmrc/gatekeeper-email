@@ -16,57 +16,76 @@
 
 package uk.gov.hmrc.gatekeeperemail.repository
 
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.gatekeeperemail.models.Reference
 import uk.gov.hmrc.gatekeeperemail.models.{Failed, InProgress, UploadId, UploadedSuccessfully}
 import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
-
-import java.util.UUID.randomUUID
 
 class UploadInfoTest extends WordSpec with Matchers {
 
   "Serialization and deserialization of UploadDetails" should {
 
     "serialize and deserialize InProgress status" in {
-      val input = UploadInfo(Reference("ABC"), InProgress)
+
+      val dateTime: DateTime = DateTime.parse("02/02/2022 20:27:05",
+        DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss"));
+      val input = UploadInfo(Reference("ABC"), InProgress, dateTime)
 
       val serialized = UploadInfo.format.writes(input)
       val output = UploadInfo.format.reads(serialized)
 
-      output.get shouldBe input
+      output.get.createDateTime.getMillis should equal (input.createDateTime.getMillis)
+      output.get.status should equal (input.status)
+      output.get.reference should equal (input.reference)
     }
 
     "serialize and deserialize Failed status" in {
-      val input = UploadInfo(Reference("ABC"), Failed)
+      val dateTime: DateTime = DateTime.parse("02/02/2022 20:27:05",
+        DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss"));
+      val input = UploadInfo(Reference("ABC"), InProgress, dateTime)
 
       val serialized = UploadInfo.format.writes(input)
       val output = UploadInfo.format.reads(serialized)
-
-      output.get shouldBe input
+      output.get.createDateTime.getMillis should equal (input.createDateTime.getMillis)
+      output.get.status should equal (input.status)
+      output.get.reference should equal (input.reference)
     }
 
     "serialize and deserialize UploadedSuccessfully status when size is unknown" in {
+      val dateTime: DateTime = DateTime.parse("02/02/2022 20:27:05",
+        DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss"));
       val input = UploadInfo(
         Reference("ABC"),
-        UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = None, "http://aws.s3.object-store-url")
+        UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = None, "http://aws.s3.object-store-url"),
+        dateTime
       )
 
       val serialized = UploadInfo.format.writes(input)
       val output = UploadInfo.format.reads(serialized)
 
-      output.get shouldBe input
+      output.get.createDateTime.getMillis should equal (input.createDateTime.getMillis)
+      output.get.status should equal (input.status)
+      output.get.reference should equal (input.reference)
     }
 
     "serialize and deserialize UploadedSuccessfully status when size is known" in {
+      val dateTime: DateTime = DateTime.parse("02/02/2022 20:27:05",
+        DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss"));
+
       val input = UploadInfo(
         Reference("ABC"),
-        UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = Some(123456), "http://aws.s3.object-store-url")
+        UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = Some(123456), "http://aws.s3.object-store-url"),
+        dateTime
       )
 
       val serialized = UploadInfo.format.writes(input)
       val output = UploadInfo.format.reads(serialized)
 
-      output.get shouldBe input
+      output.get.createDateTime.getMillis should equal (input.createDateTime.getMillis)
+      output.get.status should equal (input.status)
+      output.get.reference should equal (input.reference)
     }
   }
 }
