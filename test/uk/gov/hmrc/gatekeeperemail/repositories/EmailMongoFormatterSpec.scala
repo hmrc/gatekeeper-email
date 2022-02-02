@@ -31,7 +31,7 @@ class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSuga
     val formatter = EmailMongoFormatter.emailFormatter
     "correctly write a Email message" in {
       val data: EmailTemplateData = EmailTemplateData("gatekeeper", Map(), false, Map(), None);
-      val email = Email("61e00e08ed2f2471ce3126db", "keyRef", data, "DL Team",
+      val email = Email("61e00e08ed2f2471ce3126db", Some(List("keyRef")), data, "DL Team",
         List("test@digital.hmrc.gov.uk"), None, "markdownEmailBody", "This is test email",
         "test subject", "composedBy", Some("approvedBy"), DateTime.now(UTC))
       val msgJson: JsObject = formatter.writes(email)

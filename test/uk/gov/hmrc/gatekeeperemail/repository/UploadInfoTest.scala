@@ -23,8 +23,6 @@ import uk.gov.hmrc.gatekeeperemail.models.Reference
 import uk.gov.hmrc.gatekeeperemail.models.{Failed, InProgress, UploadId, UploadedSuccessfully}
 import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 
-import java.util.UUID.randomUUID
-
 class UploadInfoTest extends WordSpec with Matchers {
 
   "Serialization and deserialization of UploadDetails" should {
@@ -38,21 +36,26 @@ class UploadInfoTest extends WordSpec with Matchers {
       val serialized = UploadInfo.format.writes(input)
       val output = UploadInfo.format.reads(serialized)
 
-      output.get should equal (input)
+      output.get.createDateTime.getMillis should equal (input.createDateTime.getMillis)
+      output.get.status should equal (input.status)
+      output.get.reference should equal (input.reference)
     }
 
     "serialize and deserialize Failed status" in {
-      val dateTime: DateTime = DateTime.parse("2021-09-12T00:00:00.000+01:00")
-      val input = UploadInfo(Reference("ABC"), Failed, dateTime)
+      val dateTime: DateTime = DateTime.parse("02/02/2022 20:27:05",
+        DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss"));
+      val input = UploadInfo(Reference("ABC"), InProgress, dateTime)
 
       val serialized = UploadInfo.format.writes(input)
       val output = UploadInfo.format.reads(serialized)
-
-      output.get shouldBe input
+      output.get.createDateTime.getMillis should equal (input.createDateTime.getMillis)
+      output.get.status should equal (input.status)
+      output.get.reference should equal (input.reference)
     }
 
     "serialize and deserialize UploadedSuccessfully status when size is unknown" in {
-      val dateTime: DateTime = DateTime.parse("2021-09-12T00:00:00.000+01:00")
+      val dateTime: DateTime = DateTime.parse("02/02/2022 20:27:05",
+        DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss"));
       val input = UploadInfo(
         Reference("ABC"),
         UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = None, "http://aws.s3.object-store-url"),
@@ -62,11 +65,14 @@ class UploadInfoTest extends WordSpec with Matchers {
       val serialized = UploadInfo.format.writes(input)
       val output = UploadInfo.format.reads(serialized)
 
-      output.get shouldBe input
+      output.get.createDateTime.getMillis should equal (input.createDateTime.getMillis)
+      output.get.status should equal (input.status)
+      output.get.reference should equal (input.reference)
     }
 
     "serialize and deserialize UploadedSuccessfully status when size is known" in {
-      val dateTime: DateTime = DateTime.parse("2021-09-12T00:00:00.000+01:00")
+      val dateTime: DateTime = DateTime.parse("02/02/2022 20:27:05",
+        DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss"));
 
       val input = UploadInfo(
         Reference("ABC"),
@@ -77,7 +83,9 @@ class UploadInfoTest extends WordSpec with Matchers {
       val serialized = UploadInfo.format.writes(input)
       val output = UploadInfo.format.reads(serialized)
 
-      output.get shouldBe input
+      output.get.createDateTime.getMillis should equal (input.createDateTime.getMillis)
+      output.get.status should equal (input.status)
+      output.get.reference should equal (input.reference)
     }
   }
 }

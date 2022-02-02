@@ -75,7 +75,7 @@ class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEac
           "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
       val emailRequest = EmailRequest(List("test@digital.hmrc.gov.uk"), "gatekeeper",
         EmailData("Recipient Title", "Test subject", "Dear Mr XYZ, This is test email"), false, Map())
-      val email: Email = await(underTest.persistEmail(emailRequest))
+      val email: Email = await(underTest.persistEmail(emailRequest, "keyRef"))
       email.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
       val fetchedRecords = await(emailRepository.collection.withReadPreference(primaryPreferred).find().toFuture())
 

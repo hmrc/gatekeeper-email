@@ -25,7 +25,7 @@ case class EmailTemplateData(templateId: String, parameters: Map[String, String]
                              auditData: Map[String, String] = Map.empty,
                              eventUrl: Option[String] = None)
 
-case class Email(emailId: String, keyReference: String, templateData: EmailTemplateData, recipientTitle: String, recipients: List[String],
+case class Email(emailId: String, keyReference: Option[List[String]], templateData: EmailTemplateData, recipientTitle: String, recipients: List[String],
                  attachmentLink: Option[String], markdownEmailBody: String,
                  htmlEmailBody: String, subject: String, composedBy: String, approvedBy: Option[String], createDateTime: DateTime)
 
