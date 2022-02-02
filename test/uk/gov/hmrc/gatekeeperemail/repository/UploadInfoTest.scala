@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.gatekeeperemail.repository
 
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.gatekeeperemail.models.Reference
 import uk.gov.hmrc.gatekeeperemail.models.{Failed, InProgress, UploadId, UploadedSuccessfully}
@@ -28,16 +30,20 @@ class UploadInfoTest extends WordSpec with Matchers {
   "Serialization and deserialization of UploadDetails" should {
 
     "serialize and deserialize InProgress status" in {
-      val input = UploadInfo(Reference("ABC"), InProgress)
+
+      val dateTime: DateTime = DateTime.parse("02/02/2022 20:27:05",
+        DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss"));
+      val input = UploadInfo(Reference("ABC"), InProgress, dateTime)
 
       val serialized = UploadInfo.format.writes(input)
       val output = UploadInfo.format.reads(serialized)
 
-      output.get shouldBe input
+      output.get should equal (input)
     }
 
     "serialize and deserialize Failed status" in {
-      val input = UploadInfo(Reference("ABC"), Failed)
+      val dateTime: DateTime = DateTime.parse("2021-09-12T00:00:00.000+01:00")
+      val input = UploadInfo(Reference("ABC"), Failed, dateTime)
 
       val serialized = UploadInfo.format.writes(input)
       val output = UploadInfo.format.reads(serialized)
@@ -46,9 +52,11 @@ class UploadInfoTest extends WordSpec with Matchers {
     }
 
     "serialize and deserialize UploadedSuccessfully status when size is unknown" in {
+      val dateTime: DateTime = DateTime.parse("2021-09-12T00:00:00.000+01:00")
       val input = UploadInfo(
         Reference("ABC"),
-        UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = None, "http://aws.s3.object-store-url")
+        UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = None, "http://aws.s3.object-store-url"),
+        dateTime
       )
 
       val serialized = UploadInfo.format.writes(input)
@@ -58,9 +66,12 @@ class UploadInfoTest extends WordSpec with Matchers {
     }
 
     "serialize and deserialize UploadedSuccessfully status when size is known" in {
+      val dateTime: DateTime = DateTime.parse("2021-09-12T00:00:00.000+01:00")
+
       val input = UploadInfo(
         Reference("ABC"),
-        UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = Some(123456), "http://aws.s3.object-store-url")
+        UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = Some(123456), "http://aws.s3.object-store-url"),
+        dateTime
       )
 
       val serialized = UploadInfo.format.writes(input)

@@ -57,7 +57,7 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
       when(emailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       val emailRequest = EmailRequest(List("test@digital.hmrc.gov.uk"), "gatekeeper",
         EmailData("Recipient Title", "Test subject", "Dear Mr XYZ, This is test email"), false, Map())
-      val email: Email = await(underTest.persistEmail(emailRequest))
+      val email: Email = await(underTest.persistEmail(emailRequest, "keyRef"))
       email.subject shouldBe "Test subject"
       email.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
       email.templateData.templateId shouldBe "gatekeeper"
@@ -68,7 +68,7 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
       when(emailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       val emailRequest = EmailRequest(List("test@digital.hmrc.gov.uk"), "gatekeeper",
         EmailData("Recipient Title", "Test subject2", "Dear Mr XYZ, This is test email"), false, Map())
-      val email: Email = await(underTest.persistEmail(emailRequest))
+      val email: Email = await(underTest.persistEmail(emailRequest, "keyRef"))
       email.subject shouldBe "Test subject2"
       email.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
       email.templateData.templateId shouldBe "gatekeeper"
