@@ -19,7 +19,7 @@ package uk.gov.hmrc.gatekeeperemail.connectors
 import play.api.Logging
 import play.api.http.HeaderNames.CONTENT_TYPE
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest
+import uk.gov.hmrc.gatekeeperemail.models.{OneEmailRequest, SendEmailRequest}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpErrorFunctions, HttpResponse}
 import uk.gov.hmrc.play.http.metrics.common.API
@@ -37,14 +37,26 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
   def sendEmail(emailRequest: SendEmailRequest): Future[Int] = {
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(CONTENT_TYPE -> "application/json")
 
+    //Here go through all first and last names and add as parameters and send email in a loop
     logger.info(s"receiveEmailRequest.to :${emailRequest.to}")
 
-    postHttpRequest(emailRequest)
+
+    val returnCodes = emailRequest.to.map( user => {
+      val parametersWithModifiedFName = emailRequest.parameters + ("firstName" -> s"${user.firstName}")
+      val parametersWithModifiedLName = parametersWithModifiedFName + ("lastName" -> s"${user.lastName}")
+      val emailRequestModified = emailRequest.copy(to = List(user), parameters = parametersWithModifiedLName)
+      postHttpRequest(emailRequestModified)
+    }
+    )
+    //Here need to decide how to send response back.
+    returnCodes.head
   }
 
   private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Int] = {
     logger.info(s"sendEmailRequest:$request")
-    http.POST[SendEmailRequest, HttpResponse](s"$serviceUrl/developer/email", request) map { response =>
+    val oneEmailRequest = OneEmailRequest(request.to.map(_.email), request.templateId, request.parameters, request.force, request.auditData, request.eventUrl)
+    http.POST[OneEmailRequest, HttpResponse](s"$serviceUrl/developer/email",
+      oneEmailRequest) map { response =>
       logger.info("Requested email service to send email")
       response.status
     }

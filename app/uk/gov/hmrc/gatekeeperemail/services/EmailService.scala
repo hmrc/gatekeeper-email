@@ -42,7 +42,9 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
     val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
       "fromAddress" -> "gateKeeper",
       "body" -> s"${emailRequest.emailData.emailBody}",
-      "service" -> "gatekeeper")
+      "service" -> "gatekeeper",
+      "firstName" -> "((first name))",
+      "lastName" -> "((last name))")
     val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
@@ -63,6 +65,34 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
         email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
       _ <- emailConnector.sendEmail(emailRequestedData)
     } yield email
+  }
+
+  def fetchEmail(emailSaved: EmailSaved): Future[Email] = {
+    for {
+      email <- emailRepository.getEmailData(emailSaved)
+    } yield email
+  }
+
+  def updateEmail(emailRequest: EmailRequest, emailSaved: EmailSaved, key: String): Future[Email] = {
+    val email: Email = emailData(emailRequest, key)
+    logger.info(s"email data  before saving $email")
+    val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
+      "fromAddress" -> "gateKeeper",
+      "body" -> s"${emailRequest.emailData.emailBody}",
+      "service" -> "gatekeeper",
+      "firstName" -> "((first name))",
+      "lastName" -> "((last name))")
+    val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, parameters, emailRequest.force,
+      emailRequest.auditData, emailRequest.eventUrl)
+
+    for {
+      renderResult <- emailRendererConnector.getTemplatedEmail(sendEmailRequest)
+      emailBody = getEmailBody(renderResult)
+      templatedData = EmailTemplateData(sendEmailRequest.templateId, sendEmailRequest.parameters, sendEmailRequest.force,
+        sendEmailRequest.auditData, sendEmailRequest.eventUrl)
+      renderedEmail = email.copy(templateData = templatedData, htmlEmailBody = emailBody._1, markdownEmailBody = emailBody._2)
+      _ <- emailRepository.persist(renderedEmail)
+    } yield renderedEmail
   }
 
   private def emailData(emailRequest: EmailRequest, key: String): Email = {

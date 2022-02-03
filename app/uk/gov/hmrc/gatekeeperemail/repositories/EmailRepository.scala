@@ -20,11 +20,12 @@ import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.{MongoClient, MongoCollection}
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.model.Updates.set
+import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
 import org.mongodb.scala.result.InsertOneResult
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Results.BadRequest
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailSaved}
+import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailRequest, EmailSaved}
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.emailFormatter
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
@@ -70,6 +71,14 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
         }
       }
     }
+
+  def updateEmail(email: EmailRequest, emailSaved: EmailSaved, key: String): Future[Email] = {
+
+    collection.findOneAndUpdate(equal("emailid", Codecs.toBson(emailSaved.emailId)),
+      update = set("emailData", email.emailData),
+      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+    ).map(_.asInstanceOf[Email]).head()
+  }
 
   def findByEmailId(emailId: String)(implicit executionContext: ExecutionContext): Future[Option[Email]] = {
     collection.find(equal("emailId", Codecs.toBson(emailId))).headOption()

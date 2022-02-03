@@ -43,6 +43,22 @@ class GatekeeperComposeEmailController @Inject()(
     }
   }
 
+  def updateEmail(emailUID: String, key: String): Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
+    withJson[EmailRequest] { receiveEmailRequest =>
+      emailService.updateEmail(receiveEmailRequest, EmailSaved(emailUID), key)
+        .map(email => Ok(toJson(outgoingEmail(email))))
+        .recover(recovery)
+    }
+  }
+
+  def fetchEmail(emailUID: String): Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
+    withJson[EmailRequest] { receiveEmailRequest =>
+      emailService.fetchEmail(EmailSaved(emailUID))
+        .map(email => Ok(toJson(outgoingEmail(email))))
+        .recover(recovery)
+    }
+  }
+
   def sendEmail(emailId: String): Action[AnyContent] = Action.async{ implicit request =>
     emailService.sendEmail(EmailSaved(emailId))
       .map(email => Ok(toJson(outgoingEmail(email))))

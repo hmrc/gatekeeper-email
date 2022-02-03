@@ -1,10 +1,12 @@
 # microservice specific routes
 
-POST       /gatekeeper-email/save-email             uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.saveEmail(key)
-POST       /gatekeeper-email/send-email/:emailId    uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.sendEmail(emailId: String)
+POST /gatekeeper-email/save-email uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.saveEmail(key)
+POST /gatekeeper-email/send-email uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.sendEmail(emailId: String)
+GET  /gatekeeper-email/fetch-email uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.fetchEmail(emailId: String)
+POST /gatekeeper-email/update-email uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.updateEmail(emailId: String, key: String)
 
-POST       /gatekeeperemail/upscancallback        uk.gov.hmrc.gatekeeperemail.controllers.UploadCallbackController.callback
+POST /gatekeeperemail/upscancallback uk.gov.hmrc.gatekeeperemail.controllers.UploadCallbackController.callback
 
-POST /gatekeeperemail/insertfileuploadstatus  uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.addUploadedFileStatus(key)
+POST /gatekeeperemail/insertfileuploadstatus uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.addUploadedFileStatus(key)
 POST /gatekeeperemail/updatefileuploadstatus uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.updateUploadedFileStatus(key)
-GET /gatekeeperemail/fetchfileuploadstatus     uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.fetchUploadedFileStatus(key)
+GET /gatekeeperemail/fetchfileuploadstatus uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.fetchUploadedFileStatus(key)
