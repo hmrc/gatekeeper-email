@@ -18,7 +18,7 @@ package uk.gov.hmrc.gatekeeperemail.models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class EmailData(emailRecipient: String, emailSubject: String, emailBody: String)
+case class EmailData(emailSubject: String, emailBody: String)
 
 case class SendEmailRequest(to: List[User],
                             templateId: String,
@@ -41,7 +41,7 @@ case class EmailRequest(to: List[User],
                         auditData: Map[String, String] = Map.empty,
                         eventUrl: Option[String] = None)
 
-case class EmailSaved(emailId: String)
+case class EmailSaved(emailUID: String)
 
 object EmailSaved {
   implicit val emailSavedFmt: OFormat[EmailSaved] = Json.format[EmailSaved]

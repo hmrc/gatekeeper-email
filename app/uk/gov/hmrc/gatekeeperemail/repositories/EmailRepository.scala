@@ -64,23 +64,23 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
     }
 
     def getEmailData(savedEmail: EmailSaved): Future[Email] = {
-      for (emailData <- findByEmailId(savedEmail.emailId)) yield {
+      for (emailData <- findByEmailUID(savedEmail.emailUID)) yield {
         emailData match {
           case Some(email) => email
-          case None         => throw new Exception(s"Email with id ${savedEmail.emailId} not found")
+          case None         => throw new Exception(s"Email with id ${savedEmail.emailUID} not found")
         }
       }
     }
 
   def updateEmail(email: EmailRequest, emailSaved: EmailSaved, key: String): Future[Email] = {
 
-    collection.findOneAndUpdate(equal("emailid", Codecs.toBson(emailSaved.emailId)),
+    collection.findOneAndUpdate(equal("emailUID", Codecs.toBson(emailSaved.emailUID)),
       update = set("emailData", email.emailData),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
     ).map(_.asInstanceOf[Email]).head()
   }
 
-  def findByEmailId(emailId: String)(implicit executionContext: ExecutionContext): Future[Option[Email]] = {
-    collection.find(equal("emailId", Codecs.toBson(emailId))).headOption()
+  def findByEmailUID(emailUID: String)(implicit executionContext: ExecutionContext): Future[Option[Email]] = {
+    collection.find(equal("emailUID", Codecs.toBson(emailUID))).headOption()
   }
 }

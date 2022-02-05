@@ -37,14 +37,12 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
   def sendEmail(emailRequest: SendEmailRequest): Future[Int] = {
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(CONTENT_TYPE -> "application/json")
 
-    //Here go through all first and last names and add as parameters and send email in a loop
-    logger.info(s"receiveEmailRequest.to :${emailRequest.to}")
-
-
     val returnCodes = emailRequest.to.map( user => {
       val parametersWithModifiedFName = emailRequest.parameters + ("firstName" -> s"${user.firstName}")
       val parametersWithModifiedLName = parametersWithModifiedFName + ("lastName" -> s"${user.lastName}")
       val emailRequestModified = emailRequest.copy(to = List(user), parameters = parametersWithModifiedLName)
+      logger.info(s">>>**********receiveEmailRequest.to :${user.email} ${user.firstName} ${user.lastName}")
+      logger.info(s">>>**********email Parameters are  is .to :${emailRequest.parameters}")
       postHttpRequest(emailRequestModified)
     }
     )
@@ -57,7 +55,9 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
     val oneEmailRequest = OneEmailRequest(request.to.map(_.email), request.templateId, request.parameters, request.force, request.auditData, request.eventUrl)
     http.POST[OneEmailRequest, HttpResponse](s"$serviceUrl/developer/email",
       oneEmailRequest) map { response =>
-      logger.info("Requested email service to send email")
+      logger.info(
+        s"""Requested email service to send email to ${oneEmailRequest.to} firstName ${oneEmailRequest.parameters("firstName")}
+           |lastName ${oneEmailRequest.parameters("lastName")}""".stripMargin)
       response.status
     }
   }

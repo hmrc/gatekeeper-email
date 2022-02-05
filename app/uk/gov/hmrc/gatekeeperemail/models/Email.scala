@@ -25,11 +25,11 @@ case class EmailTemplateData(templateId: String, parameters: Map[String, String]
                              auditData: Map[String, String] = Map.empty,
                              eventUrl: Option[String] = None)
 
-case class Email(emailId: String, keyReference: Option[List[String]], templateData: EmailTemplateData, recipientTitle: String, recipients: List[User],
+case class Email(emailUID: String, keyReference: Option[List[String]], templateData: EmailTemplateData, recipientTitle: String, recipients: List[User],
                  attachmentLink: Option[String], markdownEmailBody: String,
                  htmlEmailBody: String, subject: String, composedBy: String, approvedBy: Option[String], createDateTime: DateTime)
 
-case class OutgoingEmail(emailId: String, recipientTitle: String, recipients: List[User], attachmentLink: Option[String],
+case class OutgoingEmail(emailUID: String, recipientTitle: String, recipients: List[User], attachmentLink: Option[String],
                          markdownEmailBody: String, htmlEmailBody: String, subject: String,
                          composedBy: String, approvedBy: Option[String])
 
