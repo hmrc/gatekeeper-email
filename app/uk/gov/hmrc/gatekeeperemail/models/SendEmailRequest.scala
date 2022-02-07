@@ -43,10 +43,6 @@ case class EmailRequest(to: List[User],
 
 case class EmailSaved(emailUID: String)
 
-object EmailSaved {
-  implicit val emailSavedFmt: OFormat[EmailSaved] = Json.format[EmailSaved]
-}
-
 object SendEmailRequest {
   implicit val userFmt: OFormat[User] = Json.format[User]
   implicit val sendEmailRequestFmt: OFormat[SendEmailRequest] = Json.format[SendEmailRequest]

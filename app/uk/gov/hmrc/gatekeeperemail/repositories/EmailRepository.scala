@@ -23,9 +23,7 @@ import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.set
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
 import org.mongodb.scala.result.InsertOneResult
-import play.api.libs.json.{JsObject, Json}
-import play.api.mvc.Results.BadRequest
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailRequest, EmailSaved}
+import uk.gov.hmrc.gatekeeperemail.models.Email
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.emailFormatter
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
@@ -62,11 +60,11 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
       collection.insertOne(entity).toFuture()
     }
 
-    def getEmailData(savedEmail: EmailSaved): Future[Email] = {
-      for (emailData <- findByEmailUID(savedEmail.emailUID)) yield {
+    def getEmailData(emailUID: String): Future[Email] = {
+      for (emailData <- findByEmailUID(emailUID)) yield {
         emailData match {
           case Some(email) => email
-          case None         => throw new Exception(s"Email with id ${savedEmail.emailUID} not found")
+          case None         => throw new Exception(s"Email with id ${emailUID} not found")
         }
       }
     }

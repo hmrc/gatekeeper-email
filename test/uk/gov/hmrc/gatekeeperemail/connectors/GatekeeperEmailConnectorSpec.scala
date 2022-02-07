@@ -26,7 +26,7 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.OK
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest
+import uk.gov.hmrc.gatekeeperemail.models.{SendEmailRequest, User}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import java.io.IOException
@@ -61,6 +61,8 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach
   val fromAddress = "gateKeeper"
   val emailBody = "Body to be used in the email template"
   val emailServicePath = "/developer/email"
+  val users = List(User("example@example.com", "first name", "last name", true),
+    User("example2@example2.com", "first name2", "last name2", true))
    
   trait Setup {
     val httpClient = app.injector.instanceOf[HttpClient]
@@ -87,7 +89,8 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach
   "emailConnector" should {
     val parameters: Map[String, String] = Map("subject" -> s"$subject", "fromAddress" -> s"$fromAddress",
                                               "body" -> s"$emailBody", "service" -> s"gatekeeper")
-    val emailRequest = SendEmailRequest(List(emailId), "gatekeeper", parameters)
+
+    val emailRequest = SendEmailRequest(users, "gatekeeper", parameters)
 
     "send gatekeeper email" in new Setup with WorkingHttp {
       await(underTest.sendEmail(emailRequest))
@@ -97,13 +100,17 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach
         .withRequestBody(equalToJson(
           s"""
               |{
-              |  "to": ["$emailId"],
+              |  "to" : [ "example2@example2.com" ],
               |  "templateId": "gatekeeper",
               |  "parameters": {
-              |    "subject": "$subject",
-              |    "fromAddress": "gateKeeper",
-              |    "body": "$emailBody",
-              |    "service": "gatekeeper"
+              |  "showFooter" : "true",
+              |  "showHmrcBanner" : "true",
+              |  "subject": "$subject",
+              |  "fromAddress": "gateKeeper",
+              |  "body": "$emailBody",
+              |  "service": "gatekeeper",
+              |  "lastName" : "last name2",
+              |  "firstName" : "first name2"
               |  },
               |  "force": false,
               |  "auditData": {}

@@ -35,7 +35,7 @@ import play.api.mvc.PlayBodyParsers
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailData, EmailRequest, EmailSaved, EmailTemplateData, RenderResult}
+import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
 import uk.gov.hmrc.gatekeeperemail.services.EmailService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -60,12 +60,14 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
   val emailBody = "Body to be used in the email template"
   val emailServicePath = "/gatekeeper/email"
   val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
+  val users = List(User("example@example.com", "first name", "last name", true),
+    User("example2@example2.com", "first name2", "last name2", true))
   val email = Email("emailId-123", Some(List("keyRef")), templateData, "DL Team",
-    List("test@digital.hmrc.gov.uk"), None, "markdownEmailBody", "This is test email",
+    users, None, "markdownEmailBody", "This is test email",
     "test subject", "composedBy", Some("approvedBy"), DateTime.now(UTC))
 
-  val emailRequest = EmailRequest(List(emailId), "gatekeeper", EmailData(emailId, subject, emailBody))
-  val wrongEmailRequest = EmailRequest(List(emailId), "gatekeeper", EmailData(emailId, subject, emailBody))
+  val emailRequest = EmailRequest(users, "gatekeeper", EmailData(subject, emailBody))
+  val wrongEmailRequest = EmailRequest(users, "gatekeeper", EmailData(subject, emailBody))
   private val fakeRequest = FakeRequest("POST", "/gatekeeper-email").withBody(Json.toJson(emailRequest))
   private val fakeSaveEmailRequest = FakeRequest("POST", "/gatekeeper-email/save-email").withBody(Json.toJson(emailRequest))
   private val fakeWrongSaveEmailRequest = FakeRequest("POST", "/gatekeeper-email/save-email").withBody(Json.toJson(emailBody))
@@ -86,6 +88,7 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
 
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
+    implicit lazy val request = FakeRequest()
     val emailService = new EmailService(mockEmailConnector, emailRendererConnectorMock, mockEmailRepository)
     val mockEmailService = mock[EmailService]
     val controller = new GatekeeperComposeEmailController(Helpers.stubMessagesControllerComponents(),
@@ -97,45 +100,70 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
       .thenReturn(successful(Right(RenderResult("RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
         "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
 
-    val emailId: String = UUID.randomUUID().toString
+    val emailUID: String = UUID.randomUUID().toString
     val dummyEmailData = Email("", Some(List("")), EmailTemplateData("", Map(), false, Map(), None), "", List(),
       None, "", "", "", "", None, DateTime.now)
-    when(mockEmailRepository.getEmailData(EmailSaved(emailId))).thenReturn(Future(dummyEmailData))
+    when(mockEmailRepository.getEmailData(emailUID)).thenReturn(Future(dummyEmailData))
   }
 
   "POST /gatekeeper-email/send-email" should {
     "return 200" in new Setup {
       when(mockEmailConnector.sendEmail(*)).thenReturn(successful(Status.OK))
       when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      val result = controller.sendEmail(emailId)(fakeRequest)
+      val result = controller.sendEmail(emailUID)(fakeRequest)
       status(result) shouldBe Status.OK
     }
 
     "return 500" in new Setup {
       when(mockEmailConnector.sendEmail(*)).thenReturn(failed(new IOException("can not connect to email service")))
       when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      val result = controller.sendEmail(emailId)(fakeRequest)
+      val result = controller.sendEmail(emailUID)(fakeRequest)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
   }
 
   "POST /gatekeeper-email/save-email" should {
     "return 200" in new Setup {
-      when(mockEmailService.persistEmail(emailRequest, "keyRef")).thenReturn(successful(email))
-      val result = controller2.saveEmail("keyRef")(fakeSaveEmailRequest)
+      when(mockEmailService.persistEmail(emailRequest, emailUID, "keyRef")).thenReturn(successful(email))
+      val result = controller2.saveEmail(emailUID, "keyRef")(fakeSaveEmailRequest)
       status(result) shouldBe Status.OK
     }
-
     "return 500" in new Setup {
-      when(mockEmailService.persistEmail(emailRequest, "keyRef")).thenReturn(failed(new IOException("can not connect to email service")))
-      val result = controller2.saveEmail("keyRef")(fakeSaveEmailRequest)
+      when(mockEmailService.persistEmail(emailRequest, emailUID, "keyRef")).thenReturn(failed(new IOException("can not connect to email service")))
+      val result = controller2.saveEmail(emailUID, "keyRef")(fakeSaveEmailRequest)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
 
     "return 400" in new Setup {
-      when(mockEmailService.persistEmail(emailRequest, "keyRef")).thenReturn(successful(email))
-      val result = controller2.saveEmail("keyRef")(fakeWrongSaveEmailRequest)
+      when(mockEmailService.persistEmail(emailRequest, emailUID, "keyRef")).thenReturn(successful(email))
+      val result = controller2.saveEmail(emailUID, "keyRef")(fakeWrongSaveEmailRequest)
       status(result) shouldBe Status.BAD_REQUEST
     }
   }
+
+    "POST /gatekeeper-email/update-email" should {
+      "return 200" in new Setup {
+        when(mockEmailService.updateEmail(*, *, *)).thenReturn(successful(email))
+        val result = controller2.updateEmail(emailUID, "KeyRef")(fakeSaveEmailRequest)
+        status(result) shouldBe Status.OK
+      }
+      "return 500" in new Setup {
+        when(mockEmailService.updateEmail(emailRequest, (emailUID), "keyRef")).thenReturn(failed(new IOException("can not connect to email service")))
+        val result = controller2.updateEmail(emailUID, "keyRef")(fakeSaveEmailRequest)
+        status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      }
+      "return 400" in new Setup {
+        when(mockEmailService.updateEmail(emailRequest, (emailUID), "keyRef")).thenReturn(successful(email))
+        val result = controller2.updateEmail(emailUID, "keyRef")(fakeWrongSaveEmailRequest)
+        status(result) shouldBe Status.BAD_REQUEST
+      }
+    }
+
+    "GET /gatekeeper-email/fetch-email" should {
+      "return 200" in new Setup {
+        when(mockEmailService.fetchEmail((emailUID))).thenReturn(successful(email))
+        val result = controller2.fetchEmail(emailUID)(request)
+        status(result) shouldBe Status.OK
+      }
+    }
 }

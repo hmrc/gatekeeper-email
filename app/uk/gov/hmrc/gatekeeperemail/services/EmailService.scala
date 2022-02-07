@@ -53,23 +53,23 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
     } yield renderedEmail
   }
 
-  def sendEmail(emailSaved: EmailSaved): Future[Email] = {
+  def sendEmail(emailUID: String): Future[Email] = {
     for {
-      email <- emailRepository.getEmailData(emailSaved)
+      email <- emailRepository.getEmailData(emailUID)
       emailRequestedData = SendEmailRequest(email.recipients, email.templateData.templateId, email.templateData.parameters,
         email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
       _ <- emailConnector.sendEmail(emailRequestedData)
     } yield email
   }
 
-  def fetchEmail(emailSaved: EmailSaved): Future[Email] = {
+  def fetchEmail(emailUID: String): Future[Email] = {
     for {
-      email <- emailRepository.getEmailData(emailSaved)
+      email <- emailRepository.getEmailData(emailUID)
     } yield email
   }
 
-  def updateEmail(emailRequest: EmailRequest, emailSaved: EmailSaved, key: String): Future[Email] = {
-    val email: Email = emailData(emailRequest, emailSaved.emailUID, key)
+  def updateEmail(emailRequest: EmailRequest, emailUID: String, key: String): Future[Email] = {
+    val email: Email = emailData(emailRequest, emailUID, key)
     logger.info(s"email data  before saving $email")
 
     val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
