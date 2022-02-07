@@ -40,10 +40,8 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
     mongoComponent = mongoComponent,
     collectionName = "email",
     domainFormat = emailFormatter,
-    indexes = Seq(IndexModel(ascending("composedBy"),
-      IndexOptions().name("composedByIndex").background(true)),
-      IndexModel(ascending("createDateTime"),
-        IndexOptions().name("createDateTimeIndex").background(true).unique(false)))
+    indexes = Seq(IndexModel(ascending("emailUID"),
+        IndexOptions().name("emailUIDIndex").background(true).unique(true)))
   ) {
 
   override lazy val collection: MongoCollection[Email] =
@@ -53,6 +51,7 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
         fromRegistries(
           fromCodecs(
             Codecs.playFormatCodec(domainFormat),
+            Codecs.playFormatCodec(EmailMongoFormatter.emailTemplateDataFormatter),
             Codecs.playFormatCodec(EmailMongoFormatter.emailFormatter)
           ),
           MongoClient.DEFAULT_CODEC_REGISTRY
@@ -72,10 +71,10 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
       }
     }
 
-  def updateEmail(email: EmailRequest, emailSaved: EmailSaved, key: String): Future[Email] = {
+  def updateEmail(email: Email): Future[Email] = {
 
-    collection.findOneAndUpdate(equal("emailUID", Codecs.toBson(emailSaved.emailUID)),
-      update = set("emailData", email.emailData),
+    collection.findOneAndUpdate(equal("emailUID", Codecs.toBson(email.emailUID)),
+      update = set("templateData", email.templateData),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
     ).map(_.asInstanceOf[Email]).head()
   }

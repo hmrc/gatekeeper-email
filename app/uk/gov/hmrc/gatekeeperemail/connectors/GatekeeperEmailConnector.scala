@@ -38,11 +38,12 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(CONTENT_TYPE -> "application/json")
 
     val returnCodes = emailRequest.to.map( user => {
-      val parametersWithModifiedFName = emailRequest.parameters + ("firstName" -> s"${user.firstName}")
+      val parametersWithModifiedFName = emailRequest.parameters + ("firstName" -> s"${user.firstName}") +
+        ("showFooter" -> "true") + ("showHmrcBanner" -> "true")
       val parametersWithModifiedLName = parametersWithModifiedFName + ("lastName" -> s"${user.lastName}")
       val emailRequestModified = emailRequest.copy(to = List(user), parameters = parametersWithModifiedLName)
       logger.info(s">>>**********receiveEmailRequest.to :${user.email} ${user.firstName} ${user.lastName}")
-      logger.info(s">>>**********email Parameters are  is .to :${emailRequest.parameters}")
+      logger.info(s">>>**********email Parameters are  is .to :${emailRequestModified.parameters}")
       postHttpRequest(emailRequestModified)
     }
     )
