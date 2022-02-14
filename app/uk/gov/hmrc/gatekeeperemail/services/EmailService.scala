@@ -24,7 +24,6 @@ import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -81,7 +80,7 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
       templatedData = EmailTemplateData(sendEmailRequest.templateId, sendEmailRequest.parameters, sendEmailRequest.force,
         sendEmailRequest.auditData, sendEmailRequest.eventUrl)
       renderedEmail = email.copy(templateData = templatedData, htmlEmailBody = emailBody._1,
-        markdownEmailBody = emailBody._2, subject = emailRequest.emailData.emailSubject)
+        markdownEmailBody = templatedData.parameters.get("body").get, subject = emailRequest.emailData.emailSubject)
       _ <- emailRepository.updateEmail(renderedEmail)
     } yield renderedEmail
   }

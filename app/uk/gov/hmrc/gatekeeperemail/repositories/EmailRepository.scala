@@ -80,6 +80,10 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
     ).map(_.asInstanceOf[Email]).head()
     collection.findOneAndUpdate(equal("emailUID", Codecs.toBson(email.emailUID)),
+      update = set("markdownEmailBody", email.markdownEmailBody),
+      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+    ).map(_.asInstanceOf[Email]).head()
+    collection.findOneAndUpdate(equal("emailUID", Codecs.toBson(email.emailUID)),
       update = set("subject", email.subject),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
     ).map(_.asInstanceOf[Email]).head()
