@@ -42,8 +42,8 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
         ("showFooter" -> "true") + ("showHmrcBanner" -> "true")
       val parametersWithModifiedLName = parametersWithModifiedFName + ("lastName" -> s"${user.lastName}")
       val emailRequestModified = emailRequest.copy(to = List(user), parameters = parametersWithModifiedLName)
-      logger.info(s">>>**********receiveEmailRequest.to :${user.email} ${user.firstName} ${user.lastName}")
-      logger.info(s">>>**********email Parameters are  is .to :${emailRequestModified.parameters}")
+      logger.info(s"ReceiveEmailRequest  :${user.email} ${user.firstName} ${user.lastName}")
+      logger.info(s"Email Parameters are  is .to :${emailRequestModified.parameters}")
       postHttpRequest(emailRequestModified)
     }
     )

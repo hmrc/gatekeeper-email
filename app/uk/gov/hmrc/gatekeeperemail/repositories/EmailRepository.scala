@@ -75,6 +75,14 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
       update = set("templateData", email.templateData),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
     ).map(_.asInstanceOf[Email]).head()
+    collection.findOneAndUpdate(equal("emailUID", Codecs.toBson(email.emailUID)),
+      update = set("htmlEmailBody", email.htmlEmailBody),
+      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+    ).map(_.asInstanceOf[Email]).head()
+    collection.findOneAndUpdate(equal("emailUID", Codecs.toBson(email.emailUID)),
+      update = set("subject", email.subject),
+      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+    ).map(_.asInstanceOf[Email]).head()
   }
 
   def findByEmailUID(emailUID: String)(implicit executionContext: ExecutionContext): Future[Option[Email]] = {
