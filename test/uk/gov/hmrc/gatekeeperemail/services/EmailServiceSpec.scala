@@ -64,7 +64,7 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
       when(emailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       val emailRequest = EmailRequest(users, "gatekeeper",
         EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
-      val emailFromMongo: Email = await(underTest.persistEmail(emailRequest, "emailUID", "keyRef"))
+      val emailFromMongo: Email = await(underTest.persistEmail(emailRequest, "emailUID"))
       emailFromMongo.subject shouldBe "Test subject"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
       emailFromMongo.templateData.templateId shouldBe "gatekeeper"
@@ -75,7 +75,7 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
       when(emailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       val emailRequest = EmailRequest(users, "gatekeeper",
         EmailData("Test subject2", "Dear Mr XYZ, This is test email"), false, Map())
-      val emailFromMongo: Email = await(underTest.persistEmail(emailRequest, "emailUID", "keyRef"))
+      val emailFromMongo: Email = await(underTest.persistEmail(emailRequest, "emailUID"))
       emailFromMongo.subject shouldBe "Test subject2"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
       emailFromMongo.templateData.templateId shouldBe "gatekeeper"
@@ -89,7 +89,7 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
       when(emailRepositoryMock.updateEmail(*)).thenReturn(Future(email))
       val emailRequest = EmailRequest(users, "gatekeeper",
         EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
-      val emailFromMongo: Email = await(underTest.updateEmail(emailRequest, "emailUID", "keyRef"))
+      val emailFromMongo: Email = await(underTest.updateEmail(emailRequest, "emailUID"))
       emailFromMongo.subject shouldBe "Test subject"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
       emailFromMongo.templateData.templateId shouldBe "gatekeeper"
@@ -100,7 +100,7 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
       when(emailRepositoryMock.updateEmail(*)).thenReturn(Future(email))
       val emailRequest = EmailRequest(users, "gatekeeper",
         EmailData("Test subject2", "Dear Mr XYZ, This is test email"), false, Map())
-      val emailFromMongo: Email = await(underTest.updateEmail(emailRequest, "emailUID", "keyRef"))
+      val emailFromMongo: Email = await(underTest.updateEmail(emailRequest, "emailUID"))
       emailFromMongo.subject shouldBe "Test subject2"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
       emailFromMongo.templateData.templateId shouldBe "gatekeeper"

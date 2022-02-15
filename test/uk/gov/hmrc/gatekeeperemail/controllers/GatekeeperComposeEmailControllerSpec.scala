@@ -124,37 +124,37 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
 
   "POST /gatekeeper-email/save-email" should {
     "return 200" in new Setup {
-      when(mockEmailService.persistEmail(emailRequest, emailUID, "keyRef")).thenReturn(successful(email))
-      val result = controller2.saveEmail(emailUID, "keyRef")(fakeSaveEmailRequest)
+      when(mockEmailService.persistEmail(emailRequest, emailUID)).thenReturn(successful(email))
+      val result = controller2.saveEmail(emailUID)(fakeSaveEmailRequest)
       status(result) shouldBe Status.OK
     }
     "return 500" in new Setup {
-      when(mockEmailService.persistEmail(emailRequest, emailUID, "keyRef")).thenReturn(failed(new IOException("can not connect to email service")))
-      val result = controller2.saveEmail(emailUID, "keyRef")(fakeSaveEmailRequest)
+      when(mockEmailService.persistEmail(emailRequest, emailUID)).thenReturn(failed(new IOException("can not connect to email service")))
+      val result = controller2.saveEmail(emailUID)(fakeSaveEmailRequest)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
 
     "return 400" in new Setup {
-      when(mockEmailService.persistEmail(emailRequest, emailUID, "keyRef")).thenReturn(successful(email))
-      val result = controller2.saveEmail(emailUID, "keyRef")(fakeWrongSaveEmailRequest)
+      when(mockEmailService.persistEmail(emailRequest, emailUID)).thenReturn(successful(email))
+      val result = controller2.saveEmail(emailUID)(fakeWrongSaveEmailRequest)
       status(result) shouldBe Status.BAD_REQUEST
     }
   }
 
     "POST /gatekeeper-email/update-email" should {
       "return 200" in new Setup {
-        when(mockEmailService.updateEmail(*, *, *)).thenReturn(successful(email))
-        val result = controller2.updateEmail(emailUID, "KeyRef")(fakeSaveEmailRequest)
+        when(mockEmailService.updateEmail(*, *)).thenReturn(successful(email))
+        val result = controller2.updateEmail(emailUID)(fakeSaveEmailRequest)
         status(result) shouldBe Status.OK
       }
       "return 500" in new Setup {
-        when(mockEmailService.updateEmail(emailRequest, (emailUID), "keyRef")).thenReturn(failed(new IOException("can not connect to email service")))
-        val result = controller2.updateEmail(emailUID, "keyRef")(fakeSaveEmailRequest)
+        when(mockEmailService.updateEmail(emailRequest, (emailUID))).thenReturn(failed(new IOException("can not connect to email service")))
+        val result = controller2.updateEmail(emailUID)(fakeSaveEmailRequest)
         status(result) shouldBe Status.INTERNAL_SERVER_ERROR
       }
       "return 400" in new Setup {
-        when(mockEmailService.updateEmail(emailRequest, (emailUID), "keyRef")).thenReturn(successful(email))
-        val result = controller2.updateEmail(emailUID, "keyRef")(fakeWrongSaveEmailRequest)
+        when(mockEmailService.updateEmail(emailRequest, (emailUID))).thenReturn(successful(email))
+        val result = controller2.updateEmail(emailUID)(fakeWrongSaveEmailRequest)
         status(result) shouldBe Status.BAD_REQUEST
       }
     }
