@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import java.io.IOException
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class GatekeeperComposeEmailController @Inject()(
@@ -51,6 +51,27 @@ class GatekeeperComposeEmailController @Inject()(
     }
   }
 
+  def updateFiles(): Action[UploadedFileMetadata] = Action.async(parse.json[UploadedFileMetadata]) { implicit request =>
+    request.body match {
+      case value =>  {
+        println(s"Cargo is ${value.cargo}")
+        println(s"******$value")
+        val fetchEmail: Future[Email] = emailService.fetchEmail(emailUID = value.cargo.get.emailUID)
+        fetchEmail.map { email =>
+          val er = EmailRequest(
+            email.recipients,
+            templateId = "gatekeeper",
+            EmailData(email.subject, email.markdownEmailBody),
+            attachmentDetails = Some(value.uploadedFiles)
+          )
+          emailService.updateEmail(er, email.emailUID )
+          NoContent
+        }
+      }
+      case _ => Future.successful(BadRequest)
+    }
+
+  }
   def fetchEmail(emailUID: String): Action[AnyContent] = Action.async { implicit request =>
       logger.info(s"In fetchEmail for $emailUID")
       emailService.fetchEmail(emailUID)
@@ -65,7 +86,7 @@ class GatekeeperComposeEmailController @Inject()(
   }
 
   private def outgoingEmail(email: Email): OutgoingEmail = {
-    OutgoingEmail(email.emailUID, email.recipientTitle, email.recipients, email.attachmentLink,
+    OutgoingEmail(email.emailUID, email.recipientTitle, email.recipients, email.attachmentDetails,
       email.markdownEmailBody, email.htmlEmailBody, email.subject,
       email.composedBy, email.approvedBy)
   }

@@ -50,6 +50,8 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
           fromCodecs(
             Codecs.playFormatCodec(domainFormat),
             Codecs.playFormatCodec(EmailMongoFormatter.emailTemplateDataFormatter),
+            Codecs.playFormatCodec(EmailMongoFormatter.cargoFormat),
+            Codecs.playFormatCodec(EmailMongoFormatter.attachmentDetailsFormat),
             Codecs.playFormatCodec(EmailMongoFormatter.emailFormatter)
           ),
           MongoClient.DEFAULT_CODEC_REGISTRY
@@ -85,6 +87,10 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
     ).map(_.asInstanceOf[Email]).head()
     collection.findOneAndUpdate(equal("emailUID", Codecs.toBson(email.emailUID)),
       update = set("subject", email.subject),
+      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+    ).map(_.asInstanceOf[Email]).head()
+    collection.findOneAndUpdate(equal("emailUID", Codecs.toBson(email.emailUID)),
+      update = set("attachmentDetails", email.attachmentDetails.getOrElse(Seq.empty)),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
     ).map(_.asInstanceOf[Email]).head()
   }

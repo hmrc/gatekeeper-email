@@ -48,7 +48,7 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
     val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
     val users = List(User("example@example.com", "first name", "last name", true),
       User("example2@example2.com", "first name2", "last name2", true))
-    val email = Email("emailId-123", Some(List("keyRef")), templateData, "DL Team",
+    val email = Email("emailId-123", templateData, "DL Team",
       users, None, "markdownEmailBody", "This is test email",
       "test subject", "composedBy", Some("approvedBy"), DateTime.now(UTC))
     when(emailRendererConnectorMock.getTemplatedEmail(*))

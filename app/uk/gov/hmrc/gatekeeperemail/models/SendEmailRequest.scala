@@ -34,28 +34,38 @@ case class OneEmailRequest(to: List[String],
                             auditData: Map[String, String] = Map.empty,
                             eventUrl: Option[String] = None)
 
+
 case class EmailRequest(to: List[User],
                         templateId: String,
                         emailData: EmailData,
                         force: Boolean = false,
                         auditData: Map[String, String] = Map.empty,
-                        eventUrl: Option[String] = None)
+                        eventUrl: Option[String] = None,
+                        attachmentDetails: Option[Seq[UploadedFile]] = None)
 
 case class EmailSaved(emailUID: String)
 
 object SendEmailRequest {
   implicit val userFmt: OFormat[User] = Json.format[User]
+  implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
+  implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val sendEmailRequestFmt: OFormat[SendEmailRequest] = Json.format[SendEmailRequest]
 }
 object OneEmailRequest {
   implicit val userFmt: OFormat[User] = Json.format[User]
+  implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
+  implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val sendEmailRequestFmt: OFormat[OneEmailRequest] = Json.format[OneEmailRequest]
 }
 object EmailRequest {
   implicit val userFmt: OFormat[User] = Json.format[User]
+  implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
+  implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val receiveEmailRequestFmt: OFormat[EmailRequest] = Json.format[EmailRequest]
 }
 object EmailData {
   implicit val userFmt: OFormat[User] = Json.format[User]
+  implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
+  implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val emailDataFmt: OFormat[EmailData] = Json.format[EmailData]
 }

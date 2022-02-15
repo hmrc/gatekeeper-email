@@ -62,7 +62,7 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
   val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
   val users = List(User("example@example.com", "first name", "last name", true),
     User("example2@example2.com", "first name2", "last name2", true))
-  val email = Email("emailId-123", Some(List("keyRef")), templateData, "DL Team",
+  val email = Email("emailId-123", templateData, "DL Team",
     users, None, "markdownEmailBody", "This is test email",
     "test subject", "composedBy", Some("approvedBy"), DateTime.now(UTC))
 
@@ -101,7 +101,7 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
         "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
 
     val emailUID: String = UUID.randomUUID().toString
-    val dummyEmailData = Email("", Some(List("")), EmailTemplateData("", Map(), false, Map(), None), "", List(),
+    val dummyEmailData = Email("", EmailTemplateData("", Map(), false, Map(), None), "", List(),
       None, "", "", "", "", None, DateTime.now)
     when(mockEmailRepository.getEmailData(emailUID)).thenReturn(Future(dummyEmailData))
   }
