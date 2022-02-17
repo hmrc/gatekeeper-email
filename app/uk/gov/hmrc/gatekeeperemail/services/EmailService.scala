@@ -120,6 +120,7 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
     val emailTemplateData = EmailTemplateData(emailRequest.templateId, parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
+    println(s"***EmailAttachmentDetails*****:${emailRequest.attachmentDetails}")
     Email(emailUID,  emailTemplateData, recipientsTitle, emailRequest.to, emailRequest.attachmentDetails,
       emailBodyModified, emailBodyModified,
       emailRequest.emailData.emailSubject, "composedBy",

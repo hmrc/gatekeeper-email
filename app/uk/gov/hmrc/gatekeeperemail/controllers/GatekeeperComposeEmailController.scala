@@ -19,11 +19,15 @@ package uk.gov.hmrc.gatekeeperemail.controllers
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, PlayBodyParsers, Result}
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.services.EmailService
+import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
+import uk.gov.hmrc.objectstore.client.{ObjectSummaryWithMd5, Path, RetentionPeriod}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import java.io.IOException
+import java.net.URL
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -31,7 +35,9 @@ import scala.concurrent.{ExecutionContext, Future}
 class GatekeeperComposeEmailController @Inject()(
   mcc: MessagesControllerComponents,
   playBodyParsers: PlayBodyParsers,
-  emailService: EmailService
+  emailService: EmailService,
+  objectStoreClient: PlayObjectStoreClient,
+  appConfig: AppConfig
   )(implicit val ec: ExecutionContext)
     extends BackendController(mcc) with WithJson {
 
@@ -52,26 +58,89 @@ class GatekeeperComposeEmailController @Inject()(
   }
 
   def updateFiles(): Action[UploadedFileMetadata] = Action.async(parse.json[UploadedFileMetadata]) { implicit request =>
+
+    def uploadToObjectStore(downloadUrl: String, fileName: String) = {
+      logger.info(s"uploadToObjectStore downloadUrl = $downloadUrl and fileName = $fileName")
+      objectStoreClient.uploadFromUrl(from = new URL(downloadUrl),
+        to = Path.File(Path.Directory("gatekeeper-email"), fileName),
+        retentionPeriod = RetentionPeriod.parse(appConfig.defaultRetentionPeriod).getOrElse(RetentionPeriod.OneYear),
+        contentType = None,
+        contentMd5 = None,
+        owner = "gatekeeper-email"
+      )
+    }
     request.body match {
       case value =>  {
-        println(s"Cargo is ${value.cargo}")
-        println(s"******$value")
+        println(s"Cargo: ${value.cargo}")
+        println(s"Callback received UploadedFileMetadata: $value")
         val fetchEmail: Future[Email] = emailService.fetchEmail(emailUID = value.cargo.get.emailUID)
         fetchEmail.map { email =>
-          val er = EmailRequest(
-            email.recipients,
-            templateId = "gatekeeper",
-            EmailData(email.subject, email.markdownEmailBody),
-            attachmentDetails = Some(value.uploadedFiles)
-          )
-          emailService.updateEmail(er, email.emailUID )
+          val filesToUploadInObjStore: Seq[UploadedFileWithObjectStore] =
+            filesToUploadInObjectStore(email.attachmentDetails, value.uploadedFiles)
+          println(s"filesToUploadInObjStore: $filesToUploadInObjStore")
+          var latestUploadedFiles: Seq[UploadedFileWithObjectStore] = Seq.empty[UploadedFileWithObjectStore]
+          filesToUploadInObjStore.foreach(uploadedFile => {
+            val objectSummary: Future[ObjectSummaryWithMd5] = uploadToObjectStore(uploadedFile.downloadUrl, uploadedFile.fileName)
+            objectSummary.map { summary =>
+              println(s"*****latestUploadedFiles BEFORE APPENDING***: $latestUploadedFiles")
+              latestUploadedFiles = latestUploadedFiles :+ uploadedFile.copy(objectStoreUrl = Some(summary.location.asUri))
+              println(s"*****latestUploadedFiles AFTER APPENDING***: $latestUploadedFiles")
+              println(s"latestUploadedFiles: $latestUploadedFiles")
+              val finalUploadedFiles = email.attachmentDetails match {
+                case Some(currentFiles) =>
+                  println(s"*****currentFiles****: $currentFiles")
+                  val finalList = currentFiles ++ latestUploadedFiles
+                  println(s"*****currentFiles AFTER APPENDING****: $finalList")
+                  finalList
+
+                case None => latestUploadedFiles
+              }
+              println(s"*****finalUploadedFiles*******: $finalUploadedFiles")
+              val er = EmailRequest(
+                email.recipients,
+                templateId = "gatekeeper",
+                EmailData(email.subject, email.markdownEmailBody),
+                attachmentDetails = Some(finalUploadedFiles))
+              emailService.updateEmail(er, email.emailUID)
+            }
+          })
           NoContent
         }
       }
       case _ => Future.successful(BadRequest)
     }
-
   }
+
+  def filesToUploadInObjectStore(existingFiles: Option[Seq[UploadedFileWithObjectStore]],
+                                uploadedFiles: Seq[UploadedFileWithObjectStore]):
+  Seq[UploadedFileWithObjectStore] = {
+    existingFiles match {
+      case Some(current) =>
+          val intersection = current.intersect(uploadedFiles)
+          if (intersection.size == uploadedFiles.size) {
+            List()
+          } else {
+            uploadedFiles.diff(current)
+          }
+      case None => uploadedFiles
+    }
+  }
+
+  def filesToRemoveFromObjectStore(existingFiles: Option[Seq[UploadedFileWithObjectStore]],
+                                 uploadedFiles: Seq[UploadedFileWithObjectStore]):
+  Seq[UploadedFileWithObjectStore] = {
+    existingFiles match {
+      case Some(current) =>
+        val intersection = current.intersect(uploadedFiles)
+        if (intersection.size == uploadedFiles.size) {
+          List()
+        } else {
+          current.diff(uploadedFiles)
+        }
+      case None => uploadedFiles
+    }
+  }
+
   def fetchEmail(emailUID: String): Action[AnyContent] = Action.async { implicit request =>
       logger.info(s"In fetchEmail for $emailUID")
       emailService.fetchEmail(emailUID)

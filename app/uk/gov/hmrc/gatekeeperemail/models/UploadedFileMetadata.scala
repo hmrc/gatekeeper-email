@@ -18,8 +18,9 @@ package uk.gov.hmrc.gatekeeperemail.models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class UploadedFileMetadata(nonce: Nonce, uploadedFiles: Seq[UploadedFile], cargo: Option[UploadCargo])
+case class UploadedFileMetadata(nonce: Nonce, uploadedFiles: Seq[UploadedFileWithObjectStore], cargo: Option[UploadCargo])
 
 object UploadedFileMetadata {
+  implicit val formatWithObjectStore: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
   implicit val format: OFormat[UploadedFileMetadata] = Json.format[UploadedFileMetadata]
 }

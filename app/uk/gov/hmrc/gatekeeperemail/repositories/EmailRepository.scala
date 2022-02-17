@@ -89,6 +89,7 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
       update = set("subject", email.subject),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
     ).map(_.asInstanceOf[Email]).head()
+    println(s"email attachments while UPDATING EMAIL:${email.attachmentDetails}")
     collection.findOneAndUpdate(equal("emailUID", Codecs.toBson(email.emailUID)),
       update = set("attachmentDetails", email.attachmentDetails.getOrElse(Seq.empty)),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
