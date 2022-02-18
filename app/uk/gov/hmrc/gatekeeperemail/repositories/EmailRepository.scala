@@ -52,6 +52,7 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
             Codecs.playFormatCodec(EmailMongoFormatter.emailTemplateDataFormatter),
             Codecs.playFormatCodec(EmailMongoFormatter.cargoFormat),
             Codecs.playFormatCodec(EmailMongoFormatter.attachmentDetailsFormat),
+            Codecs.playFormatCodec(EmailMongoFormatter.attachmentDetailsWithObjectStoreFormat),
             Codecs.playFormatCodec(EmailMongoFormatter.emailFormatter)
           ),
           MongoClient.DEFAULT_CODEC_REGISTRY

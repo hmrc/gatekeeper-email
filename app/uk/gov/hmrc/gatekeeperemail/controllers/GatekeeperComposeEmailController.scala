@@ -59,10 +59,10 @@ class GatekeeperComposeEmailController @Inject()(
 
   def updateFiles(): Action[UploadedFileMetadata] = Action.async(parse.json[UploadedFileMetadata]) { implicit request =>
 
-    def uploadToObjectStore(downloadUrl: String, fileName: String) = {
+    def uploadToObjectStore(emailUID: String, downloadUrl: String, fileName: String) = {
       logger.info(s"uploadToObjectStore downloadUrl = $downloadUrl and fileName = $fileName")
       objectStoreClient.uploadFromUrl(from = new URL(downloadUrl),
-        to = Path.File(Path.Directory("gatekeeper-email"), fileName),
+        to = Path.File(Path.Directory(emailUID), fileName),
         retentionPeriod = RetentionPeriod.parse(appConfig.defaultRetentionPeriod).getOrElse(RetentionPeriod.OneYear),
         contentType = None,
         contentMd5 = None,
@@ -80,7 +80,7 @@ class GatekeeperComposeEmailController @Inject()(
           println(s"filesToUploadInObjStore: $filesToUploadInObjStore")
           var latestUploadedFiles: Seq[UploadedFileWithObjectStore] = Seq.empty[UploadedFileWithObjectStore]
           filesToUploadInObjStore.foreach(uploadedFile => {
-            val objectSummary: Future[ObjectSummaryWithMd5] = uploadToObjectStore(uploadedFile.downloadUrl, uploadedFile.fileName)
+            val objectSummary: Future[ObjectSummaryWithMd5] = uploadToObjectStore(email.emailUID, uploadedFile.downloadUrl, uploadedFile.fileName)
             objectSummary.map { summary =>
               println(s"*****latestUploadedFiles BEFORE APPENDING***: $latestUploadedFiles")
               latestUploadedFiles = latestUploadedFiles :+ uploadedFile.copy(objectStoreUrl = Some(summary.location.asUri))
