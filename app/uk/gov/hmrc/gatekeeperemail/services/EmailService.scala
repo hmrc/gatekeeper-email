@@ -80,7 +80,7 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
       templatedData = EmailTemplateData(sendEmailRequest.templateId, sendEmailRequest.parameters, sendEmailRequest.force,
         sendEmailRequest.auditData, sendEmailRequest.eventUrl)
       renderedEmail = email.copy(templateData = templatedData, htmlEmailBody = emailBody._1,
-        markdownEmailBody = templatedData.parameters.get("body").get, subject = emailRequest.emailData.emailSubject)
+        markdownEmailBody = emailBody._2, subject = emailRequest.emailData.emailSubject)
       _ <- emailRepository.updateEmail(renderedEmail)
     } yield renderedEmail
   }
@@ -93,8 +93,6 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
       emailRequest.emailData.emailBody.slice(0, index)
     }
     else emailRequest.emailData.emailBody
-    println(s"********$emailBody && ${emailRequest.emailData.emailBody}")
-
     val emailAttachments : String = {
       if (emailRequest.attachmentDetails.isDefined) {
         attachmentStartText + "\n" + emailRequest.attachmentDetails.get.map(file =>
@@ -105,9 +103,6 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
       }
     }
     val emailBodyModified =  emailBody + "\n" + emailAttachments
-
-    println(s"***************$emailBodyModified")
-
 
     val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
       "fromAddress" -> "gateKeeper",
@@ -120,7 +115,6 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
     val emailTemplateData = EmailTemplateData(emailRequest.templateId, parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
-    println(s"***EmailAttachmentDetails*****:${emailRequest.attachmentDetails}")
     Email(emailUID,  emailTemplateData, recipientsTitle, emailRequest.to, emailRequest.attachmentDetails,
       emailBodyModified, emailBodyModified,
       emailRequest.emailData.emailSubject, "composedBy",

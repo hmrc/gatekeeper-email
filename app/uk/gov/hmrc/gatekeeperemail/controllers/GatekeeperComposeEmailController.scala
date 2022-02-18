@@ -20,8 +20,9 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, PlayBodyParsers, Result}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.models.{UploadedFileWithObjectStore, _}
 import uk.gov.hmrc.gatekeeperemail.services.EmailService
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{ObjectSummaryWithMd5, Path, RetentionPeriod}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -57,58 +58,87 @@ class GatekeeperComposeEmailController @Inject()(
     }
   }
 
-  def updateFiles(): Action[UploadedFileMetadata] = Action.async(parse.json[UploadedFileMetadata]) { implicit request =>
 
-    def uploadToObjectStore(emailUID: String, downloadUrl: String, fileName: String) = {
-      logger.info(s"uploadToObjectStore downloadUrl = $downloadUrl and fileName = $fileName")
-      objectStoreClient.uploadFromUrl(from = new URL(downloadUrl),
-        to = Path.File(Path.Directory(emailUID), fileName),
-        retentionPeriod = RetentionPeriod.parse(appConfig.defaultRetentionPeriod).getOrElse(RetentionPeriod.OneYear),
-        contentType = None,
-        contentMd5 = None,
-        owner = "gatekeeper-email"
-      )
-    }
+  def uploadToObjectStore(emailUID: String, downloadUrl: String, fileName: String) = {
+    implicit val hc = HeaderCarrier()
+    logger.info(s"uploadToObjectStore downloadUrl = $downloadUrl and fileName = $fileName")
+    objectStoreClient.uploadFromUrl(from = new URL(downloadUrl),
+      to = Path.File(Path.Directory(emailUID), fileName),
+      retentionPeriod = RetentionPeriod.parse(appConfig.defaultRetentionPeriod).getOrElse(RetentionPeriod.OneYear),
+      contentType = None,
+      contentMd5 = None,
+      owner = "gatekeeper-email"
+    )
+  }
+
+  def deleteFromObjectStore(emailUID: String, fileName: String) = {
+    implicit val hc = HeaderCarrier()
+    logger.info(s"deleteFromObjectStore emailUID = $emailUID and fileName = $fileName")
+    objectStoreClient.deleteObject(
+      path = Path.File(Path.Directory(emailUID), fileName),
+      owner = "gatekeeper-email"
+    )
+  }
+
+  def updateFiles(): Action[UploadedFileMetadata] = Action.async(parse.json[UploadedFileMetadata]) { implicit request =>
     request.body match {
-      case value =>  {
-        println(s"Cargo: ${value.cargo}")
-        println(s"Callback received UploadedFileMetadata: $value")
+      case value =>
         val fetchEmail: Future[Email] = emailService.fetchEmail(emailUID = value.cargo.get.emailUID)
         fetchEmail.map { email =>
           val filesToUploadInObjStore: Seq[UploadedFileWithObjectStore] =
             filesToUploadInObjectStore(email.attachmentDetails, value.uploadedFiles)
-          println(s"filesToUploadInObjStore: $filesToUploadInObjStore")
-          var latestUploadedFiles: Seq[UploadedFileWithObjectStore] = Seq.empty[UploadedFileWithObjectStore]
-          filesToUploadInObjStore.foreach(uploadedFile => {
-            val objectSummary: Future[ObjectSummaryWithMd5] = uploadToObjectStore(email.emailUID, uploadedFile.downloadUrl, uploadedFile.fileName)
-            objectSummary.map { summary =>
-              println(s"*****latestUploadedFiles BEFORE APPENDING***: $latestUploadedFiles")
-              latestUploadedFiles = latestUploadedFiles :+ uploadedFile.copy(objectStoreUrl = Some(summary.location.asUri))
-              println(s"*****latestUploadedFiles AFTER APPENDING***: $latestUploadedFiles")
-              println(s"latestUploadedFiles: $latestUploadedFiles")
-              val finalUploadedFiles = email.attachmentDetails match {
-                case Some(currentFiles) =>
-                  println(s"*****currentFiles****: $currentFiles")
-                  val finalList = currentFiles ++ latestUploadedFiles
-                  println(s"*****currentFiles AFTER APPENDING****: $finalList")
-                  finalList
-
-                case None => latestUploadedFiles
-              }
-              println(s"*****finalUploadedFiles*******: $finalUploadedFiles")
-              val er = EmailRequest(
-                email.recipients,
-                templateId = "gatekeeper",
-                EmailData(email.subject, email.markdownEmailBody),
-                attachmentDetails = Some(finalUploadedFiles))
-              emailService.updateEmail(er, email.emailUID)
-            }
-          })
+          uploadFilesToObjectStoreAndConsolidateFinalList(email, filesToUploadInObjStore)
+          val filesToDeleteFromObjStore: Seq[UploadedFileWithObjectStore] =
+            filesToRemoveFromObjectStore(email.attachmentDetails, value.uploadedFiles)
+          deleteFilesFromObjectStoreAndConsolidateFinalList(email, filesToDeleteFromObjStore)
           NoContent
         }
-      }
       case _ => Future.successful(BadRequest)
     }
+  }
+
+  def uploadFilesToObjectStoreAndConsolidateFinalList(email: Email, filesToUploadInObjStore: Seq[UploadedFileWithObjectStore]) = {
+    var latestUploadedFiles: Seq[UploadedFileWithObjectStore] = Seq.empty[UploadedFileWithObjectStore]
+    filesToUploadInObjStore.foreach(uploadedFile => {
+      val objectSummary: Future[ObjectSummaryWithMd5] = uploadToObjectStore(email.emailUID, uploadedFile.downloadUrl, uploadedFile.fileName)
+      objectSummary.map { summary =>
+        latestUploadedFiles = latestUploadedFiles :+ uploadedFile.copy(objectStoreUrl = Some(summary.location.asUri),
+          devHubUrl = Some("https://devhub.url/" + summary.location.asUri)
+        )
+        val finalUploadedFiles = email.attachmentDetails match {
+          case Some(currentFiles) =>
+            val finalList = currentFiles ++ latestUploadedFiles
+            finalList
+
+          case None => latestUploadedFiles
+        }
+        val er = EmailRequest(
+          email.recipients,
+          templateId = "gatekeeper",
+          EmailData(email.subject, email.markdownEmailBody),
+          attachmentDetails = Some(finalUploadedFiles))
+        emailService.updateEmail(er, email.emailUID)
+      }
+    })
+  }
+
+  def deleteFilesFromObjectStoreAndConsolidateFinalList(email: Email, filesToDeleteFromObjStore: Seq[UploadedFileWithObjectStore]) = {
+    filesToDeleteFromObjStore.foreach(uploadedFile => {
+        deleteFromObjectStore(email.emailUID, uploadedFile.fileName)
+        val finalUploadedFiles = email.attachmentDetails match {
+          case Some(currentFiles) =>
+            val finalList = currentFiles.filterNot(file => file.upscanReference == uploadedFile.upscanReference)
+            finalList
+
+          case None => List()
+        }
+        val er = EmailRequest(
+          email.recipients,
+          templateId = "gatekeeper",
+          EmailData(email.subject, email.markdownEmailBody),
+          attachmentDetails = Some(finalUploadedFiles))
+        emailService.updateEmail(er, email.emailUID)
+    })
   }
 
   def filesToUploadInObjectStore(existingFiles: Option[Seq[UploadedFileWithObjectStore]],
@@ -116,11 +146,16 @@ class GatekeeperComposeEmailController @Inject()(
   Seq[UploadedFileWithObjectStore] = {
     existingFiles match {
       case Some(current) =>
-          val intersection = current.intersect(uploadedFiles)
+          val intersection = current.map(file => file.upscanReference).intersect(uploadedFiles.map(file => file.upscanReference))
           if (intersection.size == uploadedFiles.size) {
             List()
           } else {
-            uploadedFiles.diff(current)
+            val diffRefs = uploadedFiles.map(file => file.upscanReference).diff(current.map(file => file.upscanReference))
+            if(diffRefs.nonEmpty) {
+              uploadedFiles.filter(file => diffRefs.contains(file.upscanReference))
+            } else {
+              List()
+            }
           }
       case None => uploadedFiles
     }
@@ -131,13 +166,13 @@ class GatekeeperComposeEmailController @Inject()(
   Seq[UploadedFileWithObjectStore] = {
     existingFiles match {
       case Some(current) =>
-        val intersection = current.intersect(uploadedFiles)
-        if (intersection.size == uploadedFiles.size) {
-          List()
-        } else {
-          current.diff(uploadedFiles)
-        }
-      case None => uploadedFiles
+          val diffRefs = current.map(file => file.upscanReference).diff(uploadedFiles.map(file => file.upscanReference))
+          if(diffRefs.nonEmpty) {
+            current.filter(file => diffRefs.contains(file.upscanReference))
+          } else {
+            List()
+          }
+      case None => List()
     }
   }
 
