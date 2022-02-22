@@ -59,13 +59,16 @@ class GatekeeperComposeEmailController @Inject()(
 
   def updateFiles(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[UploadedFileMetadata] { value: UploadedFileMetadata =>
+      logger.info(s"******UPDATE FILES:$value ******")
     val fetchEmail: Future[Email] = emailService.fetchEmail(emailUID = value.cargo.get.emailUID)
         fetchEmail.map { email =>
           val filesToUploadInObjStore: Seq[UploadedFileWithObjectStore] =
             filesToUploadInObjectStore(email.attachmentDetails, value.uploadedFiles)
+          logger.info(s"*****FILES TO UPLOAD IN OBJECT STORE: $filesToUploadInObjStore ******")
           uploadFilesToObjectStoreAndUpdateEmailRecord(email, filesToUploadInObjStore)
           val filesToDeleteFromObjStore: Seq[UploadedFileWithObjectStore] =
             filesToRemoveFromObjectStore(email.attachmentDetails, value.uploadedFiles)
+          logger.info(s"*****FILES TO DELETE FROM OBJECT STORE: $filesToUploadInObjStore **********")
           deleteFilesFromObjectStoreAndUpdateEmailRecord(email, filesToDeleteFromObjStore)
           NoContent
         }
