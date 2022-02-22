@@ -24,7 +24,6 @@ import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -36,14 +35,11 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
 
   val logger: Logger = Logger(getClass.getName)
 
-  def persistEmail(emailRequest: EmailRequest, key: String): Future[Email] = {
-    val email: Email = emailData(emailRequest, key)
+  def persistEmail(emailRequest: EmailRequest, emailUID: String): Future[Email] = {
+    val email: Email = emailData(emailRequest, emailUID)
     logger.info(s"email data  before saving $email")
-    val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
-      "fromAddress" -> "gateKeeper",
-      "body" -> s"${emailRequest.emailData.emailBody}",
-      "service" -> "gatekeeper")
-    val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, parameters, emailRequest.force,
+
+    val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
     for {
@@ -56,23 +52,71 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
     } yield renderedEmail
   }
 
-  def sendEmail(emailSaved: EmailSaved): Future[Email] = {
+  def sendEmail(emailUID: String): Future[Email] = {
     for {
-      email <- emailRepository.getEmailData(emailSaved)
+      email <- emailRepository.getEmailData(emailUID)
       emailRequestedData = SendEmailRequest(email.recipients, email.templateData.templateId, email.templateData.parameters,
         email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
       _ <- emailConnector.sendEmail(emailRequestedData)
     } yield email
   }
 
-  private def emailData(emailRequest: EmailRequest, key: String): Email = {
-    val recipientsTitle = "TL API PLATFORM TEAM"
+  def fetchEmail(emailUID: String): Future[Email] = {
+    for {
+      email <- emailRepository.getEmailData(emailUID)
+    } yield email
+  }
 
-    val emailTemplateData = EmailTemplateData(emailRequest.templateId, Map(), emailRequest.force,
+  def updateEmail(emailRequest: EmailRequest, emailUID: String): Future[Email] = {
+    val email: Email = emailData(emailRequest, emailUID)
+    logger.info(s"email data  before saving $email")
+
+    val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
-    Email(UUID.randomUUID().toString, Some(List(key)), emailTemplateData, recipientsTitle, emailRequest.to, None,
-      emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
+    for {
+      renderResult <- emailRendererConnector.getTemplatedEmail(sendEmailRequest)
+      emailBody = getEmailBody(renderResult)
+      templatedData = EmailTemplateData(sendEmailRequest.templateId, sendEmailRequest.parameters, sendEmailRequest.force,
+        sendEmailRequest.auditData, sendEmailRequest.eventUrl)
+      renderedEmail = email.copy(templateData = templatedData, htmlEmailBody = emailBody._1,
+        markdownEmailBody = emailBody._2, subject = emailRequest.emailData.emailSubject)
+      _ <- emailRepository.updateEmail(renderedEmail)
+    } yield renderedEmail
+  }
+
+  private def emailData(emailRequest: EmailRequest, emailUID: String): Email = {
+    val recipientsTitle = "TL API PLATFORM TEAM"
+    val attachmentStartText = "From the Software Developer Support Team\n"
+    val index = emailRequest.emailData.emailBody.indexOf(attachmentStartText)
+    val emailBody = if(index > 0) {
+      emailRequest.emailData.emailBody.slice(0, index)
+    }
+    else emailRequest.emailData.emailBody
+    val emailAttachments : String = {
+      if (emailRequest.attachmentDetails.isDefined) {
+        attachmentStartText + "\n" + emailRequest.attachmentDetails.get.map(file =>
+          s"""[${file.fileName}](${file.downloadUrl})\n""").mkString("\n")
+      }
+      else {
+        ""
+      }
+    }
+    val emailBodyModified =  emailBody + "\n" + emailAttachments
+
+    val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
+      "fromAddress" -> "gateKeeper",
+      "body" -> s"$emailBodyModified",
+      "service" -> "gatekeeper",
+      "firstName" -> "((first name))",
+      "lastName" -> "((last name))",
+      "showFooter" -> "false",
+      "showHmrcBanner" -> "false")
+    val emailTemplateData = EmailTemplateData(emailRequest.templateId, parameters, emailRequest.force,
+      emailRequest.auditData, emailRequest.eventUrl)
+
+    Email(emailUID,  emailTemplateData, recipientsTitle, emailRequest.to, emailRequest.attachmentDetails,
+      emailBodyModified, emailBodyModified,
       emailRequest.emailData.emailSubject, "composedBy",
       Some("approvedBy"), DateTime.now())
   }

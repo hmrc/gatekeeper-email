@@ -26,7 +26,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailTemplateData}
+import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailTemplateData, User}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 import org.joda.time.DateTimeZone.UTC
@@ -53,7 +53,9 @@ class EmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[E
 
   "persist" should {
     val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
-    val email = Email("emailId-123", None, templateData, "DL Team", List("test@digital.hmrc.gov.uk"), None, "markdownEmailBody", "This is test email",
+    val users = List(User("example@example.com", "first name", "last name", true),
+      User("example2@example2.com", "first name2", "last name2", true))
+    val email = Email("emailId-123", templateData, "DL Team", users, None, "markdownEmailBody", "This is test email",
       "test subject", "composedBy", Some("approvedBy"), DateTime.now(UTC))
 
     "insert an Email message when it does not exist" in {
@@ -65,19 +67,11 @@ class EmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[E
       fetchedRecords.head shouldEqual email
     }
 
-    "create index on composedBy" in {
+    "create index on emailUID" in {
       await(serviceRepo.persist(email))
 
-      val Some(globalIdIndex) = await(serviceRepo.collection.listIndexes().toFuture()).find(i => i.get("name").get.asString().getValue == "composedByIndex")
-      globalIdIndex.get("unique") shouldBe None
-      globalIdIndex.get("background").get shouldBe BsonBoolean(true)
-    }
-
-    "create index on createDateTime" in {
-      await(serviceRepo.persist(email))
-
-      val Some(globalIdIndex) = await(serviceRepo.collection.listIndexes().toFuture()).find(i => i.get("name").get.asString().getValue == "createDateTimeIndex")
-      globalIdIndex.get("unique") shouldBe None
+      val Some(globalIdIndex) = await(serviceRepo.collection.listIndexes().toFuture()).find(i => i.get("name").get.asString().getValue == "emailUIDIndex")
+      globalIdIndex.get("unique") shouldBe Some(BsonBoolean(value=true))
       globalIdIndex.get("background").get shouldBe BsonBoolean(true)
     }
   }

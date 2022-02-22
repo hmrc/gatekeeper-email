@@ -22,25 +22,33 @@ import com.github.tomakehurst.wiremock.http.Fault
 import com.mongodb.client.result.InsertOneResult
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone.UTC
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.MockitoSugar.mock
+import org.mockito.{ArgumentCaptor, ArgumentMatchersSugar, MockitoSugar}
 import org.mongodb.scala.bson.BsonNumber
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
+import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.PlayBodyParsers
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailData, EmailRequest, EmailSaved, EmailTemplateData, RenderResult}
+import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
-import uk.gov.hmrc.gatekeeperemail.services.EmailService
+import uk.gov.hmrc.gatekeeperemail.services.{EmailService, ObjectStoreService}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
+import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
+import uk.gov.hmrc.play.audit.model.DataEvent
 
 import java.io.IOException
+import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -60,12 +68,22 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
   val emailBody = "Body to be used in the email template"
   val emailServicePath = "/gatekeeper/email"
   val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
-  val email = Email("emailId-123", Some(List("keyRef")), templateData, "DL Team",
-    List("test@digital.hmrc.gov.uk"), None, "markdownEmailBody", "This is test email",
+  val users = List(User("example@example.com", "first name", "last name", true),
+    User("example2@example2.com", "first name2", "last name2", true))
+  val email = Email("emailId-123", templateData, "DL Team",
+    users, None, "markdownEmailBody", "This is test email",
     "test subject", "composedBy", Some("approvedBy"), DateTime.now(UTC))
-
-  val emailRequest = EmailRequest(List(emailId), "gatekeeper", EmailData(emailId, subject, emailBody))
-  val wrongEmailRequest = EmailRequest(List(emailId), "gatekeeper", EmailData(emailId, subject, emailBody))
+  val emailUIDToAttachFile = "emailUID111"
+  val cargo = Some(UploadCargo(emailUIDToAttachFile))
+  val uploadedFile123: UploadedFileWithObjectStore = UploadedFileWithObjectStore("Ref123", "/gatekeeper/downloadUrl/123", "", "", "file123", "",
+    1024, cargo, None, None, Some(s"/gatekeeper/$emailUIDToAttachFile"), None)
+  val uploadedFileSeq = Seq(uploadedFile123)
+  val uploadedFileMetadata: UploadedFileMetadata = UploadedFileMetadata(Nonce.random, uploadedFileSeq, cargo)
+  val emailRequest = EmailRequest(users, "gatekeeper", EmailData(subject, emailBody))
+  val wrongEmailRequest = EmailRequest(users, "gatekeeper", EmailData(subject, emailBody))
+  private val fakeRequestToUpdateFiles = FakeRequest("POST", "/gatekeeperemail/updatefiles")
+    .withHeaders("Content-Type" -> "application/json")
+    .withBody(Json.toJson(uploadedFileMetadata))
   private val fakeRequest = FakeRequest("POST", "/gatekeeper-email").withBody(Json.toJson(emailRequest))
   private val fakeSaveEmailRequest = FakeRequest("POST", "/gatekeeper-email/save-email").withBody(Json.toJson(emailRequest))
   private val fakeWrongSaveEmailRequest = FakeRequest("POST", "/gatekeeper-email/save-email").withBody(Json.toJson(emailBody))
@@ -86,56 +104,152 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
 
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
+
+    implicit lazy val request = FakeRequest()
+    val objectStoreClient = mock[PlayObjectStoreClient]
+    val mockAppConfig = mock[AppConfig]
+
     val emailService = new EmailService(mockEmailConnector, emailRendererConnectorMock, mockEmailRepository)
     val mockEmailService = mock[EmailService]
+    val mockObjectStoreService = mock[ObjectStoreService]
     val controller = new GatekeeperComposeEmailController(Helpers.stubMessagesControllerComponents(),
-      playBodyParsers, emailService)
+      playBodyParsers, emailService, mockObjectStoreService)
     val controller2 = new GatekeeperComposeEmailController(Helpers.stubMessagesControllerComponents(),
-      playBodyParsers, mockEmailService)
+      playBodyParsers, mockEmailService, mockObjectStoreService)
 
     when(emailRendererConnectorMock.getTemplatedEmail(*))
       .thenReturn(successful(Right(RenderResult("RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
         "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
 
-    val emailId: String = UUID.randomUUID().toString
-    val dummyEmailData = Email("", Some(List("")), EmailTemplateData("", Map(), false, Map(), None), "", List(),
+    val emailUID: String = UUID.randomUUID().toString
+    val dummyEmailData = Email("", EmailTemplateData("", Map(), false, Map(), None), "", List(),
       None, "", "", "", "", None, DateTime.now)
-    when(mockEmailRepository.getEmailData(EmailSaved(emailId))).thenReturn(Future(dummyEmailData))
+    when(mockEmailRepository.getEmailData(emailUID)).thenReturn(Future(dummyEmailData))
   }
 
   "POST /gatekeeper-email/send-email" should {
     "return 200" in new Setup {
       when(mockEmailConnector.sendEmail(*)).thenReturn(successful(Status.OK))
       when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      val result = controller.sendEmail(emailId)(fakeRequest)
+      val result = controller.sendEmail(emailUID)(fakeRequest)
       status(result) shouldBe Status.OK
     }
 
     "return 500" in new Setup {
       when(mockEmailConnector.sendEmail(*)).thenReturn(failed(new IOException("can not connect to email service")))
       when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      val result = controller.sendEmail(emailId)(fakeRequest)
+      val result = controller.sendEmail(emailUID)(fakeRequest)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
   }
 
   "POST /gatekeeper-email/save-email" should {
     "return 200" in new Setup {
-      when(mockEmailService.persistEmail(emailRequest, "keyRef")).thenReturn(successful(email))
-      val result = controller2.saveEmail("keyRef")(fakeSaveEmailRequest)
+      when(mockEmailService.persistEmail(emailRequest, emailUID)).thenReturn(successful(email))
+      val result = controller2.saveEmail(emailUID)(fakeSaveEmailRequest)
       status(result) shouldBe Status.OK
     }
-
     "return 500" in new Setup {
-      when(mockEmailService.persistEmail(emailRequest, "keyRef")).thenReturn(failed(new IOException("can not connect to email service")))
-      val result = controller2.saveEmail("keyRef")(fakeSaveEmailRequest)
+      when(mockEmailService.persistEmail(emailRequest, emailUID)).thenReturn(failed(new IOException("can not connect to email service")))
+      val result = controller2.saveEmail(emailUID)(fakeSaveEmailRequest)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
 
     "return 400" in new Setup {
-      when(mockEmailService.persistEmail(emailRequest, "keyRef")).thenReturn(successful(email))
-      val result = controller2.saveEmail("keyRef")(fakeWrongSaveEmailRequest)
+      when(mockEmailService.persistEmail(emailRequest, emailUID)).thenReturn(successful(email))
+      val result = controller2.saveEmail(emailUID)(fakeWrongSaveEmailRequest)
       status(result) shouldBe Status.BAD_REQUEST
     }
   }
+
+  "POST /gatekeeper-email/update-email" should {
+    "return 200" in new Setup {
+      when(mockEmailService.updateEmail(*, *)).thenReturn(successful(email))
+      val result = controller2.updateEmail(emailUID)(fakeSaveEmailRequest)
+      status(result) shouldBe Status.OK
+    }
+    "return 500" in new Setup {
+      when(mockEmailService.updateEmail(emailRequest, (emailUID))).thenReturn(failed(new IOException("can not connect to email service")))
+      val result = controller2.updateEmail(emailUID)(fakeSaveEmailRequest)
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+    }
+    "return 400" in new Setup {
+      when(mockEmailService.updateEmail(emailRequest, (emailUID))).thenReturn(successful(email))
+      val result = controller2.updateEmail(emailUID)(fakeWrongSaveEmailRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+    }
+  }
+
+  "POST /gatekeeperemail/updatefiles" should {
+    "return 200" in new Setup {
+      val toLocation = Path.File(Path.Directory("gatekeeper-email"), "file123")
+      when(mockObjectStoreService.uploadToObjectStore(*,*,*))
+        .thenReturn(successful(ObjectSummaryWithMd5(toLocation, 1024,
+        Md5Hash("md5Hash"), Instant.parse("2018-04-24T09:30:00Z"))))
+
+      when(mockEmailService.fetchEmail((emailUIDToAttachFile))).thenReturn(successful(email))
+      val result = controller2.updateFiles()(fakeRequestToUpdateFiles)
+      verify(mockObjectStoreService).uploadToObjectStore(*, *, *)
+      status(result) shouldBe Status.NO_CONTENT
+    }
+
+    "return 500" in new Setup {
+      when(mockEmailService.fetchEmail((emailUIDToAttachFile))).thenReturn(failed(new IOException("can not connect to email service")))
+      val result = controller2.updateFiles()(fakeRequestToUpdateFiles)
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+    }
+
+    "Upload to object store and update attachments" in new Setup {
+      val uploadedFile345: UploadedFileWithObjectStore = UploadedFileWithObjectStore("Ref345", "/gatekeeper/downloadUrl/345", "", "", "file345", "",
+        1024, cargo, None, None, Some(s"/gatekeeper/$emailUIDToAttachFile"), None)
+      val uploadedFile567: UploadedFileWithObjectStore = UploadedFileWithObjectStore("Ref567", "/gatekeeper/downloadUrl/567", "", "", "file567", "",
+        1024, cargo, None, None, Some(s"/gatekeeper/$emailUIDToAttachFile"), None)
+      val uploadedFiles = uploadedFileMetadata.copy(uploadedFiles =
+        Seq(uploadedFile123, uploadedFile345, uploadedFile567), cargo = cargo)
+      private val fakeRequestToUpdateFiles = FakeRequest("POST", "/gatekeeperemail/updatefiles")
+        .withHeaders("Content-Type" -> "application/json")
+        .withBody(Json.toJson(uploadedFiles))
+      val existingEmail = email.copy(emailUID = emailUIDToAttachFile, attachmentDetails = Some(Seq(uploadedFile123, uploadedFile345)))
+      when(mockEmailService.fetchEmail((emailUIDToAttachFile))).thenReturn(successful(existingEmail))
+
+      val toLocation = Path.File(Path.Directory("gatekeeper-email"), "file567")
+      when(mockObjectStoreService.uploadToObjectStore(emailUIDToAttachFile, "/gatekeeper/downloadUrl/567", "file567"))
+        .thenReturn(successful(ObjectSummaryWithMd5(toLocation, 1024, Md5Hash("md5Hash"), Instant.parse("2018-04-24T09:30:00Z"))))
+
+      val captor = ArgumentCaptor.forClass(classOf[EmailRequest])
+      await(controller2.updateFiles()(fakeRequestToUpdateFiles))
+      verify(mockObjectStoreService, times(1)).uploadToObjectStore(emailUIDToAttachFile, "/gatekeeper/downloadUrl/567", "file567")
+      verify(mockEmailService).updateEmail(captor.capture(), anyString())
+      val emailRequestCaptured: EmailRequest = captor.getValue
+      emailRequestCaptured.attachmentDetails.get.size shouldBe 3
+    }
+
+    "Remove from object store and update attachments" in new Setup {
+      val uploadedFile345: UploadedFileWithObjectStore = UploadedFileWithObjectStore("Ref345", "/gatekeeper/downloadUrl/345", "", "", "file345", "",
+        1024, cargo, None, None, Some(s"/gatekeeper/$emailUIDToAttachFile"), None)
+      val uploadedFiles = uploadedFileMetadata.copy(uploadedFiles = Seq(uploadedFile345))
+      private val fakeRequestToUpdateFiles = FakeRequest("POST", "/gatekeeperemail/updatefiles")
+        .withHeaders("Content-Type" -> "application/json")
+        .withBody(Json.toJson(uploadedFiles))
+
+      val captor = ArgumentCaptor.forClass(classOf[EmailRequest])
+      val existingEmail = email.copy(emailUID = emailUIDToAttachFile,
+        attachmentDetails = Some(Seq(uploadedFile123, uploadedFile345)))
+      when(mockEmailService.fetchEmail((emailUIDToAttachFile))).thenReturn(successful(existingEmail))
+      when(mockObjectStoreService.deleteFromObjectStore(emailUIDToAttachFile, "file123")).thenReturn(successful())
+      await(controller2.updateFiles()(fakeRequestToUpdateFiles))
+      verify(mockObjectStoreService, times(1)).deleteFromObjectStore(emailUIDToAttachFile, "file123")
+      verify(mockEmailService).updateEmail(captor.capture(), anyString())
+      val emailRequestCaptured: EmailRequest = captor.getValue
+      emailRequestCaptured.attachmentDetails.get.size shouldBe 1
+    }
+  }
+
+  "GET /gatekeeper-email/fetch-email" should {
+      "return 200" in new Setup {
+        when(mockEmailService.fetchEmail((emailUID))).thenReturn(successful(email))
+        val result = controller2.fetchEmail(emailUID)(request)
+        status(result) shouldBe Status.OK
+      }
+    }
 }

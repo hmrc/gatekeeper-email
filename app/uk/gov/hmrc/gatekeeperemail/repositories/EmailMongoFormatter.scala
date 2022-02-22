@@ -18,11 +18,15 @@ package uk.gov.hmrc.gatekeeperemail.repositories
 
 import org.joda.time.DateTime
 import play.api.libs.json.{Format, Json, OFormat}
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailTemplateData}
+import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailTemplateData, UploadCargo, UploadedFile, UploadedFileWithObjectStore, User}
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 
 private[repositories] object EmailMongoFormatter {
   implicit val dateFormation  : Format[DateTime] = MongoJodaFormats.dateTimeFormat
+  implicit val userFormatter: OFormat[User] = Json.format[User]
+  implicit val cargoFormat: OFormat[UploadCargo] = Json.format[UploadCargo]
+  implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
+  implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
   implicit val emailTemplateDataFormatter: OFormat[EmailTemplateData] = Json.format[EmailTemplateData]
   implicit val emailFormatter: OFormat[Email] = Json.format[Email]
 }

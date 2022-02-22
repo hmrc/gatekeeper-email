@@ -28,7 +28,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailData, EmailRequest, RenderResult}
+import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailData, EmailRequest, RenderResult, User}
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -64,6 +64,8 @@ class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEac
     val emailConnectorMock: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
     val underTest = new EmailService(emailConnectorMock, emailRendererConnectorMock, emailRepository)
+    val users = List(User("example@example.com", "first name", "last name", true),
+      User("example2@example2.com", "first name2", "last name2", true))
   }
 
   "saveEmail" should {
@@ -73,9 +75,9 @@ class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEac
       when(emailRendererConnectorMock.getTemplatedEmail(*))
         .thenReturn(successful(Right(RenderResult("RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
           "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
-      val emailRequest = EmailRequest(List("test@digital.hmrc.gov.uk"), "gatekeeper",
-        EmailData("Recipient Title", "Test subject", "Dear Mr XYZ, This is test email"), false, Map())
-      val email: Email = await(underTest.persistEmail(emailRequest, "keyRef"))
+      val emailRequest = EmailRequest(users, "gatekeeper",
+        EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
+      val email: Email = await(underTest.persistEmail(emailRequest,"emailUID"))
       email.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
       val fetchedRecords = await(emailRepository.collection.withReadPreference(primaryPreferred).find().toFuture())
 

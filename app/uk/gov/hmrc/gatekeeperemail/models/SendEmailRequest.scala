@@ -18,34 +18,58 @@ package uk.gov.hmrc.gatekeeperemail.models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class EmailData(emailRecipient: String, emailSubject: String, emailBody: String)
+case class EmailData(emailSubject: String, emailBody: String)
 
-case class SendEmailRequest(to: List[String],
+case class SendEmailRequest(to: List[User],
                             templateId: String,
                             parameters: Map[String, String],
                             force: Boolean = false,
                             auditData: Map[String, String] = Map.empty,
                             eventUrl: Option[String] = None)
 
-case class EmailRequest(to: List[String],
+case class OneEmailRequest(to: List[String],
+                            templateId: String,
+                            parameters: Map[String, String],
+                            force: Boolean = false,
+                            auditData: Map[String, String] = Map.empty,
+                            eventUrl: Option[String] = None)
+
+
+case class EmailRequest(to: List[User],
                         templateId: String,
                         emailData: EmailData,
                         force: Boolean = false,
                         auditData: Map[String, String] = Map.empty,
-                        eventUrl: Option[String] = None)
+                        eventUrl: Option[String] = None,
+                        attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None)
 
-case class EmailSaved(emailId: String)
-
-object EmailSaved {
-  implicit val emailSavedFmt: OFormat[EmailSaved] = Json.format[EmailSaved]
-}
+case class EmailSaved(emailUID: String)
 
 object SendEmailRequest {
+  implicit val userFmt: OFormat[User] = Json.format[User]
+  implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
+  implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
+  implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
   implicit val sendEmailRequestFmt: OFormat[SendEmailRequest] = Json.format[SendEmailRequest]
 }
+object OneEmailRequest {
+  implicit val userFmt: OFormat[User] = Json.format[User]
+  implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
+  implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
+  implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
+  implicit val sendEmailRequestFmt: OFormat[OneEmailRequest] = Json.format[OneEmailRequest]
+}
 object EmailRequest {
+  implicit val userFmt: OFormat[User] = Json.format[User]
+  implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
+  implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
+  implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
   implicit val receiveEmailRequestFmt: OFormat[EmailRequest] = Json.format[EmailRequest]
 }
 object EmailData {
+  implicit val userFmt: OFormat[User] = Json.format[User]
+  implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
+  implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
+  implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
   implicit val emailDataFmt: OFormat[EmailData] = Json.format[EmailData]
 }

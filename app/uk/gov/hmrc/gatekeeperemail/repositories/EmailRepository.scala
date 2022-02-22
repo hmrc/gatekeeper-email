@@ -20,11 +20,10 @@ import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.{MongoClient, MongoCollection}
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.model.Updates.set
+import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
 import org.mongodb.scala.result.InsertOneResult
-import play.api.libs.json.{JsObject, Json}
-import play.api.mvc.Results.BadRequest
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailSaved}
+import uk.gov.hmrc.gatekeeperemail.models.Email
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.emailFormatter
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
@@ -39,10 +38,8 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
     mongoComponent = mongoComponent,
     collectionName = "email",
     domainFormat = emailFormatter,
-    indexes = Seq(IndexModel(ascending("composedBy"),
-      IndexOptions().name("composedByIndex").background(true)),
-      IndexModel(ascending("createDateTime"),
-        IndexOptions().name("createDateTimeIndex").background(true).unique(false)))
+    indexes = Seq(IndexModel(ascending("emailUID"),
+        IndexOptions().name("emailUIDIndex").background(true).unique(true)))
   ) {
 
   override lazy val collection: MongoCollection[Email] =
@@ -52,6 +49,10 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
         fromRegistries(
           fromCodecs(
             Codecs.playFormatCodec(domainFormat),
+            Codecs.playFormatCodec(EmailMongoFormatter.emailTemplateDataFormatter),
+            Codecs.playFormatCodec(EmailMongoFormatter.cargoFormat),
+            Codecs.playFormatCodec(EmailMongoFormatter.attachmentDetailsFormat),
+            Codecs.playFormatCodec(EmailMongoFormatter.attachmentDetailsWithObjectStoreFormat),
             Codecs.playFormatCodec(EmailMongoFormatter.emailFormatter)
           ),
           MongoClient.DEFAULT_CODEC_REGISTRY
@@ -62,16 +63,40 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
       collection.insertOne(entity).toFuture()
     }
 
-    def getEmailData(savedEmail: EmailSaved): Future[Email] = {
-      for (emailData <- findByEmailId(savedEmail.emailId)) yield {
+    def getEmailData(emailUID: String): Future[Email] = {
+      for (emailData <- findByEmailUID(emailUID)) yield {
         emailData match {
           case Some(email) => email
-          case None         => throw new Exception(s"Email with id ${savedEmail.emailId} not found")
+          case None         => throw new Exception(s"Email with id ${emailUID} not found")
         }
       }
     }
 
-  def findByEmailId(emailId: String)(implicit executionContext: ExecutionContext): Future[Option[Email]] = {
-    collection.find(equal("emailId", Codecs.toBson(emailId))).headOption()
+  def updateEmail(email: Email): Future[Email] = {
+
+    collection.findOneAndUpdate(equal("emailUID", Codecs.toBson(email.emailUID)),
+      update = set("templateData", email.templateData),
+      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+    ).map(_.asInstanceOf[Email]).head()
+    collection.findOneAndUpdate(equal("emailUID", Codecs.toBson(email.emailUID)),
+      update = set("htmlEmailBody", email.htmlEmailBody),
+      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+    ).map(_.asInstanceOf[Email]).head()
+    collection.findOneAndUpdate(equal("emailUID", Codecs.toBson(email.emailUID)),
+      update = set("markdownEmailBody", email.markdownEmailBody),
+      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+    ).map(_.asInstanceOf[Email]).head()
+    collection.findOneAndUpdate(equal("emailUID", Codecs.toBson(email.emailUID)),
+      update = set("subject", email.subject),
+      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+    ).map(_.asInstanceOf[Email]).head()
+    collection.findOneAndUpdate(equal("emailUID", Codecs.toBson(email.emailUID)),
+      update = set("attachmentDetails", email.attachmentDetails.getOrElse(Seq.empty)),
+      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+    ).map(_.asInstanceOf[Email]).head()
+  }
+
+  def findByEmailUID(emailUID: String)(implicit executionContext: ExecutionContext): Future[Option[Email]] = {
+    collection.find(equal("emailUID", Codecs.toBson(emailUID))).headOption()
   }
 }

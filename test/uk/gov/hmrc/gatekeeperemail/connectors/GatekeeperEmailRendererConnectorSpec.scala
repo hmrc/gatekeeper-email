@@ -26,7 +26,7 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.OK
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.SendEmailRequest
+import uk.gov.hmrc.gatekeeperemail.models.{SendEmailRequest, User}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import java.io.IOException
@@ -62,6 +62,8 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcSpec with BeforeAndA
   val emailBody = "Body to be used in the email template"
   val templateId = "gatekeeper"
   val emailRendererPath = s"/templates/$templateId"
+  val users = List(User("example@example.com", "first name", "last name", true),
+    User("example2@example2.com", "first name2", "last name2", true))
 
   trait Setup {
     val httpClient = app.injector.instanceOf[HttpClient]
@@ -91,7 +93,7 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcSpec with BeforeAndA
   "emailRendererConnector" should {
     val parameters: Map[String, String] = Map("subject" -> s"$subject", "fromAddress" -> s"$fromAddress",
       "body" -> s"$emailBody", "service" -> s"gatekeeper")
-    val emailRequest = SendEmailRequest(List(emailId), templateId, parameters)
+    val emailRequest = SendEmailRequest(users, templateId, parameters)
 
     "get gatekeeper email template renderer" in new Setup with WorkingHttp {
       await(underTest.getTemplatedEmail(emailRequest))
@@ -101,7 +103,6 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcSpec with BeforeAndA
         .withRequestBody(equalToJson(
           s"""
              |{
-             |  "email": "$emailId",
              |  "parameters": {
              |    "subject": "$subject",
              |    "fromAddress": "gateKeeper",

@@ -40,7 +40,7 @@ class GatekeeperEmailRendererConnector @Inject()(httpClient: HttpClient, config:
 
     httpClient.POST[TemplateRenderRequest, TemplateRenderResult](
       s"$serviceUrl/templates/${emailRequest.templateId}",
-      TemplateRenderRequest(emailRequest.parameters, takeOnlyIfOneEmail(emailRequest.to))) map { result =>
+      TemplateRenderRequest(emailRequest.parameters, takeOnlyIfOneEmail(emailRequest.to.map(_.email)))) map { result =>
       Right(
           RenderResult(
           result.plain,

@@ -25,20 +25,28 @@ case class EmailTemplateData(templateId: String, parameters: Map[String, String]
                              auditData: Map[String, String] = Map.empty,
                              eventUrl: Option[String] = None)
 
-case class Email(emailId: String, keyReference: Option[List[String]], templateData: EmailTemplateData, recipientTitle: String, recipients: List[String],
-                 attachmentLink: Option[String], markdownEmailBody: String,
+case class Email(emailUID: String, templateData: EmailTemplateData, recipientTitle: String, recipients: List[User],
+                 attachmentDetails: Option[Seq[UploadedFileWithObjectStore]], markdownEmailBody: String,
                  htmlEmailBody: String, subject: String, composedBy: String, approvedBy: Option[String], createDateTime: DateTime)
 
-case class OutgoingEmail(emailId: String, recipientTitle: String, recipients: List[String], attachmentLink: Option[String],
+case class OutgoingEmail(emailUID: String, recipientTitle: String, recipients: List[User], attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None,
                          markdownEmailBody: String, htmlEmailBody: String, subject: String,
                          composedBy: String, approvedBy: Option[String])
 
 object OutgoingEmail {
+  implicit val userFormatter: OFormat[User] = Json.format[User]
+  implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
+  implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
+  implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
   implicit val outGoingEmailFmt: OFormat[OutgoingEmail] = Json.format[OutgoingEmail]
 }
 
 object Email {
   implicit val dateFormation: Format[DateTime] = MongoJodaFormats.dateTimeFormat
+  implicit val userFormatter: OFormat[User] = Json.format[User]
+  implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
+  implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
+  implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
   implicit val emailTemplateDataFormatter: OFormat[EmailTemplateData] = Json.format[EmailTemplateData]
   implicit val emailFormatter: OFormat[Email] = Json.format[Email]
 }
