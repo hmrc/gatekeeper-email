@@ -169,7 +169,10 @@ class GatekeeperComposeEmailController @Inject()(
 
   private def recovery: PartialFunction[Throwable, Result] = {
     case e: IOException =>
-      logger.warn(s"IOException ${e.getMessage}")
+      logger.error(s"IOException ${e.getMessage}")
       InternalServerError(JsErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage))
+    case th: Throwable =>
+      logger.error(s"Throwable message : ${th.getMessage} and Throwable: $th")
+      InternalServerError(JsErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, th.getMessage))
   }
 }
