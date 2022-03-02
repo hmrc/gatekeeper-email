@@ -14,3 +14,35 @@ curl localhost:9620/gatekeeper-email -d '{"to":["sdgdf@sdfds"], "templateId":"ga
 ### License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
+
+### Run object store stub 
+sm --start OBJECT_STORE_STUB
+
+
+## check out internal-auth git repo 
+## run command:
+sbt "run 8470" -Dapplication.router=testOnlyDoNotUseInAppConf.Routes
+
+
+##POSTMAN REQUEST
+
+POST to  http://localhost:8470/test-only/token
+with body:
+{
+"token": "1113",
+"principal": "object-store",
+"permissions": [{
+"resourceType": "object-store",
+"resourceLocation": "gatekeeper-email",
+"actions": ["*"]
+}]
+}
+
+Response:
+{
+"token": "1113",
+"expiresAt": "2022-03-14T12:20:19.832Z"
+}
+
+## the token 1113 should be in application.conf ( which is set currently)
+
