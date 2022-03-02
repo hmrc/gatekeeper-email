@@ -87,26 +87,9 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
 
   private def emailData(emailRequest: EmailRequest, emailUID: String): Email = {
     val recipientsTitle = "TL API PLATFORM TEAM"
-    val attachmentStartText = "From the Software Developer Support Team\n"
-    val index = emailRequest.emailData.emailBody.indexOf(attachmentStartText)
-    val emailBody = if(index > 0) {
-      emailRequest.emailData.emailBody.slice(0, index)
-    }
-    else emailRequest.emailData.emailBody
-    val emailAttachments : String = {
-      if (emailRequest.attachmentDetails.isDefined) {
-        attachmentStartText + "\n" + emailRequest.attachmentDetails.get.map(file =>
-          s"""[${file.fileName}](${file.downloadUrl})\n""").mkString("\n")
-      }
-      else {
-        ""
-      }
-    }
-    val emailBodyModified =  emailBody + "\n" + emailAttachments
-
     val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
       "fromAddress" -> "gateKeeper",
-      "body" -> s"$emailBodyModified",
+      "body" -> s"${emailRequest.emailData.emailBody}",
       "service" -> "gatekeeper",
       "firstName" -> "((first name))",
       "lastName" -> "((last name))",
@@ -116,7 +99,7 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
       emailRequest.auditData, emailRequest.eventUrl)
 
     Email(emailUID,  emailTemplateData, recipientsTitle, emailRequest.to, emailRequest.attachmentDetails,
-      emailBodyModified, emailBodyModified,
+      emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
       emailRequest.emailData.emailSubject, "composedBy",
       Some("approvedBy"), DateTime.now())
   }
