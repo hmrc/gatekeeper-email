@@ -73,10 +73,10 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
   val email = Email("emailId-123", templateData, "DL Team",
     users, None, "markdownEmailBody", "This is test email",
     "test subject", "composedBy", Some("approvedBy"), DateTime.now(UTC))
-  val emailUIDToAttachFile = "emailUID111"
-  val cargo = Some(UploadCargo(emailUIDToAttachFile))
+  val emailUUIDToAttachFile = "emailUUID111"
+  val cargo = Some(UploadCargo(emailUUIDToAttachFile))
   val uploadedFile123: UploadedFileWithObjectStore = UploadedFileWithObjectStore("Ref123", "/gatekeeper/downloadUrl/123", "", "", "file123", "",
-    1024, cargo, None, None, Some(s"/gatekeeper/$emailUIDToAttachFile"), None)
+    1024, cargo, None, None, Some(s"/gatekeeper/$emailUUIDToAttachFile"), None)
   val uploadedFileSeq = Seq(uploadedFile123)
   val uploadedFileMetadata: UploadedFileMetadata = UploadedFileMetadata(Nonce.random, uploadedFileSeq, cargo)
   val emailRequest = EmailRequest(users, "gatekeeper", EmailData(subject, emailBody))
@@ -121,43 +121,43 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
       .thenReturn(successful(Right(RenderResult("RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
         "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
 
-    val emailUID: String = UUID.randomUUID().toString
+    val emailUUID: String = UUID.randomUUID().toString
     val dummyEmailData = Email("", EmailTemplateData("", Map(), false, Map(), None), "", List(),
       None, "", "", "", "", None, DateTime.now)
-    when(mockEmailRepository.getEmailData(emailUID)).thenReturn(Future(dummyEmailData))
+    when(mockEmailRepository.getEmailData(emailUUID)).thenReturn(Future(dummyEmailData))
   }
 
   "POST /gatekeeper-email/send-email" should {
     "return 200" in new Setup {
       when(mockEmailConnector.sendEmail(*)).thenReturn(successful(Status.OK))
       when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      val result = controller.sendEmail(emailUID)(fakeRequest)
+      val result = controller.sendEmail(emailUUID)(fakeRequest)
       status(result) shouldBe Status.OK
     }
 
     "return 500" in new Setup {
       when(mockEmailConnector.sendEmail(*)).thenReturn(failed(new IOException("can not connect to email service")))
       when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      val result = controller.sendEmail(emailUID)(fakeRequest)
+      val result = controller.sendEmail(emailUUID)(fakeRequest)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
   }
 
   "POST /gatekeeper-email/save-email" should {
     "return 200" in new Setup {
-      when(mockEmailService.persistEmail(emailRequest, emailUID)).thenReturn(successful(email))
-      val result = controller2.saveEmail(emailUID)(fakeSaveEmailRequest)
+      when(mockEmailService.persistEmail(emailRequest, emailUUID)).thenReturn(successful(email))
+      val result = controller2.saveEmail(emailUUID)(fakeSaveEmailRequest)
       status(result) shouldBe Status.OK
     }
     "return 500" in new Setup {
-      when(mockEmailService.persistEmail(emailRequest, emailUID)).thenReturn(failed(new IOException("can not connect to email service")))
-      val result = controller2.saveEmail(emailUID)(fakeSaveEmailRequest)
+      when(mockEmailService.persistEmail(emailRequest, emailUUID)).thenReturn(failed(new IOException("can not connect to email service")))
+      val result = controller2.saveEmail(emailUUID)(fakeSaveEmailRequest)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
 
     "return 400" in new Setup {
-      when(mockEmailService.persistEmail(emailRequest, emailUID)).thenReturn(successful(email))
-      val result = controller2.saveEmail(emailUID)(fakeWrongSaveEmailRequest)
+      when(mockEmailService.persistEmail(emailRequest, emailUUID)).thenReturn(successful(email))
+      val result = controller2.saveEmail(emailUUID)(fakeWrongSaveEmailRequest)
       status(result) shouldBe Status.BAD_REQUEST
     }
   }
@@ -165,17 +165,17 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
   "POST /gatekeeper-email/update-email" should {
     "return 200" in new Setup {
       when(mockEmailService.updateEmail(*, *)).thenReturn(successful(email))
-      val result = controller2.updateEmail(emailUID)(fakeSaveEmailRequest)
+      val result = controller2.updateEmail(emailUUID)(fakeSaveEmailRequest)
       status(result) shouldBe Status.OK
     }
     "return 500" in new Setup {
-      when(mockEmailService.updateEmail(emailRequest, (emailUID))).thenReturn(failed(new IOException("can not connect to email service")))
-      val result = controller2.updateEmail(emailUID)(fakeSaveEmailRequest)
+      when(mockEmailService.updateEmail(emailRequest, (emailUUID))).thenReturn(failed(new IOException("can not connect to email service")))
+      val result = controller2.updateEmail(emailUUID)(fakeSaveEmailRequest)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
     "return 400" in new Setup {
-      when(mockEmailService.updateEmail(emailRequest, (emailUID))).thenReturn(successful(email))
-      val result = controller2.updateEmail(emailUID)(fakeWrongSaveEmailRequest)
+      when(mockEmailService.updateEmail(emailRequest, (emailUUID))).thenReturn(successful(email))
+      val result = controller2.updateEmail(emailUUID)(fakeWrongSaveEmailRequest)
       status(result) shouldBe Status.BAD_REQUEST
     }
   }
@@ -187,38 +187,38 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
         .thenReturn(successful(ObjectSummaryWithMd5(toLocation, 1024,
         Md5Hash("md5Hash"), Instant.parse("2018-04-24T09:30:00Z"))))
 
-      when(mockEmailService.fetchEmail((emailUIDToAttachFile))).thenReturn(successful(email))
+      when(mockEmailService.fetchEmail((emailUUIDToAttachFile))).thenReturn(successful(email))
       val result = controller2.updateFiles()(fakeRequestToUpdateFiles)
       verify(mockObjectStoreService).uploadToObjectStore(*, *, *)
       status(result) shouldBe Status.NO_CONTENT
     }
 
     "return 500" in new Setup {
-      when(mockEmailService.fetchEmail((emailUIDToAttachFile))).thenReturn(failed(new IOException("can not connect to email service")))
+      when(mockEmailService.fetchEmail((emailUUIDToAttachFile))).thenReturn(failed(new IOException("can not connect to email service")))
       val result = controller2.updateFiles()(fakeRequestToUpdateFiles)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
 
     "Upload to object store and update attachments" in new Setup {
       val uploadedFile345: UploadedFileWithObjectStore = UploadedFileWithObjectStore("Ref345", "/gatekeeper/downloadUrl/345", "", "", "file345", "",
-        1024, cargo, None, None, Some(s"/gatekeeper/$emailUIDToAttachFile"), None)
+        1024, cargo, None, None, Some(s"/gatekeeper/$emailUUIDToAttachFile"), None)
       val uploadedFile567: UploadedFileWithObjectStore = UploadedFileWithObjectStore("Ref567", "/gatekeeper/downloadUrl/567", "", "", "file567", "",
-        1024, cargo, None, None, Some(s"/gatekeeper/$emailUIDToAttachFile"), None)
+        1024, cargo, None, None, Some(s"/gatekeeper/$emailUUIDToAttachFile"), None)
       val uploadedFiles = uploadedFileMetadata.copy(uploadedFiles =
         Seq(uploadedFile123, uploadedFile345, uploadedFile567), cargo = cargo)
       private val fakeRequestToUpdateFiles = FakeRequest("POST", "/gatekeeperemail/updatefiles")
         .withHeaders("Content-Type" -> "application/json")
         .withBody(Json.toJson(uploadedFiles))
-      val existingEmail = email.copy(emailUID = emailUIDToAttachFile, attachmentDetails = Some(Seq(uploadedFile123, uploadedFile345)))
-      when(mockEmailService.fetchEmail((emailUIDToAttachFile))).thenReturn(successful(existingEmail))
+      val existingEmail = email.copy(emailUUID = emailUUIDToAttachFile, attachmentDetails = Some(Seq(uploadedFile123, uploadedFile345)))
+      when(mockEmailService.fetchEmail((emailUUIDToAttachFile))).thenReturn(successful(existingEmail))
 
       val toLocation = Path.File(Path.Directory("gatekeeper-email"), "file567")
-      when(mockObjectStoreService.uploadToObjectStore(emailUIDToAttachFile, "/gatekeeper/downloadUrl/567", "file567"))
+      when(mockObjectStoreService.uploadToObjectStore(emailUUIDToAttachFile, "/gatekeeper/downloadUrl/567", "file567"))
         .thenReturn(successful(ObjectSummaryWithMd5(toLocation, 1024, Md5Hash("md5Hash"), Instant.parse("2018-04-24T09:30:00Z"))))
 
       val captor = ArgumentCaptor.forClass(classOf[EmailRequest])
       await(controller2.updateFiles()(fakeRequestToUpdateFiles))
-      verify(mockObjectStoreService, times(1)).uploadToObjectStore(emailUIDToAttachFile, "/gatekeeper/downloadUrl/567", "file567")
+      verify(mockObjectStoreService, times(1)).uploadToObjectStore(emailUUIDToAttachFile, "/gatekeeper/downloadUrl/567", "file567")
       verify(mockEmailService).updateEmail(captor.capture(), anyString())
       val emailRequestCaptured: EmailRequest = captor.getValue
       emailRequestCaptured.attachmentDetails.get.size shouldBe 3
@@ -226,19 +226,19 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
 
     "Remove from object store and update attachments" in new Setup {
       val uploadedFile345: UploadedFileWithObjectStore = UploadedFileWithObjectStore("Ref345", "/gatekeeper/downloadUrl/345", "", "", "file345", "",
-        1024, cargo, None, None, Some(s"/gatekeeper/$emailUIDToAttachFile"), None)
+        1024, cargo, None, None, Some(s"/gatekeeper/$emailUUIDToAttachFile"), None)
       val uploadedFiles = uploadedFileMetadata.copy(uploadedFiles = Seq(uploadedFile345))
       private val fakeRequestToUpdateFiles = FakeRequest("POST", "/gatekeeperemail/updatefiles")
         .withHeaders("Content-Type" -> "application/json")
         .withBody(Json.toJson(uploadedFiles))
 
       val captor = ArgumentCaptor.forClass(classOf[EmailRequest])
-      val existingEmail = email.copy(emailUID = emailUIDToAttachFile,
+      val existingEmail = email.copy(emailUUID = emailUUIDToAttachFile,
         attachmentDetails = Some(Seq(uploadedFile123, uploadedFile345)))
-      when(mockEmailService.fetchEmail((emailUIDToAttachFile))).thenReturn(successful(existingEmail))
-      when(mockObjectStoreService.deleteFromObjectStore(emailUIDToAttachFile, "file123")).thenReturn(successful())
+      when(mockEmailService.fetchEmail((emailUUIDToAttachFile))).thenReturn(successful(existingEmail))
+      when(mockObjectStoreService.deleteFromObjectStore(emailUUIDToAttachFile, "file123")).thenReturn(successful())
       await(controller2.updateFiles()(fakeRequestToUpdateFiles))
-      verify(mockObjectStoreService, times(1)).deleteFromObjectStore(emailUIDToAttachFile, "file123")
+      verify(mockObjectStoreService, times(1)).deleteFromObjectStore(emailUUIDToAttachFile, "file123")
       verify(mockEmailService).updateEmail(captor.capture(), anyString())
       val emailRequestCaptured: EmailRequest = captor.getValue
       emailRequestCaptured.attachmentDetails.get.size shouldBe 1
@@ -247,8 +247,8 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
 
   "GET /gatekeeper-email/fetch-email" should {
       "return 200" in new Setup {
-        when(mockEmailService.fetchEmail((emailUID))).thenReturn(successful(email))
-        val result = controller2.fetchEmail(emailUID)(request)
+        when(mockEmailService.fetchEmail((emailUUID))).thenReturn(successful(email))
+        val result = controller2.fetchEmail(emailUUID)(request)
         status(result) shouldBe Status.OK
       }
     }

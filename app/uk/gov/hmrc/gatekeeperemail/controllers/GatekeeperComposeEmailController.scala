@@ -41,17 +41,17 @@ class GatekeeperComposeEmailController @Inject()(
   )(implicit val ec: ExecutionContext)
     extends BackendController(mcc) with WithJson {
 
-  def saveEmail(emailUID: String): Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
+  def saveEmail(emailUUID: String): Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
     withJson[EmailRequest] { receiveEmailRequest =>
-      emailService.persistEmail(receiveEmailRequest, emailUID)
+      emailService.persistEmail(receiveEmailRequest, emailUUID)
         .map(email => Ok(toJson(outgoingEmail(email))))
         .recover(recovery)
     }
   }
 
-  def updateEmail(emailUID: String): Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
+  def updateEmail(emailUUID: String): Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
     withJson[EmailRequest] { receiveEmailRequest =>
-      emailService.updateEmail(receiveEmailRequest, emailUID)
+      emailService.updateEmail(receiveEmailRequest, emailUUID)
         .map(email => Ok(toJson(outgoingEmail(email))))
         .recover(recovery)
     }
@@ -60,7 +60,7 @@ class GatekeeperComposeEmailController @Inject()(
   def updateFiles(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[UploadedFileMetadata] { value: UploadedFileMetadata =>
       logger.info(s"******UPDATE FILES ******")
-    val fetchEmail: Future[Email] = emailService.fetchEmail(emailUID = value.cargo.get.emailUID)
+    val fetchEmail: Future[Email] = emailService.fetchEmail(emailUUID = value.cargo.get.emailUUID)
         fetchEmail.map { email =>
           val filesToUploadInObjStore: Seq[UploadedFileWithObjectStore] =
             filesToUploadInObjectStore(email.attachmentDetails, value.uploadedFiles)
@@ -78,7 +78,7 @@ class GatekeeperComposeEmailController @Inject()(
   def uploadFilesToObjectStoreAndUpdateEmailRecord(email: Email, filesToUploadInObjStore: Seq[UploadedFileWithObjectStore]) = {
     var latestUploadedFiles: Seq[UploadedFileWithObjectStore] = Seq.empty[UploadedFileWithObjectStore]
     filesToUploadInObjStore.foreach(uploadedFile => {
-      val objectSummary: Future[ObjectSummaryWithMd5] = objectStoreService.uploadToObjectStore(email.emailUID, uploadedFile.downloadUrl, uploadedFile.fileName)
+      val objectSummary: Future[ObjectSummaryWithMd5] = objectStoreService.uploadToObjectStore(email.emailUUID, uploadedFile.downloadUrl, uploadedFile.fileName)
       objectSummary.map { summary =>
         latestUploadedFiles = latestUploadedFiles :+ uploadedFile.copy(objectStoreUrl = Some(summary.location.asUri),
           devHubUrl = Some("https://devhub.url/" + summary.location.asUri)
@@ -98,12 +98,12 @@ class GatekeeperComposeEmailController @Inject()(
       templateId = "gatekeeper",
       EmailData(email.subject, email.markdownEmailBody),
       attachmentDetails = Some(finalUploadedFiles))
-    emailService.updateEmail(er, email.emailUID)
+    emailService.updateEmail(er, email.emailUUID)
   }
 
   def deleteFilesFromObjectStoreAndUpdateEmailRecord(email: Email, filesToDeleteFromObjStore: Seq[UploadedFileWithObjectStore]) = {
     filesToDeleteFromObjStore.foreach(uploadedFile => {
-        objectStoreService.deleteFromObjectStore(email.emailUID, uploadedFile.fileName)
+        objectStoreService.deleteFromObjectStore(email.emailUUID, uploadedFile.fileName)
         val finalUploadedFiles = email.attachmentDetails match {
           case Some(currentFiles) =>
             currentFiles.filterNot(file => file.upscanReference == uploadedFile.upscanReference)
@@ -148,21 +148,21 @@ class GatekeeperComposeEmailController @Inject()(
     }
   }
 
-  def fetchEmail(emailUID: String): Action[AnyContent] = Action.async { implicit request =>
-      logger.info(s"In fetchEmail for $emailUID")
-      emailService.fetchEmail(emailUID)
+  def fetchEmail(emailUUID: String): Action[AnyContent] = Action.async { implicit request =>
+      logger.info(s"In fetchEmail for $emailUUID")
+      emailService.fetchEmail(emailUUID)
         .map(email => Ok(toJson(outgoingEmail(email))))
         .recover(recovery)
   }
 
-  def sendEmail(emailUID: String): Action[AnyContent] = Action.async{ implicit request =>
-    emailService.sendEmail(emailUID)
+  def sendEmail(emailUUID: String): Action[AnyContent] = Action.async{ implicit request =>
+    emailService.sendEmail(emailUUID)
       .map(email => Ok(toJson(outgoingEmail(email))))
       .recover(recovery)
   }
 
   private def outgoingEmail(email: Email): OutgoingEmail = {
-    OutgoingEmail(email.emailUID, email.recipientTitle, email.recipients, email.attachmentDetails,
+    OutgoingEmail(email.emailUUID, email.recipientTitle, email.recipients, email.attachmentDetails,
       email.markdownEmailBody, email.htmlEmailBody, email.subject,
       email.composedBy, email.approvedBy)
   }

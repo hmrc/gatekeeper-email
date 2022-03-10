@@ -43,7 +43,7 @@ case class EmailRequest(to: List[User],
                         eventUrl: Option[String] = None,
                         attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None)
 
-case class EmailSaved(emailUID: String)
+case class EmailSaved(emailUUID: String)
 
 object SendEmailRequest {
   implicit val userFmt: OFormat[User] = Json.format[User]

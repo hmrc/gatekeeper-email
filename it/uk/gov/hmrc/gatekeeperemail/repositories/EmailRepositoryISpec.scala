@@ -67,10 +67,10 @@ class EmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[E
       fetchedRecords.head shouldEqual email
     }
 
-    "create index on emailUID" in {
+    "create index on emailUUID" in {
       await(serviceRepo.persist(email))
 
-      val Some(globalIdIndex) = await(serviceRepo.collection.listIndexes().toFuture()).find(i => i.get("name").get.asString().getValue == "emailUIDIndex")
+      val Some(globalIdIndex) = await(serviceRepo.collection.listIndexes().toFuture()).find(i => i.get("name").get.asString().getValue == "emailUUIDIndex")
       globalIdIndex.get("unique") shouldBe Some(BsonBoolean(value=true))
       globalIdIndex.get("background").get shouldBe BsonBoolean(true)
     }
