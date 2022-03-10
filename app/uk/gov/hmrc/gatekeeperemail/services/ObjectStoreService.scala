@@ -33,11 +33,11 @@ class ObjectStoreService @Inject()(objectStoreClient: PlayObjectStoreClient,
 
   val logger: Logger = Logger(getClass.getName)
 
-  def uploadToObjectStore(emailUID: String, downloadUrl: String, fileName: String) = {
+  def uploadToObjectStore(emailUUID: String, downloadUrl: String, fileName: String) = {
     implicit val hc = HeaderCarrier()
-    logger.info(s"uploadToObjectStore upload to location: $emailUID")
+    logger.info(s"uploadToObjectStore upload to location: $emailUUID")
     objectStoreClient.uploadFromUrl(from = new URL(downloadUrl),
-      to = Path.File(Path.Directory(emailUID), fileName),
+      to = Path.File(Path.Directory(emailUUID), fileName),
       retentionPeriod = RetentionPeriod.parse(appConfig.defaultRetentionPeriod).getOrElse(RetentionPeriod.OneYear),
       contentType = None,
       contentMd5 = None,
@@ -45,11 +45,11 @@ class ObjectStoreService @Inject()(objectStoreClient: PlayObjectStoreClient,
     )
   }
 
-  def deleteFromObjectStore(emailUID: String, fileName: String) = {
+  def deleteFromObjectStore(emailUUID: String, fileName: String) = {
     implicit val hc = HeaderCarrier()
-    logger.info(s"deleteFromObjectStore emailUID = $emailUID")
+    logger.info(s"deleteFromObjectStore emailUUID = $emailUUID")
     objectStoreClient.deleteObject(
-      path = Path.File(Path.Directory(emailUID), fileName),
+      path = Path.File(Path.Directory(emailUUID), fileName),
       owner = "gatekeeper-email"
     )
   }

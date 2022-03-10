@@ -35,8 +35,8 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
 
   val logger: Logger = Logger(getClass.getName)
 
-  def persistEmail(emailRequest: EmailRequest, emailUID: String): Future[Email] = {
-    val email: Email = emailData(emailRequest, emailUID)
+  def persistEmail(emailRequest: EmailRequest, emailUUID: String): Future[Email] = {
+    val email: Email = emailData(emailRequest, emailUUID)
     logger.info(s"email data  before saving $email")
 
     val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
@@ -52,23 +52,23 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
     } yield renderedEmail
   }
 
-  def sendEmail(emailUID: String): Future[Email] = {
+  def sendEmail(emailUUID: String): Future[Email] = {
     for {
-      email <- emailRepository.getEmailData(emailUID)
+      email <- emailRepository.getEmailData(emailUUID)
       emailRequestedData = SendEmailRequest(email.recipients, email.templateData.templateId, email.templateData.parameters,
         email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
       _ <- emailConnector.sendEmail(emailRequestedData)
     } yield email
   }
 
-  def fetchEmail(emailUID: String): Future[Email] = {
+  def fetchEmail(emailUUID: String): Future[Email] = {
     for {
-      email <- emailRepository.getEmailData(emailUID)
+      email <- emailRepository.getEmailData(emailUUID)
     } yield email
   }
 
-  def updateEmail(emailRequest: EmailRequest, emailUID: String): Future[Email] = {
-    val email: Email = emailData(emailRequest, emailUID)
+  def updateEmail(emailRequest: EmailRequest, emailUUID: String): Future[Email] = {
+    val email: Email = emailData(emailRequest, emailUUID)
     logger.info(s"email data  before saving $email")
 
     val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
@@ -85,7 +85,7 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
     } yield renderedEmail
   }
 
-  private def emailData(emailRequest: EmailRequest, emailUID: String): Email = {
+  private def emailData(emailRequest: EmailRequest, emailUUID: String): Email = {
     val recipientsTitle = "TL API PLATFORM TEAM"
     val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
       "fromAddress" -> "gateKeeper",
@@ -98,7 +98,7 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
     val emailTemplateData = EmailTemplateData(emailRequest.templateId, parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
-    Email(emailUID,  emailTemplateData, recipientsTitle, emailRequest.to, emailRequest.attachmentDetails,
+    Email(emailUUID,  emailTemplateData, recipientsTitle, emailRequest.to, emailRequest.attachmentDetails,
       emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
       emailRequest.emailData.emailSubject, "composedBy",
       Some("approvedBy"), DateTime.now())

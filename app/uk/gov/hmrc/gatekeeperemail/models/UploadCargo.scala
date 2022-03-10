@@ -19,7 +19,7 @@ package uk.gov.hmrc.gatekeeperemail.models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class UploadCargo(emailUID: String)
+case class UploadCargo(emailUUID: String)
 
 object UploadCargo {
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
