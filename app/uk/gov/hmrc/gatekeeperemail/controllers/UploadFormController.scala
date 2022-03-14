@@ -55,9 +55,9 @@ class UploadFormController @Inject()(
   }
 
 
-  def addUploadedFileStatus(key: String) : Action[AnyContent] = Action.async {
+  def addUploadedFileStatus(key: String, emailUUID: String) : Action[AnyContent] = Action.async {
     logger.info(s"Got a insert request for key: $key")
-    val result = uploadProgressTracker.requestUpload(key)
+    val result = uploadProgressTracker.requestUpload(key, emailUUID)
     handleFuture(result)
   }
 
@@ -70,7 +70,7 @@ class UploadFormController @Inject()(
 
   def fetchUploadedFileStatus(key: String) : Action[AnyContent] = Action.async {
     logger.info(s"Got a fetch request for key: $key")
-    val result = for (uploadResult <- uploadProgressTracker.getUploadResult(Reference(key))) yield uploadResult
+    val result = for (uploadResult <- uploadProgressTracker.getUploadResult(key)) yield uploadResult
     handleOption(result)
   }
 }

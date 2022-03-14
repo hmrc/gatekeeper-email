@@ -27,10 +27,10 @@ import scala.concurrent.Future
 @ImplementedBy(classOf[FileUploadStatusService])
 trait UploadProgressTracker {
 
-  def requestUpload(fileReference : String) : Future[UploadInfo]
+  def requestUpload(fileReference : String, emailUUID: String) : Future[UploadInfo]
 
-  def registerUploadResult(reference : String, uploadStatus : UploadStatus): Future[UploadInfo]
+  def registerUploadResult(fileReference : String, uploadStatus : UploadStatus): Future[UploadInfo]
 
-  def getUploadResult(id : Reference): Future[Option[UploadInfo]]
+  def getUploadResult(fileReference : String): Future[Option[UploadInfo]]
 
 }

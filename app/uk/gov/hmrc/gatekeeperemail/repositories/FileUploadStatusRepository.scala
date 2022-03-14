@@ -35,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.libs.json.Json
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 
-case class UploadInfo(reference : Reference, status : UploadStatus, createDateTime: DateTime)
+case class UploadInfo(reference : String, emailUUID: String, status : UploadStatus)
 
 object UploadInfo {
   val status = "status"
@@ -48,10 +48,12 @@ class FileUploadStatusRepository @Inject()(mongoComponent: MongoComponent)
                                           (implicit ec : ExecutionContext, m: Materializer)
   extends PlayMongoRepository[UploadInfo](
     mongoComponent = mongoComponent,
-    collectionName = "gatekeeper-fileuploads",
+    collectionName = "fileuploads",
     domainFormat = uploadInfo,
     indexes = Seq(IndexModel(ascending("reference"),
-      IndexOptions().name("referenceIndex").background(true).unique(true)))
+      IndexOptions().name("referenceIndex").background(true).unique(true)),
+      IndexModel(ascending("emailUUID"),
+        IndexOptions().name("emailUUIDIndex").background(true).unique(false)))
   ) {
 
   override lazy val collection: MongoCollection[UploadInfo] =
@@ -74,10 +76,10 @@ class FileUploadStatusRepository @Inject()(mongoComponent: MongoComponent)
         )
       )
 
-  def findByUploadId(reference: Reference): Future[Option[UploadInfo]] =
+  def findByUploadId(reference: String): Future[Option[UploadInfo]] =
     collection.find(equal("reference" , Codecs.toBson(reference))).headOption()
 
-  def updateStatus(reference : Reference, newStatus : UploadStatus): Future[UploadInfo] = {
+  def updateStatus(reference : String, newStatus : UploadStatus): Future[UploadInfo] = {
     collection.findOneAndUpdate(equal("reference", Codecs.toBson(reference)),
       update = set("status", newStatus),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)

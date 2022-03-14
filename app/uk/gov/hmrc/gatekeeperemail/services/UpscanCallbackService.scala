@@ -52,22 +52,21 @@ class UpscanCallbackService @Inject()(sessionStorage: FileUploadStatusRepository
 
     callback match {
       case s: ReadyCallbackBody =>
-        val objectSummary: Future[ObjectSummaryWithMd5] = uploadToObjectStore(s)
-        objectSummary.flatMap { summary =>
+        //val objectSummary: Future[ObjectSummaryWithMd5] = uploadToObjectStore(s)
+        //objectSummary.flatMap { summary =>
           val status = UploadedSuccessfully(
           s.uploadDetails.fileName,
           s.uploadDetails.fileMimeType,
           s.downloadUrl,
           Some(s.uploadDetails.size),
-          summary.location.asUri)
-          sessionStorage.updateStatus(Reference(callback.reference), status)
-        }
+          "summary.location.asUri")
+          sessionStorage.updateStatus((callback.reference), status)
       case f: FailedCallbackBody =>
         val status = UploadedFailedWithErrors(f.fileStatus, f.failureDetails.failureReason, f.failureDetails.message, f.reference)
-        sessionStorage.updateStatus(Reference(callback.reference), status)
+        sessionStorage.updateStatus((callback.reference), status)
       case _ =>
         val status = Failed
-        sessionStorage.updateStatus(Reference(callback.reference), status)
+        sessionStorage.updateStatus((callback.reference), status)
     }
   }
 

@@ -25,14 +25,14 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class FileUploadStatusService @Inject()(repository : FileUploadStatusRepository)(implicit ec : ExecutionContext) extends UploadProgressTracker {
 
-  override def requestUpload(fileReference : String): Future[UploadInfo] =
-    repository.requestUpload(UploadInfo(Reference(fileReference), InProgress, DateTime.now()))
+  override def requestUpload(fileReference : String, emailUUID: String): Future[UploadInfo] =
+    repository.requestUpload(UploadInfo(fileReference, emailUUID, InProgress))
 
   override def registerUploadResult(fileReference: String, uploadStatus: UploadStatus): Future[UploadInfo] =
-    repository.updateStatus(Reference(fileReference), uploadStatus)
+    repository.updateStatus(fileReference, uploadStatus)
 
-  override def getUploadResult(key: Reference): Future[Option[UploadInfo]] =
-    for (result <- repository.findByUploadId(key)) yield {
+  override def getUploadResult(fileReference: String): Future[Option[UploadInfo]] =
+    for (result <- repository.findByUploadId(fileReference)) yield {
       result
     }
 }
