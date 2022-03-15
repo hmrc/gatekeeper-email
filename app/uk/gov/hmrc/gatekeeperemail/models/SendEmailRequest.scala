@@ -41,7 +41,7 @@ case class EmailRequest(to: List[User],
                         force: Boolean = false,
                         auditData: Map[String, String] = Map.empty,
                         eventUrl: Option[String] = None,
-                        attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None)
+                        attachmentDetails: Option[Seq[String]] = None)
 
 case class EmailSaved(emailUUID: String)
 

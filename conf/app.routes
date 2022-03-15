@@ -10,6 +10,3 @@ POST /gatekeeperemail/upscancallback uk.gov.hmrc.gatekeeperemail.controllers.Upl
 POST /gatekeeperemail/insertfileuploadstatus uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.addUploadedFileStatus(key, emailUUID)
 POST /gatekeeperemail/updatefileuploadstatus uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.updateUploadedFileStatus(key)
 GET /gatekeeperemail/fetchfileuploadstatus uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.fetchUploadedFileStatus(key)
-
-+ nocsrf
-POST        /gatekeeperemail/updatefiles                               uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.updateFiles
