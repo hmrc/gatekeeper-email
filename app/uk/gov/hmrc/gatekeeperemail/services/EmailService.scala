@@ -21,7 +21,7 @@ import org.mongodb.scala.bson.BsonValue
 import play.api.Logger
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
+import uk.gov.hmrc.gatekeeperemail.repositories.{EmailRepository, FileUploadStatusRepository, UploadInfo}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import javax.inject.{Inject, Singleton}
@@ -30,13 +30,14 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
                              emailRendererConnector: GatekeeperEmailRendererConnector,
-                               emailRepository: EmailRepository)
+                             emailRepository: EmailRepository,
+                             fileRepository: FileUploadStatusRepository)
                                            (implicit val ec: ExecutionContext) {
 
   val logger: Logger = Logger(getClass.getName)
 
   def persistEmail(emailRequest: EmailRequest, emailUUID: String): Future[Email] = {
-    val email: Email = emailData(emailRequest, emailUUID)
+    val email: Email = emailData(emailRequest, emailUUID, "")
     logger.info(s"email data  before saving $email")
 
     val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
@@ -68,33 +69,42 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
   }
 
   def updateEmail(emailRequest: EmailRequest, emailUUID: String): Future[Email] = {
-    val email: Email = emailData(emailRequest, emailUUID)
-    logger.info(s"email data  before saving $email")
 
-    val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
-      emailRequest.auditData, emailRequest.eventUrl)
+
+    val fileUploads = Future.sequence(emailRequest.attachmentDetails.getOrElse(Seq.empty).map(file =>
+      fileRepository.findByUploadId(file)))
 
     for {
+      file <- fileUploads
+      urls = file.flatten.map(x =>
+      s"""<a href="${x.status.asInstanceOf[UploadedSuccessfully].downloadUrl}" target="_blank">${x.status.asInstanceOf[UploadedSuccessfully].name}</a>"""
+      )
+      email: Email = emailData(emailRequest, emailUUID, urls.mkString("\n\n"))
+      sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
+        emailRequest.auditData, emailRequest.eventUrl)
+      _ = logger.info(s"email data  before saving $email")
       renderResult <- emailRendererConnector.getTemplatedEmail(sendEmailRequest)
       emailBody = getEmailBody(renderResult)
       templatedData = EmailTemplateData(sendEmailRequest.templateId, sendEmailRequest.parameters, sendEmailRequest.force,
-        sendEmailRequest.auditData, sendEmailRequest.eventUrl)
+      sendEmailRequest.auditData, sendEmailRequest.eventUrl)
       renderedEmail = email.copy(templateData = templatedData, htmlEmailBody = emailBody._1,
-        markdownEmailBody = emailBody._2, subject = emailRequest.emailData.emailSubject)
+      markdownEmailBody = emailBody._2, subject = emailRequest.emailData.emailSubject)
       _ <- emailRepository.updateEmail(renderedEmail)
     } yield renderedEmail
   }
 
-  private def emailData(emailRequest: EmailRequest, emailUUID: String): Email = {
+  private def emailData(emailRequest: EmailRequest, emailUUID: String, files: String): Email = {
     val recipientsTitle = "TL API PLATFORM TEAM"
+
     val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
       "fromAddress" -> "gateKeeper",
-      "body" -> s"${emailRequest.emailData.emailBody}",
+      "body" -> emailRequest.emailData.emailBody,
       "service" -> "gatekeeper",
       "firstName" -> "((first name))",
       "lastName" -> "((last name))",
       "showFooter" -> "false",
-      "showHmrcBanner" -> "false")
+      "showHmrcBanner" -> "false",
+      "attachments" -> files)
     val emailTemplateData = EmailTemplateData(emailRequest.templateId, parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
