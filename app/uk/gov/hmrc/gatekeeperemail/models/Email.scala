@@ -27,10 +27,10 @@ case class EmailTemplateData(templateId: String, parameters: Map[String, String]
 
 case class Email(emailUUID: String, templateData: EmailTemplateData, recipientTitle: String, recipients: List[User],
                  attachmentDetails: Option[Seq[UploadedFileWithObjectStore]], markdownEmailBody: String,
-                 htmlEmailBody: String, subject: String, composedBy: String, approvedBy: Option[String], createDateTime: DateTime)
+                 htmlEmailBody: String, subject: String, status: String, composedBy: String, approvedBy: Option[String], createDateTime: DateTime)
 
 case class OutgoingEmail(emailUUID: String, recipientTitle: String, recipients: List[User], attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None,
-                         markdownEmailBody: String, htmlEmailBody: String, subject: String,
+                         markdownEmailBody: String, htmlEmailBody: String, subject: String, status: String,
                          composedBy: String, approvedBy: Option[String])
 
 object OutgoingEmail {

@@ -58,6 +58,7 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
       emailRequestedData = SendEmailRequest(email.recipients, email.templateData.templateId, email.templateData.parameters,
         email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
       _ <- emailConnector.sendEmail(emailRequestedData)
+      _ <- emailRepository.updateEmailSentStatus(emailUUID)
     } yield email
   }
 
@@ -100,7 +101,7 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
 
     Email(emailUUID,  emailTemplateData, recipientsTitle, emailRequest.to, emailRequest.attachmentDetails,
       emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
-      emailRequest.emailData.emailSubject, "composedBy",
+      emailRequest.emailData.emailSubject, "IN_PROGRESS", "composedBy",
       Some("approvedBy"), DateTime.now())
   }
 

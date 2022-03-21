@@ -72,8 +72,14 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
       }
     }
 
-  def updateEmail(email: Email): Future[Email] = {
+  def updateEmailSentStatus(emailUUID: String): Future[Email] = {
+    collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(emailUUID)),
+      update = set("status", "SENT"),
+      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+    ).map(_.asInstanceOf[Email]).head()
+  }
 
+  def updateEmail(email: Email): Future[Email] = {
     collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(email.emailUUID)),
       update = set("templateData", email.templateData),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
