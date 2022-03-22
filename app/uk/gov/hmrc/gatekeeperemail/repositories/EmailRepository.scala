@@ -23,7 +23,8 @@ import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.set
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
 import org.mongodb.scala.result.InsertOneResult
-import uk.gov.hmrc.gatekeeperemail.models.Email
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
+import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailStatus}
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.emailFormatter
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
@@ -72,8 +73,14 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
       }
     }
 
-  def updateEmail(email: Email): Future[Email] = {
+  def updateEmailSentStatus(emailUUID: String): Future[Email] = {
+    collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(emailUUID)),
+      update = set("status", EmailStatus.displayedStatus(SENT)),
+      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+    ).map(_.asInstanceOf[Email]).head()
+  }
 
+  def updateEmail(email: Email): Future[Email] = {
     collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(email.emailUUID)),
       update = set("templateData", email.templateData),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)

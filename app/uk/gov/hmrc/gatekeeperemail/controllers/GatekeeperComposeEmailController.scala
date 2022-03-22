@@ -163,7 +163,7 @@ class GatekeeperComposeEmailController @Inject()(
 
   private def outgoingEmail(email: Email): OutgoingEmail = {
     OutgoingEmail(email.emailUUID, email.recipientTitle, email.recipients, email.attachmentDetails,
-      email.markdownEmailBody, email.htmlEmailBody, email.subject,
+      email.markdownEmailBody, email.htmlEmailBody, email.subject, email.status,
       email.composedBy, email.approvedBy)
   }
 
