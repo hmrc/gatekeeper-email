@@ -20,6 +20,7 @@ import org.joda.time.DateTime
 import org.mongodb.scala.bson.BsonValue
 import play.api.Logger
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.{INPROGRESS, SENT}
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
 import uk.gov.hmrc.http.UpstreamErrorResponse
@@ -101,7 +102,7 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
 
     Email(emailUUID,  emailTemplateData, recipientsTitle, emailRequest.to, emailRequest.attachmentDetails,
       emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
-      emailRequest.emailData.emailSubject, "IN_PROGRESS", "composedBy",
+      emailRequest.emailData.emailSubject, EmailStatus.displayedStatus(INPROGRESS), "composedBy",
       Some("approvedBy"), DateTime.now())
   }
 

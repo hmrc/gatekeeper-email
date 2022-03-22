@@ -72,7 +72,7 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
     User("example2@example2.com", "first name2", "last name2", true))
   val email = Email("emailId-123", templateData, "DL Team",
     users, None, "markdownEmailBody", "This is test email",
-    "test subject", "", "composedBy", Some("approvedBy"), DateTime.now(UTC))
+    "test subject", "SENT", "composedBy", Some("approvedBy"), DateTime.now(UTC))
   val emailUUIDToAttachFile = "emailUUID111"
   val cargo = Some(UploadCargo(emailUUIDToAttachFile))
   val uploadedFile123: UploadedFileWithObjectStore = UploadedFileWithObjectStore("Ref123", "/gatekeeper/downloadUrl/123", "", "", "file123", "",

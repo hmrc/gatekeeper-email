@@ -18,6 +18,7 @@ package uk.gov.hmrc.gatekeeperemail.models
 
 import org.joda.time.DateTime
 import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.Status
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 
 case class EmailTemplateData(templateId: String, parameters: Map[String, String],
@@ -49,4 +50,14 @@ object Email {
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
   implicit val emailTemplateDataFormatter: OFormat[EmailTemplateData] = Json.format[EmailTemplateData]
   implicit val emailFormatter: OFormat[Email] = Json.format[Email]
+}
+
+object EmailStatus extends Enumeration {
+  type Status = Value
+  val INPROGRESS, SENT = Value
+
+  val displayedStatus: (Status) => String = {
+    case EmailStatus.INPROGRESS => "INPROGRESS"
+    case EmailStatus.SENT => "SENT"
+  }
 }
