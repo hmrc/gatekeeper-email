@@ -18,6 +18,7 @@ package uk.gov.hmrc.gatekeeperemail.models
 
 import org.joda.time.DateTime
 import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.Status
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 
 case class EmailTemplateData(templateId: String, parameters: Map[String, String],
@@ -27,10 +28,10 @@ case class EmailTemplateData(templateId: String, parameters: Map[String, String]
 
 case class Email(emailUUID: String, templateData: EmailTemplateData, recipientTitle: String, recipients: List[User],
                  attachmentDetails: Option[Seq[UploadedFileWithObjectStore]], markdownEmailBody: String,
-                 htmlEmailBody: String, subject: String, composedBy: String, approvedBy: Option[String], createDateTime: DateTime)
+                 htmlEmailBody: String, subject: String, status: String, composedBy: String, approvedBy: Option[String], createDateTime: DateTime)
 
 case class OutgoingEmail(emailUUID: String, recipientTitle: String, recipients: List[User], attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None,
-                         markdownEmailBody: String, htmlEmailBody: String, subject: String,
+                         markdownEmailBody: String, htmlEmailBody: String, subject: String, status: String,
                          composedBy: String, approvedBy: Option[String])
 
 object OutgoingEmail {
@@ -49,4 +50,14 @@ object Email {
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
   implicit val emailTemplateDataFormatter: OFormat[EmailTemplateData] = Json.format[EmailTemplateData]
   implicit val emailFormatter: OFormat[Email] = Json.format[Email]
+}
+
+object EmailStatus extends Enumeration {
+  type Status = Value
+  val INPROGRESS, SENT = Value
+
+  val displayedStatus: (Status) => String = {
+    case EmailStatus.INPROGRESS => "INPROGRESS"
+    case EmailStatus.SENT => "SENT"
+  }
 }

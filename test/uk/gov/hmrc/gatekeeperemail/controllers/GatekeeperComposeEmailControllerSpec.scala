@@ -72,7 +72,7 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
     User("example2@example2.com", "first name2", "last name2", true))
   val email = Email("emailId-123", templateData, "DL Team",
     users, None, "markdownEmailBody", "This is test email",
-    "test subject", "composedBy", Some("approvedBy"), DateTime.now(UTC))
+    "test subject", "SENT", "composedBy", Some("approvedBy"), DateTime.now(UTC))
   val emailUUIDToAttachFile = "emailUUID111"
   val cargo = Some(UploadCargo(emailUUIDToAttachFile))
   val uploadedFile123: UploadedFileWithObjectStore = UploadedFileWithObjectStore("Ref123", "/gatekeeper/downloadUrl/123", "", "", "file123", "",
@@ -123,7 +123,7 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
 
     val emailUUID: String = UUID.randomUUID().toString
     val dummyEmailData = Email("", EmailTemplateData("", Map(), false, Map(), None), "", List(),
-      None, "", "", "", "", None, DateTime.now)
+      None, "", "", "", "", "", None, DateTime.now)
     when(mockEmailRepository.getEmailData(emailUUID)).thenReturn(Future(dummyEmailData))
   }
 
@@ -131,6 +131,7 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
     "return 200" in new Setup {
       when(mockEmailConnector.sendEmail(*)).thenReturn(successful(Status.OK))
       when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+      when(mockEmailRepository.updateEmailSentStatus(*)).thenReturn(successful(email))
       val result = controller.sendEmail(emailUUID)(fakeRequest)
       status(result) shouldBe Status.OK
     }

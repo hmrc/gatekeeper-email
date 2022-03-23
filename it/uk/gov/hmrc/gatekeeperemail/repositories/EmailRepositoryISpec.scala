@@ -56,7 +56,7 @@ class EmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[E
     val users = List(User("example@example.com", "first name", "last name", true),
       User("example2@example2.com", "first name2", "last name2", true))
     val email = Email("emailId-123", templateData, "DL Team", users, None, "markdownEmailBody", "This is test email",
-      "test subject", "composedBy", Some("approvedBy"), DateTime.now(UTC))
+      "test subject", "test status", "composedBy", Some("approvedBy"), DateTime.now(UTC))
 
     "insert an Email message when it does not exist" in {
       await(serviceRepo.persist(email))
