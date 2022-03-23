@@ -65,6 +65,8 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
     }
 
     def getEmailData(emailUUID: String): Future[Email] = {
+      collection.dropIndex("emailUUID")
+//      collection.createIndex()
       for (emailData <- findByemailUUID(emailUUID)) yield {
         emailData match {
           case Some(email) => email
