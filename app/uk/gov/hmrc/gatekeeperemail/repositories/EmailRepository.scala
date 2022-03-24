@@ -37,7 +37,7 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
                                              (implicit ec: ExecutionContext)
   extends PlayMongoRepository[Email](
     mongoComponent = mongoComponent,
-    collectionName = "email",
+    collectionName = "emails",
     domainFormat = emailFormatter,
     indexes = Seq(IndexModel(ascending("emailUUID"),
         IndexOptions().name("emailUUIDIndex").background(true).unique(true)))
