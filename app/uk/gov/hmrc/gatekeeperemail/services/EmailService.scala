@@ -102,8 +102,8 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
       "service" -> "gatekeeper",
       "firstName" -> "((first name))",
       "lastName" -> "((last name))",
-      "showFooter" -> "false",
-      "showHmrcBanner" -> "false",
+      "showFooter" -> "true",
+      "showHmrcBanner" -> "true",
       "attachments" -> files)
     val emailTemplateData = EmailTemplateData(emailRequest.templateId, parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
