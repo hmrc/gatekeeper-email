@@ -103,7 +103,11 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent)
     ).map(_.asInstanceOf[Email]).head()
   }
 
-  def findByemailUUID(emailUUID: String)(implicit executionContext: ExecutionContext): Future[Option[Email]] = {
+  def findByemailUUID(emailUUID: String)(implicit ec: ExecutionContext): Future[Option[Email]] = {
     collection.find(equal("emailUUID", Codecs.toBson(emailUUID))).headOption()
+  }
+
+  def deleteByemailUUID(emailUUID: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+    collection.deleteOne(equal("emailUUID", Codecs.toBson(emailUUID))).head().map(x => x.wasAcknowledged())
   }
 }

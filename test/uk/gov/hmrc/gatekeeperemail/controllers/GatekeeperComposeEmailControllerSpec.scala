@@ -86,6 +86,7 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
     .withBody(Json.toJson(uploadedFileMetadata))
   private val fakeRequest = FakeRequest("POST", "/gatekeeper-email").withBody(Json.toJson(emailRequest))
   private val fakeSaveEmailRequest = FakeRequest("POST", "/gatekeeper-email/save-email").withBody(Json.toJson(emailRequest))
+  private val fakeDeleteEmailRequest = FakeRequest("POST", "/gatekeeper-email/delete-email").withBody()
   private val fakeWrongSaveEmailRequest = FakeRequest("POST", "/gatekeeper-email/save-email").withBody(Json.toJson(emailBody))
   lazy implicit val mat: Materializer = app.materializer
   private val playBodyParsers: PlayBodyParsers = app.injector.instanceOf[PlayBodyParsers]
@@ -160,6 +161,19 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
       when(mockEmailService.persistEmail(emailRequest, emailUUID)).thenReturn(successful(email))
       val result = controller2.saveEmail(emailUUID)(fakeWrongSaveEmailRequest)
       status(result) shouldBe Status.BAD_REQUEST
+    }
+  }
+
+  "POST /gatekeeper-email/delete-email" should {
+    "return 200" in new Setup {
+      when(mockEmailService.deleteEmail(emailUUID)).thenReturn(successful(true))
+      val result = controller2.deleteEmail(emailUUID)(fakeDeleteEmailRequest)
+      status(result) shouldBe Status.OK
+    }
+    "return 500" in new Setup {
+      when(mockEmailService.deleteEmail(emailUUID)).thenReturn(failed(new IOException("can not connect to email service")))
+      val result = controller2.deleteEmail(emailUUID)(fakeDeleteEmailRequest)
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
   }
 

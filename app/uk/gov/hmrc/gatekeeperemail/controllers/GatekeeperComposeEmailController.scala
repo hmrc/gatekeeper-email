@@ -18,6 +18,7 @@ package uk.gov.hmrc.gatekeeperemail.controllers
 
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
+import play.api.mvc.Results.Ok
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, PlayBodyParsers, Result}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.models.{UploadedFileWithObjectStore, _}
@@ -153,6 +154,14 @@ class GatekeeperComposeEmailController @Inject()(
       emailService.fetchEmail(emailUUID)
         .map(email => Ok(toJson(outgoingEmail(email))))
         .recover(recovery)
+  }
+
+  def deleteEmail(emailUUID: String): Action[AnyContent] = Action.async { implicit request =>
+    logger.info(s"In deleteEmail for $emailUUID")
+    emailService.deleteEmail(emailUUID)
+      .map(email =>
+        Ok(toJson(email)))
+      .recover(recovery)
   }
 
   def sendEmail(emailUUID: String): Action[AnyContent] = Action.async{ implicit request =>

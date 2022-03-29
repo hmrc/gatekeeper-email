@@ -3,6 +3,7 @@
 POST /gatekeeper-email/save-email uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.saveEmail(emailUUID)
 POST /gatekeeper-email/send-email/:emailUUID uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.sendEmail(emailUUID)
 GET  /gatekeeper-email/fetch-email/:emailUUID uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.fetchEmail(emailUUID)
+POST  /gatekeeper-email/delete-email/:emailUUID uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.deleteEmail(emailUUID)
 POST /gatekeeper-email/update-email uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.updateEmail(emailUUID)
 
 POST /gatekeeperemail/upscancallback uk.gov.hmrc.gatekeeperemail.controllers.UploadCallbackController.callback
