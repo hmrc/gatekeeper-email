@@ -69,6 +69,10 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
     } yield email
   }
 
+  def deleteEmail(emailUUID: String): Future[Boolean] = {
+    emailRepository.deleteByemailUUID(emailUUID)
+  }
+
   def updateEmail(emailRequest: EmailRequest, emailUUID: String): Future[Email] = {
     val email: Email = emailData(emailRequest, emailUUID)
     logger.info(s"email data  before saving $email")
