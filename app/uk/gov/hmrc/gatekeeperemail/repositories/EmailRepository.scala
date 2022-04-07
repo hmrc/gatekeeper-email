@@ -17,30 +17,43 @@
 package uk.gov.hmrc.gatekeeperemail.repositories
 
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
+import org.joda.time.{DateTime, DateTimeZone, Days, ReadableInstant}
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.{MongoClient, MongoCollection}
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.set
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
 import org.mongodb.scala.result.InsertOneResult
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
 import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailStatus}
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.emailFormatter
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
+import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class EmailRepository @Inject()(mongoComponent: MongoComponent)
+class EmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: AppConfig)
                                              (implicit ec: ExecutionContext)
   extends PlayMongoRepository[Email](
     mongoComponent = mongoComponent,
     collectionName = "emails",
     domainFormat = emailFormatter,
     indexes = Seq(IndexModel(ascending("emailUUID"),
-        IndexOptions().name("emailUUIDIndex").background(true).unique(true)))
+        IndexOptions()
+          .name("emailUUIDIndex")
+          .background(true)
+          .unique(true)),
+      IndexModel(ascending("createDateTime"),
+        IndexOptions()
+          .name("createDateTimeIndex")
+          .expireAfter(Days.daysBetween(DateTime.now(), DateTime.now().plusYears(appConfig.emailRecordRetentionPeriod)).getDays,
+            TimeUnit.DAYS)
+          .background(true)
+          .unique(true)))
   ) {
 
   override lazy val collection: MongoCollection[Email] =
