@@ -1,25 +1,24 @@
 package uk.gov.hmrc.gatekeeperemail.repository
 
-import akka.stream.Materializer
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcSpec
-import uk.gov.hmrc.gatekeeperemail.models._
+import java.util.UUID
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import akka.actor.ActorSystem
+import akka.stream.Materializer
 import akka.util.Timeout
 import org.joda.time.DateTime
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcSpec
+import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
-
-import scala.concurrent.duration.{FiniteDuration, SECONDS}
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
-import java.util.UUID
-import java.util.UUID.randomUUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.{FiniteDuration, SECONDS}
+
 class FileUploadStatusRepositorySpec
   extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll
     with PlayMongoRepositorySupport[UploadInfo] with

@@ -17,11 +17,12 @@
 package uk.gov.hmrc.gatekeeperemail.controllers
 
 import java.time.Instant
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-import org.scalatest.{Matchers, WordSpec}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 
-class CallbackBodyTest extends WordSpec with Matchers {
+class CallbackBodyTest extends AnyWordSpec with Matchers {
 
   "CallbackBody JSON reader" should {
     "be able to deserialize successful body" in {

@@ -18,12 +18,12 @@ package uk.gov.hmrc.gatekeeperemail.repository
 
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import org.scalatest.{Matchers, WordSpec}
-import uk.gov.hmrc.gatekeeperemail.models.Reference
-import uk.gov.hmrc.gatekeeperemail.models.{Failed, InProgress, UploadId, UploadedSuccessfully}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import uk.gov.hmrc.gatekeeperemail.models.{InProgress, Reference, UploadedSuccessfully}
 import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 
-class UploadInfoTest extends WordSpec with Matchers {
+class UploadInfoTest extends AnyWordSpec with Matchers {
 
   "Serialization and deserialization of UploadDetails" should {
 

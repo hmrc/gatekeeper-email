@@ -20,7 +20,7 @@ import akka.util.Timeout
 import org.joda.time.DateTime
 import org.mockito.MockitoSugar.{mock, when}
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{BeforeAndAfterEach, Matchers}
+import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -33,9 +33,11 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
-
 import java.time.Instant
 import java.util.UUID.randomUUID
+
+import org.scalatest.matchers.should.Matchers
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future.successful
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
