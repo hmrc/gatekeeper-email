@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import akka.stream.Materializer
+import javax.inject.{Inject, Singleton}
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
 import org.joda.time.DateTime
 import org.mongodb.scala.model.Filters._
@@ -24,16 +24,14 @@ import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.set
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
 import org.mongodb.scala.{MongoClient, MongoCollection}
-import play.api.libs.json.Format
-import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadId, UploadStatus}
+import play.api.libs.json.{Format, Json}
+import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadStatus}
 import uk.gov.hmrc.gatekeeperemail.repositories.FileUploadMongoFormatter._
 import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
-import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import play.api.libs.json.Json
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 
 case class UploadInfo(reference : Reference, status : UploadStatus, createDateTime: DateTime)
 
@@ -45,7 +43,7 @@ object UploadInfo {
 
 @Singleton
 class FileUploadStatusRepository @Inject()(mongoComponent: MongoComponent)
-                                          (implicit ec : ExecutionContext, m: Materializer)
+                                          (implicit ec : ExecutionContext)
   extends PlayMongoRepository[UploadInfo](
     mongoComponent = mongoComponent,
     collectionName = "gatekeeper-fileuploads",

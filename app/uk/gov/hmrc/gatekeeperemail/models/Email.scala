@@ -18,7 +18,6 @@ package uk.gov.hmrc.gatekeeperemail.models
 
 import org.joda.time.DateTime
 import play.api.libs.json.{Format, Json, OFormat}
-import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.Status
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 
 case class EmailTemplateData(templateId: String, parameters: Map[String, String],

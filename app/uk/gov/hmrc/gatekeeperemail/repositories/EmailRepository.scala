@@ -16,14 +16,17 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
+import java.util.concurrent.TimeUnit
+
+import javax.inject.{Inject, Singleton}
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
-import org.joda.time.{DateTime, DateTimeZone, Days, ReadableInstant}
+import org.joda.time.{DateTime, Days}
 import org.mongodb.scala.model.Filters.equal
-import org.mongodb.scala.{MongoClient, MongoCollection}
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.set
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
 import org.mongodb.scala.result.InsertOneResult
+import org.mongodb.scala.{MongoClient, MongoCollection}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
 import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailStatus}
@@ -31,8 +34,6 @@ import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.emailFormatt
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
-import java.util.concurrent.TimeUnit
-import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -116,7 +117,7 @@ class EmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: AppCo
     ).map(_.asInstanceOf[Email]).head()
   }
 
-  def findByemailUUID(emailUUID: String)(implicit ec: ExecutionContext): Future[Option[Email]] = {
+  def findByemailUUID(emailUUID: String): Future[Option[Email]] = {
     collection.find(equal("emailUUID", Codecs.toBson(emailUUID))).headOption()
   }
 

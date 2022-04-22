@@ -21,13 +21,13 @@ import com.mongodb.client.result.InsertOneResult
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone.UTC
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
-import org.mongodb.scala.bson.{BsonNumber, BsonValue}
+import org.mongodb.scala.bson.BsonNumber
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailData, EmailRequest, EmailTemplateData, RenderResult, User}
+import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
 import uk.gov.hmrc.http.HeaderCarrier
 

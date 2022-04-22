@@ -21,9 +21,8 @@ import play.api.libs.json.Json.toJson
 import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.gatekeeperemail.services.UpscanCallbackService
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.gatekeeperemail.controllers.CallbackBody._
-import uk.gov.hmrc.gatekeeperemail.models.Reference
 import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
 import java.time.Instant
 import javax.inject.{Inject, Singleton}

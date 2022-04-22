@@ -26,7 +26,7 @@ lazy val microservice = (project in file("."))
   .settings(
     name := appName,
     targetJvm := "jvm-1.8",
-    scalaVersion := "2.12.11",
+    scalaVersion := "2.12.15",
     libraryDependencies ++= AppDependencies(),
     majorVersion := 0,
     resolvers ++= Resolvers(),
@@ -81,8 +81,8 @@ def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
     )
   }
 
-coverageMinimum := 77
 coverageFailOnMinimum := true
+coverageMinimum := 77
 coverageExcludedPackages := Seq(
   "<empty>",
   "com.kenshoo.play.metrics",

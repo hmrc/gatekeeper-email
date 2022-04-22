@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
+import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTime
-import org.mongodb.scala.bson.BsonValue
 import play.api.Logger
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.{INPROGRESS, SENT}
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.INPROGRESS
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
-import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
