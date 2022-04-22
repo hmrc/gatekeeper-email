@@ -16,21 +16,17 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
+import java.io.IOException
+
+import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
-import play.api.mvc.Results.Ok
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, PlayBodyParsers, Result}
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import play.api.mvc._
 import uk.gov.hmrc.gatekeeperemail.models.{UploadedFileWithObjectStore, _}
 import uk.gov.hmrc.gatekeeperemail.services.{EmailService, ObjectStoreService}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
-import uk.gov.hmrc.objectstore.client.{ObjectSummaryWithMd5, Path, RetentionPeriod}
+import uk.gov.hmrc.objectstore.client.ObjectSummaryWithMd5
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import java.io.IOException
-import java.net.URL
-import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton

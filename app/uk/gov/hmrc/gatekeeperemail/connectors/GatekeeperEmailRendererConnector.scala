@@ -16,23 +16,21 @@
 
 package uk.gov.hmrc.gatekeeperemail.connectors
 
-import org.apache.http.HttpStatus
 import play.api.Logging
 import play.api.http.HeaderNames.CONTENT_TYPE
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.models.{RenderResult, SendEmailRequest, TemplateRenderRequest, TemplateRenderResult}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpClient, HttpErrorFunctions, NotFoundException, UpstreamErrorResponse}
-import uk.gov.hmrc.play.http.metrics.common.API
-
 import javax.inject.{Inject, Singleton}
+import play.mvc.Http.Status
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class GatekeeperEmailRendererConnector @Inject()(httpClient: HttpClient, config: EmailRendererConnectorConfig)(implicit ec: ExecutionContext)
   extends HttpErrorFunctions with Logging {
 
-  val api = API("developer-email-renderer")
   lazy val serviceUrl = config.emailRendererBaseUrl
 
   def getTemplatedEmail(emailRequest: SendEmailRequest): Future[Either[UpstreamErrorResponse, RenderResult]] = {
@@ -50,9 +48,9 @@ class GatekeeperEmailRendererConnector @Inject()(httpClient: HttpClient, config:
           result.service))
     } recover {
       case _: NotFoundException =>
-        Left(UpstreamErrorResponse(s"Template ${emailRequest.templateId} does not exist", HttpStatus.SC_NOT_FOUND))
+        Left(UpstreamErrorResponse(s"Template ${emailRequest.templateId} does not exist", Status.NOT_FOUND))
       case ex: BadRequestException =>
-        Left(UpstreamErrorResponse(ex.getMessage, HttpStatus.SC_BAD_REQUEST))
+        Left(UpstreamErrorResponse(ex.getMessage, Status.BAD_REQUEST))
     }
   }
 

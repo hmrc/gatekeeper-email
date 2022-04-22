@@ -16,12 +16,10 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
+import java.time.Instant
+
 import org.scalatest.{Matchers, WordSpec}
 import play.api.libs.json.{JsError, JsSuccess, Json}
-import uk.gov.hmrc.gatekeeperemail.models.Reference
-
-import java.net.URL
-import java.time.Instant
 
 class CallbackBodyTest extends WordSpec with Matchers {
 

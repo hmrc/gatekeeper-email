@@ -16,6 +16,10 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
+import java.io.IOException
+import java.time.Instant
+import java.util.UUID
+
 import akka.stream.Materializer
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor, urlEqualTo}
 import com.github.tomakehurst.wiremock.http.Fault
@@ -23,17 +27,15 @@ import com.mongodb.client.result.InsertOneResult
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone.UTC
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.MockitoSugar.mock
 import org.mockito.{ArgumentCaptor, ArgumentMatchersSugar, MockitoSugar}
 import org.mongodb.scala.bson.BsonNumber
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
-import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
 import play.api.mvc.PlayBodyParsers
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
@@ -43,13 +45,9 @@ import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
 import uk.gov.hmrc.gatekeeperemail.services.{EmailService, ObjectStoreService}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
 
-import java.io.IOException
-import java.time.Instant
-import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.{failed, successful}

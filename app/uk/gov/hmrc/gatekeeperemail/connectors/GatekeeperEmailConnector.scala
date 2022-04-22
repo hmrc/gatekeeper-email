@@ -22,7 +22,6 @@ import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.models.{OneEmailRequest, SendEmailRequest}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpErrorFunctions, HttpResponse}
-import uk.gov.hmrc.play.http.metrics.common.API
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,7 +30,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnectorConfig)(implicit ec: ExecutionContext)
   extends HttpErrorFunctions with Logging {
 
-  val api = API("email")
   lazy val serviceUrl = config.emailBaseUrl
 
   def sendEmail(emailRequest: SendEmailRequest): Future[Int] = {

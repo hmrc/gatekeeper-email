@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-import play.api.libs.json.Reads
-import play.api.mvc.QueryStringBindable
-
 import java.util.UUID
 
 sealed trait UploadStatus

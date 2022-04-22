@@ -17,7 +17,6 @@
 package uk.gov.hmrc.gatekeeperemail.services
 
 import com.google.inject.ImplementedBy
-import org.mongodb.scala.result.InsertOneResult
 import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadStatus}
 import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 
