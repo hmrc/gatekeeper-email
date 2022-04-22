@@ -16,18 +16,20 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
-import play.api.test.Helpers.await
-import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadId, UploadedFailedWithErrors, UploadedSuccessfully}
+import java.util.UUID.randomUUID
+
 import akka.util.Timeout
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.Helpers.await
+import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadedFailedWithErrors, UploadedSuccessfully}
 import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
-import java.util.UUID.randomUUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
 
@@ -48,8 +50,6 @@ class FileUploadStatusServiceSpec extends AnyWordSpec with PlayMongoRepositorySu
   "MongoBackedUploadProgressTracker" should {
     "coordinate workflow" in {
       val reference = randomUUID().toString
-      val id = UploadId(randomUUID)
-      val str = "61adf36cda0000130b757df9".getBytes()
       val expectedStatus = UploadedSuccessfully("name","mimeType","downloadUrl",Some(123), "http://aws.s3.object-store-url")
 
       implicit val timeout = Timeout(FiniteDuration(20, SECONDS))
