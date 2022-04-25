@@ -75,6 +75,7 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
       fileRepository.findByUploadId(file)))
 
     for {
+      //TODO based on file attach tick we need to send attachment details...
       file <- fileUploads
       urls = file.flatten.map(x =>
       s"""<a href="${x.status.asInstanceOf[UploadedSuccessfully].downloadUrl}" target="_blank">${x.status.asInstanceOf[UploadedSuccessfully].name}</a>"""

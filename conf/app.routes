@@ -6,6 +6,8 @@ GET  /gatekeeper-email/fetch-email/:emailUUID uk.gov.hmrc.gatekeeperemail.contro
 POST /gatekeeper-email/update-email uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.updateEmail(emailUUID)
 
 POST /gatekeeperemail/upscancallback uk.gov.hmrc.gatekeeperemail.controllers.UploadCallbackController.callback
+//TODO
+POST /gatekeeperemail/removeinui uk.gov.hmrc.gatekeeperemail.controllers.UploadCallbackController.removeinui
 
 POST /gatekeeperemail/insertfileuploadstatus uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.addUploadedFileStatus(key, emailUUID)
 POST /gatekeeperemail/updatefileuploadstatus uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.updateUploadedFileStatus(key)

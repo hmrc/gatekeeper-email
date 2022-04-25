@@ -48,6 +48,7 @@ class UpscanCallbackService @Inject()(sessionStorage: FileUploadStatusRepository
     )
   }
 
+  //TODO add UDF object store logic here..
   def handleCallback(callback : CallbackBody): Future[UploadInfo] = {
 
     callback match {
@@ -61,6 +62,7 @@ class UpscanCallbackService @Inject()(sessionStorage: FileUploadStatusRepository
           Some(s.uploadDetails.size),
           "summary.location.asUri")
           sessionStorage.updateStatus((callback.reference), status)
+        //TODO add in object store..
       case f: FailedCallbackBody =>
         val status = UploadedFailedWithErrors(f.fileStatus, f.failureDetails.failureReason, f.failureDetails.message, f.reference)
         sessionStorage.updateStatus((callback.reference), status)
