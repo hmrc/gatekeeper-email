@@ -16,40 +16,38 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import java.util.concurrent.TimeUnit
-
+import akka.stream.IOResult
 import com.mongodb.ReadPreference.primaryPreferred
 import javax.inject.{Inject, Singleton}
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
-import org.joda.time.{DateTime, Days}
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.Updates.set
-import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.result.InsertOneResult
 import org.mongodb.scala.{MongoClient, MongoCollection}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.models.{CompletedEmail, EmailStatus}
-import uk.gov.hmrc.gatekeeperemail.repositories.CompletedEmailFormatter.completedEmailFormatter
+import uk.gov.hmrc.gatekeeperemail.models.{EmailStatus, ReadyEmail}
+import uk.gov.hmrc.gatekeeperemail.repositories.ReadyEmailFormatter.readyEmailFormatter
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CompletedEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: AppConfig)
-                                        (implicit ec: ExecutionContext)
-  extends PlayMongoRepository[CompletedEmail](
+class ReadyEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: AppConfig)
+                                    (implicit ec: ExecutionContext)
+  extends PlayMongoRepository[ReadyEmail](
     mongoComponent = mongoComponent,
-    collectionName = "completed-emails",
-    domainFormat = completedEmailFormatter,
-    indexes = Seq(IndexModel(ascending("status", "failedCount", "createdAt"),
+    collectionName = "readyemails",
+    domainFormat = readyEmailFormatter,
+    indexes = Seq(IndexModel(ascending("status",  "createdAt"),
         IndexOptions()
           .name("emailNextSendIndex")
           .background(true)
-          .unique(true)),
+          .unique(false)),
       )) {
 
-  override lazy val collection: MongoCollection[CompletedEmail] =
+  override lazy val collection: MongoCollection[ReadyEmail] =
     CollectionFactory
       .collection(mongoComponent.database, collectionName, domainFormat)
       .withCodecRegistry(
@@ -66,12 +64,16 @@ class CompletedEmailRepository @Inject()(mongoComponent: MongoComponent, appConf
         )
       )
 
-  def findNextEmail(email: CompletedEmail): Future[CompletedEmail] = {
+  def persist(entity: ReadyEmail): Future[InsertOneResult] = {
+    collection.insertOne(entity).toFuture()
+  }
+
+  def findNextEmailToSend: Future[ReadyEmail] = {
     collection.withReadPreference(primaryPreferred)
-    .find(filter = and(equal("status", EmailStatus.IN_PROGRESS),
-      and(lt("failedCount", 3))))
+    .find(filter = equal("status", "IN_PROGRESS"))
       .sort(ascending("createdAt"))
-      .map(_.asInstanceOf[CompletedEmail]).head()
+      .limit(1)
+      .head()
   }
 
 }

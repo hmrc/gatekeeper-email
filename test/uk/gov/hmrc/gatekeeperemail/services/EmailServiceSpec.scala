@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
+import java.time.LocalDateTime
+
 import akka.stream.Materializer
 import com.mongodb.client.result.InsertOneResult
-import org.joda.time.DateTime
-import org.joda.time.DateTimeZone.UTC
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.mongodb.scala.bson.BsonNumber
 import org.scalatest.matchers.should.Matchers
@@ -50,7 +50,7 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
       User("example2@example2.com", "first name2", "last name2", true))
     val email = Email("emailId-123", templateData, "DL Team",
       users, None, "markdownEmailBody", "This is test email",
-      "test subject", "SENT", "composedBy", Some("approvedBy"), DateTime.now(UTC))
+      "test subject", "SENT", "composedBy", Some("approvedBy"), LocalDateTime.now())
     when(emailRendererConnectorMock.getTemplatedEmail(*))
       .thenReturn(successful(Right(RenderResult("RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
         "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))

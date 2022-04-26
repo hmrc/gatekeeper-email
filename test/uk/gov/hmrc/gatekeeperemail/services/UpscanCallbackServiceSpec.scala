@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
+import java.time.LocalDateTime.now
+
 import akka.util.Timeout
-import org.joda.time.DateTime
 import org.mockito.MockitoSugar.{mock, when}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.BeforeAndAfterEach
@@ -33,7 +34,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
-import java.time.Instant
+import java.time.{Instant, LocalDateTime}
 import java.util.UUID.randomUUID
 
 import org.scalatest.matchers.should.Matchers
@@ -61,7 +62,7 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
     ))
   val uploadStatusSuccess = UploadedSuccessfully("test.pdf", "application/pdf",
     "https://bucketName.s3.eu-west-2.amazonaws.com?1235676", Some(45678L), "gatekeeper-email/test.pdf")
-  val uploadInfoSuccess = UploadInfo(Reference(reference), uploadStatusSuccess, DateTime.now())
+  val uploadInfoSuccess = UploadInfo(Reference(reference), uploadStatusSuccess, now())
   val uploadStatusSFailedWithErrors = UploadedFailedWithErrors("FAILED", "QUARANTINE", "This file has a virus", reference)
 
   val failedCallbackBody = FailedCallbackBody(
@@ -73,7 +74,7 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
     )
   )
   val dummyCallBackBody = DummyCallBackBody(reference)
-  val uploadInfoFailed = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors, DateTime.now())
+  val uploadInfoFailed = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors, now())
   implicit val timeout = Timeout(FiniteDuration(20, SECONDS))
 
   protected def appBuilder: GuiceApplicationBuilder =

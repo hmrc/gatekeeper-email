@@ -19,9 +19,12 @@ package uk.gov.hmrc.gatekeeperemail.models
 import java.time.LocalDateTime
 import java.util.UUID
 
-import org.joda.time.DateTime
+import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
 import play.api.libs.json.{Format, Json, OFormat}
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
+import uk.gov.hmrc.mongo.play.json.formats.{MongoJavatimeFormats, MongoJodaFormats}
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats._
+
+import scala.collection.immutable
 
 case class EmailTemplateData(templateId: String, parameters: Map[String, String],
                              force: Boolean = false,
@@ -30,7 +33,7 @@ case class EmailTemplateData(templateId: String, parameters: Map[String, String]
 
 case class Email(emailUUID: String, templateData: EmailTemplateData, recipientTitle: String, recipients: List[User],
                  attachmentDetails: Option[Seq[UploadedFileWithObjectStore]], markdownEmailBody: String,
-                 htmlEmailBody: String, subject: String, status: String, composedBy: String, approvedBy: Option[String], createDateTime: DateTime)
+                 htmlEmailBody: String, subject: String, status: String, composedBy: String, approvedBy: Option[String], createDateTime: LocalDateTime)
 
 case class OutgoingEmail(emailUUID: String, recipientTitle: String, recipients: List[User], attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None,
                          markdownEmailBody: String, htmlEmailBody: String, subject: String, status: String,
@@ -45,7 +48,7 @@ object OutgoingEmail {
 }
 
 object Email {
-  implicit val dateFormation: Format[DateTime] = MongoJodaFormats.dateTimeFormat
+  implicit val dateFormatter: Format[LocalDateTime] = MongoJavatimeFormats.localDateTimeFormat
   implicit val userFormatter: OFormat[User] = Json.format[User]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
@@ -54,7 +57,7 @@ object Email {
   implicit val emailFormatter: OFormat[Email] = Json.format[Email]
 }
 
-object EmailStatus extends Enumeration {
+/*object EmailStatus extends Enumeration {
   type Status = Value
   val FAILED, IN_PROGRESS, SENT = Value
 
@@ -63,11 +66,19 @@ object EmailStatus extends Enumeration {
     case EmailStatus.IN_PROGRESS => "IN_PROGRESS"
     case EmailStatus.SENT => "SENT"
   }
+}*/
+
+case class ReadyEmail(createdAt: LocalDateTime, updatedAt: LocalDateTime, emailUuid: UUID, firstName: String,
+                      lastName: String, recipient: String, status: String, failedCount: Int)
+
+
+
+sealed abstract class EmailStatus(override val entryName: String)  extends EnumEntry
+
+object EmailStatus extends Enum[EmailStatus] with PlayJsonEnum[EmailStatus]{
+  val values: immutable.IndexedSeq[EmailStatus] = findValues
+
+  case object FAILED extends EmailStatus( "FAILED")
+  case object IN_PROGRESS  extends EmailStatus("IN_PROGRESS")
+  case object SENT extends EmailStatus( "SENT")
 }
-
-case class CompletedEmail(createdAt: LocalDateTime, updatedAt: LocalDateTime, emailUuid: UUID, firstName: String,
-lastName: String, recipient: String, status: String, failedCount: Int)
-
-
-
-

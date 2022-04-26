@@ -15,17 +15,18 @@
  */
 
 package uk.gov.hmrc.gatekeeperemail.models
-import org.joda.time.DateTime
+import java.time.LocalDateTime
+
 import play.api.libs.json._
 import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
+import uk.gov.hmrc.mongo.play.json.formats.{MongoJavatimeFormats, MongoJodaFormats}
 
 trait JsonFormatters  {
 
   implicit val bsonFormat: OFormat[UploadId] = Json.format[UploadId]
 
   implicit val referenceFormat: OFormat[Reference] = Json.format[Reference]
-  implicit val dateFormation  : Format[DateTime] = MongoJodaFormats.dateTimeFormat
+  implicit val dateFormatter  : Format[LocalDateTime] = MongoJavatimeFormats.localDateTimeFormat
 
   // NOTE - these override the defaults in order to push dates in non-mongo format
   implicit val uploadedSuccessfullyFormat: OFormat[UploadedSuccessfully] = Json.format[UploadedSuccessfully]
@@ -56,11 +57,11 @@ trait JsonFormatters  {
     }
   }
 
-  implicit val uploadStatusFormat: Format[UploadStatus] = Format(read,write)
+  implicit val uploadStatusFormat: Format[UploadStatus] = Format(read, write)
   val uploadInfoReads = Json.reads[UploadInfo]
   val uploadInfoWrites = Json.writes[UploadInfo]
-  implicit val uploadInfoFormat = Format(uploadInfoReads,uploadInfoWrites)
-  implicit val formatEmailStatus = Json.formatEnum(EmailStatus)
+  implicit val uploadInfoFormat = Format(uploadInfoReads, uploadInfoWrites)
+//  implicit val formatEmailStatus = Json.formatEnum(EmailStatus)
 
 }
 

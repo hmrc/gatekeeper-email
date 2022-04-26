@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import org.joda.time.DateTime
-import org.joda.time.DateTimeZone.UTC
+import java.time.LocalDateTime
+
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -35,7 +35,7 @@ class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSuga
       val data: EmailTemplateData = EmailTemplateData("gatekeeper", Map(), false, Map(), None);
       val email = Email("61e00e08ed2f2471ce3126db", data, "DL Team",
         users, None, "markdownEmailBody", "This is test email",
-        "test subject", "test status", "composedBy", Some("approvedBy"), DateTime.now(UTC))
+        "test subject", "test status", "composedBy", Some("approvedBy"), LocalDateTime.now())
       val msgJson: JsObject = formatter.writes(email)
       msgJson.values.size shouldBe 11
       msgJson.value.get("recipientTitle") shouldBe Some(JsString("DL Team"))

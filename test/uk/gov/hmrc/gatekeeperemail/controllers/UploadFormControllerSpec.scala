@@ -16,17 +16,17 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
+import java.time.LocalDateTime
 import java.util.UUID.randomUUID
 
 import akka.stream.Materializer
-import common.AsyncHmrcSpec
-import org.joda.time.DateTime
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.{BAD_REQUEST, OK}
 import play.api.libs.json.{JsResultException, Json}
 import play.api.mvc.ControllerComponents
 import play.api.test.Helpers.{contentAsJson, contentAsString, status}
 import play.api.test.{FakeRequest, StubControllerComponentsFactory, StubPlayBodyParsersFactory}
+import common.AsyncHmrcSpec
 import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
@@ -35,7 +35,7 @@ import uk.gov.hmrc.gatekeeperemail.services.FileUploadStatusService
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future.successful
 
-class UploadFormControllerSpec extends AsyncHmrcSpec  with GuiceOneAppPerSuite
+class UploadFormControllerSpec extends AsyncHmrcSpec with GuiceOneAppPerSuite
   with StubControllerComponentsFactory
   with StubPlayBodyParsersFactory {
 
@@ -47,9 +47,9 @@ class UploadFormControllerSpec extends AsyncHmrcSpec  with GuiceOneAppPerSuite
     """{"name" : "abc.txt", "mimeType" : "pdf", "downloadUrl" : "http://abcs3",
       |"size" : 1234, "_type" : "UploadedSuccessfully", "objectStoreUrl": "http://aws.s3.object-store-url"}""".stripMargin
   val failedBody = """{"_type" : "Failed"}"""
-  val uploadInfo1 = UploadInfo(Reference(reference), uploadStatusSuccess, DateTime.now())
-  val uploadInfoInProgress = UploadInfo(Reference(reference), InProgress, DateTime.now())
-  val uploadInfoInFailed = UploadInfo(Reference(reference), Failed, DateTime.now())
+  val uploadInfo1 = UploadInfo(Reference(reference), uploadStatusSuccess, LocalDateTime.now())
+  val uploadInfoInProgress = UploadInfo(Reference(reference), InProgress, LocalDateTime.now())
+  val uploadInfoInFailed = UploadInfo(Reference(reference), Failed, LocalDateTime.now())
 
   implicit lazy val materializer: Materializer = mock[Materializer]
 

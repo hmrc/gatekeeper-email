@@ -16,17 +16,18 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import org.joda.time.DateTime
+import java.time.LocalDateTime
+
 import uk.gov.hmrc.gatekeeperemail.models.{InProgress, Reference, UploadStatus}
 import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
-
 import javax.inject.Inject
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class FileUploadStatusService @Inject()(repository : FileUploadStatusRepository)(implicit ec : ExecutionContext) extends UploadProgressTracker {
 
   override def requestUpload(fileReference : String): Future[UploadInfo] =
-    repository.requestUpload(UploadInfo(Reference(fileReference), InProgress, DateTime.now()))
+    repository.requestUpload(UploadInfo(Reference(fileReference), InProgress, LocalDateTime.now()))
 
   override def registerUploadResult(fileReference: String, uploadStatus: UploadStatus): Future[UploadInfo] =
     repository.updateStatus(Reference(fileReference), uploadStatus)

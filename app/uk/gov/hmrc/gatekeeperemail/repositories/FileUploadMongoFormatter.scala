@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import org.joda.time.DateTime
+import java.time.LocalDateTime
+
 import play.api.libs.json._
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
+import uk.gov.hmrc.mongo.play.json.formats.{MongoJavatimeFormats, MongoJodaFormats}
 
 object FileUploadMongoFormatter {
   implicit val bsonFormat: OFormat[UploadId] = Json.format[UploadId]
 
   implicit val referenceFormat: OFormat[Reference] = Json.format[Reference]
-  implicit val dateFormation  : Format[DateTime] = MongoJodaFormats.dateTimeFormat
+  implicit val dateFormatter  : Format[LocalDateTime] = MongoJavatimeFormats.localDateTimeFormat
 
   implicit val initiateReads: Reads[InProgress.type] =
     Json.reads[InProgress.type]

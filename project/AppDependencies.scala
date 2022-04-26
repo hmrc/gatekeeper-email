@@ -12,7 +12,9 @@ object AppDependencies {
   val compile = Seq(
     "uk.gov.hmrc"                 %%  "bootstrap-backend-play-28"   % bootstrapPlayVersion,
     "uk.gov.hmrc.mongo"           %%  "hmrc-mongo-play-28"          % hmrcMongoVersion,
-    "uk.gov.hmrc.objectstore"     %%  "object-store-client-play-28" % "0.39.0"
+    "uk.gov.hmrc.objectstore"     %%  "object-store-client-play-28" % "0.39.0",
+    "com.beachape" %% "enumeratum-play-json" % "1.7.0"
+
 
   )
 

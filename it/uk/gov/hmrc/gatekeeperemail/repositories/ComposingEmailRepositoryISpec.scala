@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
+import java.time.{LocalDateTime, ZoneId}
+import java.util.TimeZone
+
 import akka.stream.Materializer
-import org.joda.time.DateTime
 import org.mongodb.scala.ReadPreference.primaryPreferred
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
@@ -29,10 +31,9 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailTemplateData, User}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
-import org.joda.time.DateTimeZone.UTC
 import org.mongodb.scala.bson.BsonBoolean
 
-class EmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[Email] with
+class ComposingEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[Email] with
   Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
   val serviceRepo = repository.asInstanceOf[ComposingEmailRepository]
 
@@ -56,7 +57,7 @@ class EmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[E
     val users = List(User("example@example.com", "first name", "last name", true),
       User("example2@example2.com", "first name2", "last name2", true))
     val email = Email("emailId-123", templateData, "DL Team", users, None, "markdownEmailBody", "This is test email",
-      "test subject", "test status", "composedBy", Some("approvedBy"), DateTime.now(UTC))
+      "test subject", "test status", "composedBy", Some("approvedBy"), LocalDateTime.now())
 
     "insert an Email message when it does not exist" in {
       await(serviceRepo.persist(email))

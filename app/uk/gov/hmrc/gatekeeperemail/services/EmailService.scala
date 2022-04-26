@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
+import java.time.LocalDateTime
+
 import javax.inject.{Inject, Singleton}
-import org.joda.time.DateTime
 import play.api.Logger
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.INPROGRESS
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.IN_PROGRESS
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.ComposingEmailRepository
 import uk.gov.hmrc.http.UpstreamErrorResponse
@@ -103,8 +104,8 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
 
     Email(emailUUID,  emailTemplateData, recipientsTitle, emailRequest.to, emailRequest.attachmentDetails,
       emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
-      emailRequest.emailData.emailSubject, EmailStatus.displayedStatus(INPROGRESS), "composedBy",
-      Some("approvedBy"), DateTime.now())
+      emailRequest.emailData.emailSubject, EmailStatus.IN_PROGRESS.toString, "composedBy",
+      Some("approvedBy"), LocalDateTime.now())
   }
 
   private def getEmailBody(rendererResult: Either[UpstreamErrorResponse, RenderResult]) = {

@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit
 
 import javax.inject.{Inject, Singleton}
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
-import org.joda.time.{DateTime, Days}
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.set
@@ -28,7 +27,6 @@ import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOption
 import org.mongodb.scala.result.InsertOneResult
 import org.mongodb.scala.{MongoClient, MongoCollection}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
 import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailStatus}
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.emailFormatter
 import uk.gov.hmrc.mongo.MongoComponent
@@ -39,7 +37,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ComposingEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: AppConfig)
                                         (implicit ec: ExecutionContext)
-  extends PlayMongoRepository[CompEmail](
+  extends PlayMongoRepository[Email](
     mongoComponent = mongoComponent,
     collectionName = "emails",
     domainFormat = emailFormatter,
@@ -51,10 +49,8 @@ class ComposingEmailRepository @Inject()(mongoComponent: MongoComponent, appConf
       IndexModel(ascending("createDateTime"),
         IndexOptions()
           .name("createDateTimeIndex")
-          .expireAfter(Days.daysBetween(DateTime.now(), DateTime.now().plusYears(appConfig.emailRecordRetentionPeriod)).getDays,
-            TimeUnit.DAYS)
-          .background(true)
-          .unique(true)))
+          .expireAfter(appConfig.emailRecordRetentionPeriod * 365, TimeUnit.DAYS)
+          .background(true)))
   ) {
 
   override lazy val collection: MongoCollection[Email] =
@@ -89,7 +85,7 @@ class ComposingEmailRepository @Inject()(mongoComponent: MongoComponent, appConf
 
   def updateEmailSentStatus(emailUUID: String): Future[Email] = {
     collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(emailUUID)),
-      update = set("status", EmailStatus.displayedStatus(SENT)),
+      update = set("status", EmailStatus.SENT),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
     ).map(_.asInstanceOf[Email]).head()
   }

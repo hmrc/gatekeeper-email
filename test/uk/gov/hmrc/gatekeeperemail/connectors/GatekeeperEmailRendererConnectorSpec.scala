@@ -21,15 +21,16 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.{verify => wireMockVerify, _}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.http.Fault
-import common.AsyncHmrcSpec
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.OK
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.models.{SendEmailRequest, User}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
-
 import java.io.IOException
+
+import common.AsyncHmrcSpec
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite {
