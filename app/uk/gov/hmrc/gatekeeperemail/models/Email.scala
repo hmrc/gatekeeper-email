@@ -57,21 +57,8 @@ object Email {
   implicit val emailFormatter: OFormat[Email] = Json.format[Email]
 }
 
-/*object EmailStatus extends Enumeration {
-  type Status = Value
-  val FAILED, IN_PROGRESS, SENT = Value
-
-  val displayedStatus: (Status) => String = {
-    case EmailStatus.FAILED => "FAILED"
-    case EmailStatus.IN_PROGRESS => "IN_PROGRESS"
-    case EmailStatus.SENT => "SENT"
-  }
-}*/
-
 case class ReadyEmail(createdAt: LocalDateTime, updatedAt: LocalDateTime, emailUuid: UUID, firstName: String,
-                      lastName: String, recipient: String, status: String, failedCount: Int)
-
-
+                      lastName: String, recipient: String, status: EmailStatus, failedCount: Int)
 
 sealed abstract class EmailStatus(override val entryName: String)  extends EnumEntry
 

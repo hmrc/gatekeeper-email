@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package common
+package uk.gov.hmrc.gatekeeperemail.common
 
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.OptionValues
@@ -23,6 +23,6 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.WsScalaTestClient
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 
-abstract class HmrcSpec extends AnyWordSpec with Matchers with OptionValues with WsScalaTestClient with MockitoSugar with ArgumentMatchersSugar
+abstract class HmrcTestSpec extends AnyWordSpec with Matchers with OptionValues with WsScalaTestClient with MockitoSugar with ArgumentMatchersSugar
 
-abstract class AsyncHmrcSpec extends HmrcSpec with DefaultAwaitTimeout with FutureAwaits
+abstract class AsyncHmrcTestSpec extends HmrcTestSpec with DefaultAwaitTimeout with FutureAwaits

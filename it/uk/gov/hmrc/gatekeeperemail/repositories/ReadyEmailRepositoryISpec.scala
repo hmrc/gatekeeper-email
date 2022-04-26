@@ -28,7 +28,8 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailStatus, EmailTemplateData, ReadyEmail, User}
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
+import uk.gov.hmrc.gatekeeperemail.models.ReadyEmail
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
@@ -51,14 +52,10 @@ class ReadyEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
   override protected def repository: PlayMongoRepository[ReadyEmail] = app.injector.instanceOf[ReadyEmailRepository]
 
   val email = ReadyEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), emailUuid = UUID.randomUUID(),
-    firstName = "first", lastName = "last", recipient = "first.last@digital.hmrc.gov.uk", status = "IN_PROGRESS",
+    firstName = "first", lastName = "last", recipient = "first.last@digital.hmrc.gov.uk", status = IN_PROGRESS,
     failedCount = 0)
 
   "persist" should {
-    val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
-    val users = List(User("example@example.com", "first name", "last name", true),
-    User("example2@example2.com", "first name2", "last name2", true))
-
     "insert a ready email message when it does not exist" in {
       await(serviceRepo.persist(email))
 
@@ -87,6 +84,26 @@ class ReadyEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
       val nextEmail = await(serviceRepo.findNextEmailToSend)
 
       nextEmail.recipient shouldBe expectedNextSendRecipient
+      nextEmail.status shouldBe IN_PROGRESS
+    }
+
+    "ignore emails with failed status" in {
+      await(serviceRepo.persist(email.copy(status = FAILED, recipient = "failed.send@abc.com")))
+      await(serviceRepo.persist(email))
+
+      val nextEmail = await(serviceRepo.findNextEmailToSend)
+
+      nextEmail.recipient shouldBe email.recipient
+      nextEmail.status shouldBe IN_PROGRESS
+    }
+
+    "handle documents with the same created time" in {
+      await(serviceRepo.persist(email.copy(recipient = "failed.send@abc.com")))
+      await(serviceRepo.persist(email))
+
+      val nextEmail = await(serviceRepo.findNextEmailToSend)
+
+      nextEmail.status shouldBe IN_PROGRESS
     }
   }
 }

@@ -29,11 +29,11 @@ import uk.gov.hmrc.gatekeeperemail.models.{SendEmailRequest, User}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import java.io.IOException
 
-import common.AsyncHmrcSpec
+import uk.gov.hmrc.gatekeeperemail.common.{AsyncHmrcSpec, AsyncHmrcTestSpec}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite {
+class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite {
 
   val stubPort = sys.env.getOrElse("WIREMOCK", "22222").toInt
   val stubHost = "localhost"

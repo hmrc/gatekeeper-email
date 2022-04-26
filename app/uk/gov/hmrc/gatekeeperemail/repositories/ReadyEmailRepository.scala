@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import akka.stream.IOResult
 import com.mongodb.ReadPreference.primaryPreferred
 import javax.inject.{Inject, Singleton}
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
@@ -58,7 +57,8 @@ class ReadyEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
             Codecs.playFormatCodec(EmailMongoFormatter.cargoFormat),
             Codecs.playFormatCodec(EmailMongoFormatter.attachmentDetailsFormat),
             Codecs.playFormatCodec(EmailMongoFormatter.attachmentDetailsWithObjectStoreFormat),
-            Codecs.playFormatCodec(EmailMongoFormatter.emailFormatter)
+            Codecs.playFormatCodec(EmailMongoFormatter.emailFormatter),
+            Codecs.playFormatCodec(EmailStatus.jsonFormat)
           ),
           MongoClient.DEFAULT_CODEC_REGISTRY
         )
@@ -70,7 +70,7 @@ class ReadyEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
 
   def findNextEmailToSend: Future[ReadyEmail] = {
     collection.withReadPreference(primaryPreferred)
-    .find(filter = equal("status", "IN_PROGRESS"))
+    .find(filter = equal("status", Codecs.toBson(EmailStatus.IN_PROGRESS)))
       .sort(ascending("createdAt"))
       .limit(1)
       .head()
