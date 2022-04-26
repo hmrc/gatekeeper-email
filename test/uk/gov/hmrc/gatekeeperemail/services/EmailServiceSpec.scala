@@ -28,7 +28,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
+import uk.gov.hmrc.gatekeeperemail.repositories.ComposingEmailRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,7 +41,7 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
 
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
-    val emailRepositoryMock: EmailRepository = mock[EmailRepository]
+    val emailRepositoryMock: ComposingEmailRepository = mock[ComposingEmailRepository]
     val emailConnectorMock: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
     val underTest = new EmailService(emailConnectorMock, emailRendererConnectorMock, emailRepositoryMock)

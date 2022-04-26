@@ -37,9 +37,9 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoReposito
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class EmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: AppConfig)
-                                             (implicit ec: ExecutionContext)
-  extends PlayMongoRepository[Email](
+class ComposingEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: AppConfig)
+                                        (implicit ec: ExecutionContext)
+  extends PlayMongoRepository[CompEmail](
     mongoComponent = mongoComponent,
     collectionName = "emails",
     domainFormat = emailFormatter,

@@ -1,4 +1,4 @@
-package uk.gov.hmrc.gatekeeperemail.repository
+package uk.gov.hmrc.gatekeeperemail.repositories
 
 import java.util.UUID
 
@@ -13,7 +13,6 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcSpec
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
 import scala.concurrent.ExecutionContext.Implicits.global

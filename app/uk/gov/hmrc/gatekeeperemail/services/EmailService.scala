@@ -22,7 +22,7 @@ import play.api.Logger
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.INPROGRESS
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
+import uk.gov.hmrc.gatekeeperemail.repositories.ComposingEmailRepository
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,14 +30,13 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
                              emailRendererConnector: GatekeeperEmailRendererConnector,
-                               emailRepository: EmailRepository)
+                               emailRepository: ComposingEmailRepository)
                                            (implicit val ec: ExecutionContext) {
 
   val logger: Logger = Logger(getClass.getName)
 
   def persistEmail(emailRequest: EmailRequest, emailUUID: String): Future[Email] = {
     val email: Email = emailData(emailRequest, emailUUID)
-    logger.info(s"email data  before saving $email")
 
     val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
@@ -74,7 +73,6 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
 
   def updateEmail(emailRequest: EmailRequest, emailUUID: String): Future[Email] = {
     val email: Email = emailData(emailRequest, emailUUID)
-    logger.info(s"email data  before saving $email")
 
     val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)

@@ -34,7 +34,7 @@ import org.mongodb.scala.bson.BsonBoolean
 
 class EmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[Email] with
   Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
-  val serviceRepo = repository.asInstanceOf[EmailRepository]
+  val serviceRepo = repository.asInstanceOf[ComposingEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
   implicit val materialiser: Materializer = app.injector.instanceOf[Materializer]
@@ -49,7 +49,7 @@ class EmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[E
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override protected def repository: PlayMongoRepository[Email] = app.injector.instanceOf[EmailRepository]
+  override protected def repository: PlayMongoRepository[Email] = app.injector.instanceOf[ComposingEmailRepository]
 
   "persist" should {
     val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)

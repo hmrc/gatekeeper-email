@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
+import java.time.LocalDateTime
+import java.util.UUID
+
 import org.joda.time.DateTime
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
@@ -53,10 +56,18 @@ object Email {
 
 object EmailStatus extends Enumeration {
   type Status = Value
-  val INPROGRESS, SENT = Value
+  val FAILED, IN_PROGRESS, SENT = Value
 
   val displayedStatus: (Status) => String = {
-    case EmailStatus.INPROGRESS => "INPROGRESS"
+    case EmailStatus.FAILED => "FAILED"
+    case EmailStatus.IN_PROGRESS => "IN_PROGRESS"
     case EmailStatus.SENT => "SENT"
   }
 }
+
+case class CompletedEmail(createdAt: LocalDateTime, updatedAt: LocalDateTime, emailUuid: UUID, firstName: String,
+lastName: String, recipient: String, status: String, failedCount: Int)
+
+
+
+

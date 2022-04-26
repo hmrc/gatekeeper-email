@@ -28,7 +28,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
+import uk.gov.hmrc.gatekeeperemail.repositories.ComposingEmailRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
@@ -39,7 +39,7 @@ import scala.concurrent.Future.successful
 
 class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with MockitoSugar with ArgumentMatchersSugar
   with GuiceOneAppPerSuite with PlayMongoRepositorySupport[Email] {
-  val emailRepository = repository.asInstanceOf[EmailRepository]
+  val emailRepository = repository.asInstanceOf[ComposingEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
   implicit val materialiser: Materializer = app.injector.instanceOf[Materializer]
@@ -54,7 +54,7 @@ class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEac
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override protected def repository: PlayMongoRepository[Email] = app.injector.instanceOf[EmailRepository]
+  override protected def repository: PlayMongoRepository[Email] = app.injector.instanceOf[ComposingEmailRepository]
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 

@@ -42,7 +42,7 @@ import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
+import uk.gov.hmrc.gatekeeperemail.repositories.ComposingEmailRepository
 import uk.gov.hmrc.gatekeeperemail.services.{EmailService, ObjectStoreService}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
@@ -89,7 +89,7 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
   lazy implicit val mat: Materializer = app.materializer
   private val playBodyParsers: PlayBodyParsers = app.injector.instanceOf[PlayBodyParsers]
   val mockEmailConnector: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
-  val mockEmailRepository: EmailRepository = mock[EmailRepository]
+  val mockEmailRepository: ComposingEmailRepository = mock[ComposingEmailRepository]
   val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
 
   override lazy val app: Application = GuiceApplicationBuilder()
