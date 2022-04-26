@@ -106,4 +106,18 @@ class ReadyEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
       nextEmail.status shouldBe IN_PROGRESS
     }
   }
+
+  "updateFailedCount" should {
+    "update the fails counter" in {
+      await(serviceRepo.persist(email))
+
+      val nextEmail = await(serviceRepo.findNextEmailToSend)
+
+      await(serviceRepo.updateFailedCount(nextEmail))
+
+      val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred).find().toFuture())
+      fetchedRecords.size shouldBe 1
+      fetchedRecords.head.failedCount shouldBe 1
+    }
+  }
 }

@@ -57,7 +57,7 @@ object Email {
   implicit val emailFormatter: OFormat[Email] = Json.format[Email]
 }
 
-case class ReadyEmail(createdAt: LocalDateTime, updatedAt: LocalDateTime, emailUuid: UUID, firstName: String,
+case class ReadyEmail(id: UUID=UUID.randomUUID(), createdAt: LocalDateTime, updatedAt: LocalDateTime, emailUuid: UUID, firstName: String,
                       lastName: String, recipient: String, status: EmailStatus, failedCount: Int)
 
 sealed abstract class EmailStatus(override val entryName: String)  extends EnumEntry

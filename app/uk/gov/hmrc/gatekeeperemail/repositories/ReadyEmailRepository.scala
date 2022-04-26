@@ -17,10 +17,13 @@
 package uk.gov.hmrc.gatekeeperemail.repositories
 
 import com.mongodb.ReadPreference.primaryPreferred
+import com.mongodb.client.model.{ReturnDocument}
 import javax.inject.{Inject, Singleton}
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
+import org.mongodb.scala.model._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.Updates.set
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.mongodb.scala.result.InsertOneResult
 import org.mongodb.scala.{MongoClient, MongoCollection}
@@ -73,6 +76,14 @@ class ReadyEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
     .find(filter = equal("status", Codecs.toBson(EmailStatus.IN_PROGRESS)))
       .sort(ascending("createdAt"))
       .limit(1)
+      .head()
+  }
+
+  def updateFailedCount(email: ReadyEmail): Future[ReadyEmail] = {
+    collection.withReadPreference(primaryPreferred)
+      .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
+        update = set("failedCount", email.failedCount + 1),
+        options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
       .head()
   }
 
