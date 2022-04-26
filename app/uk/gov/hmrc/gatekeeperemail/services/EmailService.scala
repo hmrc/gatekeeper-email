@@ -19,18 +19,20 @@ package uk.gov.hmrc.gatekeeperemail.services
 import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTime
 import play.api.Logger
-import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
+import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailRendererConnector
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.INPROGRESS
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
+import uk.gov.hmrc.gatekeeperemail.repositories.{EmailRepository, SentEmailRepository}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
+import java.time.LocalDateTime
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
-                             emailRendererConnector: GatekeeperEmailRendererConnector,
-                               emailRepository: EmailRepository)
+class EmailService @Inject()(emailRendererConnector: GatekeeperEmailRendererConnector,
+                             emailRepository: EmailRepository,
+                             sentEmailRepository: SentEmailRepository)
                                            (implicit val ec: ExecutionContext) {
 
   val logger: Logger = Logger(getClass.getName)
@@ -55,11 +57,17 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
   def sendEmail(emailUUID: String): Future[Email] = {
     for {
       email <- emailRepository.getEmailData(emailUUID)
-      emailRequestedData = SendEmailRequest(email.recipients, email.templateData.templateId, email.templateData.parameters,
-        email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
-      _ <- emailConnector.sendEmail(emailRequestedData)
+      _ <- persistInEmailQueue(email)
       _ <- emailRepository.updateEmailSentStatus(emailUUID)
     } yield email
+  }
+
+  private def persistInEmailQueue(email: Email):  Future[Email] = {
+    email.recipients.map(elem =>
+      sentEmailRepository.persist(SentEmail(LocalDateTime.now(), LocalDateTime.now(), UUID.fromString(email.emailUUID),
+        elem.firstName, elem.lastName, elem.email, "PENDING", 0)))
+
+    Future.successful(email)
   }
 
   def fetchEmail(emailUUID: String): Future[Email] = {

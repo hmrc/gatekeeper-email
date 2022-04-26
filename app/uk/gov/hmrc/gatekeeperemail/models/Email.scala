@@ -20,6 +20,9 @@ import org.joda.time.DateTime
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 
+import java.time.LocalDateTime
+import java.util.UUID
+
 case class EmailTemplateData(templateId: String, parameters: Map[String, String],
                              force: Boolean = false,
                              auditData: Map[String, String] = Map.empty,
@@ -60,3 +63,6 @@ object EmailStatus extends Enumeration {
     case EmailStatus.SENT => "SENT"
   }
 }
+
+case class SentEmail(createdAt: LocalDateTime, updatedAt: LocalDateTime, emailUUID: UUID, firstName: String,
+                     lastName: String, recipient: String, status: String, failedCount: Int)
