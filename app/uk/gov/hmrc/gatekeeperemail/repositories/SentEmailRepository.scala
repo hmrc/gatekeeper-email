@@ -28,6 +28,7 @@ import org.mongodb.scala.model.Updates.set
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
 import org.mongodb.scala.result.InsertOneResult
 import org.mongodb.scala.{MongoClient, MongoCollection}
+import play.api.{Logger, Logging}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailStatus, SentEmail}
 import uk.gov.hmrc.gatekeeperemail.repositories.SentEmailFormatter.sentEmailFormatter
@@ -46,9 +47,9 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
     indexes = Seq(IndexModel(ascending("status", "failedCount", "createdAt"),
       IndexOptions()
         .name("emailNextSendIndex")
-        .background(true)
-        .unique(true)),
+        .background(true)),
     )) {
+  val logger: Logger = Logger(getClass.getName)
 
   override lazy val collection: MongoCollection[SentEmail] =
     CollectionFactory
@@ -76,6 +77,7 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
   }
 
   def persist(entity: SentEmail): Future[InsertOneResult] = {
+    logger.info(s"Email ID is ${entity.recipient} created at ${entity.createdAt}")
     collection.insertOne(entity).toFuture()
   }
 
