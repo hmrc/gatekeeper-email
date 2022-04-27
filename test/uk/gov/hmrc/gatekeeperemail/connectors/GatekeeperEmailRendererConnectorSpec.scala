@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.gatekeeperemail.connectors
 
+import java.io.IOException
+
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.{verify => wireMockVerify, _}
@@ -24,12 +26,10 @@ import com.github.tomakehurst.wiremock.http.Fault
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.OK
+import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.models.{SendEmailRequest, User}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
-import java.io.IOException
-
-import uk.gov.hmrc.gatekeeperemail.common.{AsyncHmrcSpec, AsyncHmrcTestSpec}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

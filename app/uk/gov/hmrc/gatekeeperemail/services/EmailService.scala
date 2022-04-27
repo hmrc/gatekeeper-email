@@ -18,12 +18,13 @@ package uk.gov.hmrc.gatekeeperemail.services
 
 import java.time.LocalDateTime
 
+import akka.Done
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.IN_PROGRESS
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.ComposingEmailRepository
+import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,13 +32,14 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
                              emailRendererConnector: GatekeeperEmailRendererConnector,
-                               emailRepository: ComposingEmailRepository)
+                             draftEmailRepository: DraftEmailRepository,
+                             sentEmailRepository: SentEmailRepository)
                                            (implicit val ec: ExecutionContext) {
 
   val logger: Logger = Logger(getClass.getName)
 
-  def persistEmail(emailRequest: EmailRequest, emailUUID: String): Future[Email] = {
-    val email: Email = emailData(emailRequest, emailUUID)
+  def persistEmail(emailRequest: EmailRequest, emailUUID: String): Future[DraftEmail] = {
+    val email: DraftEmail = emailData(emailRequest, emailUUID)
 
     val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
@@ -48,32 +50,46 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
       templatedData = EmailTemplateData(sendEmailRequest.templateId, sendEmailRequest.parameters, sendEmailRequest.force,
         sendEmailRequest.auditData, sendEmailRequest.eventUrl)
       renderedEmail = email.copy(templateData = templatedData, htmlEmailBody = emailBody._1, markdownEmailBody = emailBody._2)
-      _ <- emailRepository.persist(renderedEmail)
+      _ <- draftEmailRepository.persist(renderedEmail)
     } yield renderedEmail
   }
 
-  def sendEmail(emailUUID: String): Future[Email] = {
+  def sendEmails = {
     for {
-      email <- emailRepository.getEmailData(emailUUID)
-      emailRequestedData = SendEmailRequest(email.recipients, email.templateData.templateId, email.templateData.parameters,
-        email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
-      _ <- emailConnector.sendEmail(emailRequestedData)
-      _ <- emailRepository.updateEmailSentStatus(emailUUID)
+      next <- sentEmailRepository.findNextEmailToSend
+      email <- draftEmailRepository.findByEmailUUID(next.emailUuid.toString)
+      _ <- sendEmailScheduled(email.head)
     } yield email
   }
 
-  def fetchEmail(emailUUID: String): Future[Email] = {
+  def sendEmail(emailUUID: String): Future[DraftEmail] = {
     for {
-      email <- emailRepository.getEmailData(emailUUID)
+      email <- draftEmailRepository.getEmailData(emailUUID)
+      emailRequestedData = SendEmailRequest(email.recipients, email.templateData.templateId, email.templateData.parameters,
+        email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
+      _ <- emailConnector.sendEmail(emailRequestedData)
+      _ <- draftEmailRepository.updateEmailSentStatus(emailUUID)
+    } yield email
+  }
+
+  def sendEmailScheduled (email: DraftEmail): Future[Int] = {
+    val emailRequestedData = SendEmailRequest(email.recipients, email.templateData.templateId, email.templateData.parameters,
+      email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
+    emailConnector.sendEmail(emailRequestedData)
+  }
+
+  def fetchEmail(emailUUID: String): Future[DraftEmail] = {
+    for {
+      email <- draftEmailRepository.getEmailData(emailUUID)
     } yield email
   }
 
   def deleteEmail(emailUUID: String): Future[Boolean] = {
-    emailRepository.deleteByemailUUID(emailUUID)
+    draftEmailRepository.deleteByemailUUID(emailUUID)
   }
 
-  def updateEmail(emailRequest: EmailRequest, emailUUID: String): Future[Email] = {
-    val email: Email = emailData(emailRequest, emailUUID)
+  def updateEmail(emailRequest: EmailRequest, emailUUID: String): Future[DraftEmail] = {
+    val email: DraftEmail = emailData(emailRequest, emailUUID)
 
     val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
@@ -85,11 +101,11 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
         sendEmailRequest.auditData, sendEmailRequest.eventUrl)
       renderedEmail = email.copy(templateData = templatedData, htmlEmailBody = emailBody._1,
         markdownEmailBody = emailBody._2, subject = emailRequest.emailData.emailSubject)
-      _ <- emailRepository.updateEmail(renderedEmail)
+      _ <- draftEmailRepository.updateEmail(renderedEmail)
     } yield renderedEmail
   }
 
-  private def emailData(emailRequest: EmailRequest, emailUUID: String): Email = {
+  private def emailData(emailRequest: EmailRequest, emailUUID: String): DraftEmail = {
     val recipientsTitle = "TL API PLATFORM TEAM"
     val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
       "fromAddress" -> "gateKeeper",
@@ -102,7 +118,7 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
     val emailTemplateData = EmailTemplateData(emailRequest.templateId, parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
-    Email(emailUUID,  emailTemplateData, recipientsTitle, emailRequest.to, emailRequest.attachmentDetails,
+    DraftEmail(emailUUID,  emailTemplateData, recipientsTitle, emailRequest.to, emailRequest.attachmentDetails,
       emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
       emailRequest.emailData.emailSubject, EmailStatus.IN_PROGRESS.toString, "composedBy",
       Some("approvedBy"), LocalDateTime.now())

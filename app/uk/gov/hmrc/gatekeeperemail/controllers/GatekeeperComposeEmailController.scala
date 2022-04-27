@@ -57,7 +57,7 @@ class GatekeeperComposeEmailController @Inject()(
   def updateFiles(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[UploadedFileMetadata] { value: UploadedFileMetadata =>
       logger.info(s"******UPDATE FILES ******")
-    val fetchEmail: Future[Email] = emailService.fetchEmail(emailUUID = value.cargo.get.emailUUID)
+    val fetchEmail: Future[DraftEmail] = emailService.fetchEmail(emailUUID = value.cargo.get.emailUUID)
         fetchEmail.map { email =>
           val filesToUploadInObjStore: Seq[UploadedFileWithObjectStore] =
             filesToUploadInObjectStore(email.attachmentDetails, value.uploadedFiles)
@@ -72,7 +72,7 @@ class GatekeeperComposeEmailController @Inject()(
     }.recover(recovery)
   }
 
-  def uploadFilesToObjectStoreAndUpdateEmailRecord(email: Email, filesToUploadInObjStore: Seq[UploadedFileWithObjectStore]) = {
+  def uploadFilesToObjectStoreAndUpdateEmailRecord(email: DraftEmail, filesToUploadInObjStore: Seq[UploadedFileWithObjectStore]) = {
     var latestUploadedFiles: Seq[UploadedFileWithObjectStore] = Seq.empty[UploadedFileWithObjectStore]
     filesToUploadInObjStore.foreach(uploadedFile => {
       val objectSummary: Future[ObjectSummaryWithMd5] = objectStoreService.uploadToObjectStore(email.emailUUID, uploadedFile.downloadUrl, uploadedFile.fileName)
@@ -89,7 +89,7 @@ class GatekeeperComposeEmailController @Inject()(
     })
   }
 
-  private def updateEmailWithAttachments(email: Email, finalUploadedFiles: Seq[UploadedFileWithObjectStore]) = {
+  private def updateEmailWithAttachments(email: DraftEmail, finalUploadedFiles: Seq[UploadedFileWithObjectStore]) = {
     val er = EmailRequest(
       email.recipients,
       templateId = "gatekeeper",
@@ -98,7 +98,7 @@ class GatekeeperComposeEmailController @Inject()(
     emailService.updateEmail(er, email.emailUUID)
   }
 
-  def deleteFilesFromObjectStoreAndUpdateEmailRecord(email: Email, filesToDeleteFromObjStore: Seq[UploadedFileWithObjectStore]) = {
+  def deleteFilesFromObjectStoreAndUpdateEmailRecord(email: DraftEmail, filesToDeleteFromObjStore: Seq[UploadedFileWithObjectStore]) = {
     filesToDeleteFromObjStore.foreach(uploadedFile => {
         objectStoreService.deleteFromObjectStore(email.emailUUID, uploadedFile.fileName)
         val finalUploadedFiles = email.attachmentDetails match {
@@ -166,7 +166,7 @@ class GatekeeperComposeEmailController @Inject()(
       .recover(recovery)
   }
 
-  private def outgoingEmail(email: Email): OutgoingEmail = {
+  private def outgoingEmail(email: DraftEmail): OutgoingEmail = {
     OutgoingEmail(email.emailUUID, email.recipientTitle, email.recipients, email.attachmentDetails,
       email.markdownEmailBody, email.htmlEmailBody, email.subject, email.status,
       email.composedBy, email.approvedBy)

@@ -27,5 +27,5 @@ private[repositories] object ReadyEmailFormatter {
 //  implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
 //  implicit val emailTemplateDataFormatter: OFormat[EmailTemplateData] = Json.format[EmailTemplateData]
 //  implicit val emailFormatter: OFormat[Email] = Json.format[Email]
-  implicit val readyEmailFormatter: OFormat[ReadyEmail] = Json.format[ReadyEmail]
+  implicit val readyEmailFormatter: OFormat[SentEmail] = Json.format[SentEmail]
 }

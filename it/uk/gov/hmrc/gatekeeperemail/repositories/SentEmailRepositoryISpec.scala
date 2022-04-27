@@ -29,13 +29,13 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
-import uk.gov.hmrc.gatekeeperemail.models.{EmailStatus, ReadyEmail}
+import uk.gov.hmrc.gatekeeperemail.models.SentEmail
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
-class ReadyEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[ReadyEmail] with
+class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[SentEmail] with
   Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
-  val serviceRepo = repository.asInstanceOf[ReadyEmailRepository]
+  val serviceRepo = repository.asInstanceOf[SentEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
 
@@ -49,9 +49,9 @@ class ReadyEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override protected def repository: PlayMongoRepository[ReadyEmail] = app.injector.instanceOf[ReadyEmailRepository]
+  override protected def repository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
 
-  val email = ReadyEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), emailUuid = UUID.randomUUID(),
+  val email = SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), emailUuid = UUID.randomUUID(),
     firstName = "first", lastName = "last", recipient = "first.last@digital.hmrc.gov.uk", status = IN_PROGRESS,
     failedCount = 0)
 
@@ -108,7 +108,7 @@ class ReadyEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
   }
 
   "updateFailedCount" should {
-    "update the fails counter" in {
+    "increment the fails counter" in {
       await(serviceRepo.persist(email))
 
       val nextEmail = await(serviceRepo.findNextEmailToSend)
@@ -122,7 +122,7 @@ class ReadyEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
   }
 
   "markFailed" should {
-    "update the fails counter and mark the document as FAILED" in {
+    "increment the fails counter and mark the document as FAILED" in {
       await(serviceRepo.persist(email))
 
       val nextEmail = await(serviceRepo.findNextEmailToSend)

@@ -28,7 +28,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.ComposingEmailRepository
+import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
@@ -38,8 +38,9 @@ import scala.concurrent.Future
 import scala.concurrent.Future.successful
 
 class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with MockitoSugar with ArgumentMatchersSugar
-  with GuiceOneAppPerSuite with PlayMongoRepositorySupport[Email] {
-  val emailRepository = repository.asInstanceOf[ComposingEmailRepository]
+  with GuiceOneAppPerSuite with PlayMongoRepositorySupport[DraftEmail] {
+  override protected def repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
+  /*val emailRepository = draftRepository.asInstanceOf[DraftEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
   implicit val materialiser: Materializer = app.injector.instanceOf[Materializer]
@@ -54,7 +55,7 @@ class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEac
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override protected def repository: PlayMongoRepository[Email] = app.injector.instanceOf[ComposingEmailRepository]
+  override protected def sentRepository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -76,7 +77,7 @@ class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEac
           "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
       val emailRequest = EmailRequest(users, "gatekeeper",
         EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
-      val email: Email = await(underTest.persistEmail(emailRequest,"emailUUID"))
+      val email: DraftEmail = await(underTest.persistEmail(emailRequest,"emailUUID"))
       email.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
       val fetchedRecords = await(emailRepository.collection.withReadPreference(primaryPreferred).find().toFuture())
 
@@ -85,5 +86,5 @@ class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEac
       fetchedRecords.head.markdownEmailBody shouldBe "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls"
 
     }
-  }
+  }*/
 }

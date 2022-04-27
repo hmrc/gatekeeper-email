@@ -26,7 +26,7 @@ import play.api.libs.json.{JsResultException, Json}
 import play.api.mvc.ControllerComponents
 import play.api.test.Helpers.{contentAsJson, contentAsString, status}
 import play.api.test.{FakeRequest, StubControllerComponentsFactory, StubPlayBodyParsersFactory}
-import uk.gov.hmrc.gatekeeperemail.common.{AsyncHmrcSpec, AsyncHmrcTestSpec}
+import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo

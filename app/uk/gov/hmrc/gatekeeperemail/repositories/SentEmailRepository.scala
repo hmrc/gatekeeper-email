@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
+import java.util.concurrent.TimeUnit
+
 import com.mongodb.ReadPreference.primaryPreferred
 import com.mongodb.client.model.ReturnDocument
 import javax.inject.{Inject, Singleton}
@@ -28,7 +30,7 @@ import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.mongodb.scala.result.InsertOneResult
 import org.mongodb.scala.{MongoClient, MongoCollection}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.models.{EmailStatus, ReadyEmail}
+import uk.gov.hmrc.gatekeeperemail.models.{EmailStatus, SentEmail}
 import uk.gov.hmrc.gatekeeperemail.repositories.ReadyEmailFormatter.readyEmailFormatter
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
@@ -36,9 +38,9 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoReposito
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReadyEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: AppConfig)
-                                    (implicit ec: ExecutionContext)
-  extends PlayMongoRepository[ReadyEmail](
+class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: AppConfig)
+                                   (implicit ec: ExecutionContext)
+  extends PlayMongoRepository[SentEmail](
     mongoComponent = mongoComponent,
     collectionName = "readyemails",
     domainFormat = readyEmailFormatter,
@@ -46,31 +48,32 @@ class ReadyEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
         IndexOptions()
           .name("emailNextSendIndex")
           .background(true)
+          .unique(false)),
+      IndexModel(ascending("ttlIndex"),
+        IndexOptions()
+          .name("ttlIndex")
+          .expireAfter(appConfig.emailRecordRetentionPeriod * 365, TimeUnit.DAYS)
+          .background(true)
           .unique(false)))) {
 
-  override lazy val collection: MongoCollection[ReadyEmail] =
+  override lazy val collection: MongoCollection[SentEmail] =
     CollectionFactory
       .collection(mongoComponent.database, collectionName, domainFormat)
       .withCodecRegistry(
         fromRegistries(
           fromCodecs(
             Codecs.playFormatCodec(domainFormat),
-            Codecs.playFormatCodec(EmailMongoFormatter.emailTemplateDataFormatter),
-            Codecs.playFormatCodec(EmailMongoFormatter.cargoFormat),
-            Codecs.playFormatCodec(EmailMongoFormatter.attachmentDetailsFormat),
-            Codecs.playFormatCodec(EmailMongoFormatter.attachmentDetailsWithObjectStoreFormat),
-            Codecs.playFormatCodec(EmailMongoFormatter.emailFormatter),
             Codecs.playFormatCodec(EmailStatus.jsonFormat)
           ),
           MongoClient.DEFAULT_CODEC_REGISTRY
         )
       )
 
-  def persist(entity: ReadyEmail): Future[InsertOneResult] = {
+  def persist(entity: SentEmail): Future[InsertOneResult] = {
     collection.insertOne(entity).toFuture()
   }
 
-  def findNextEmailToSend: Future[ReadyEmail] = {
+  def findNextEmailToSend: Future[SentEmail] = {
     collection.withReadPreference(primaryPreferred)
     .find(filter = equal("status", Codecs.toBson(EmailStatus.IN_PROGRESS)))
       .sort(ascending("createdAt"))
@@ -78,7 +81,7 @@ class ReadyEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
       .head()
   }
 
-  def updateFailedCount(email: ReadyEmail): Future[ReadyEmail] = {
+  def updateFailedCount(email: SentEmail): Future[SentEmail] = {
     collection.withReadPreference(primaryPreferred)
       .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
         update = set("failedCount", email.failedCount + 1) ,
@@ -86,7 +89,7 @@ class ReadyEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
       .head()
   }
 
-  def markFailed(email: ReadyEmail): Future[ReadyEmail] = {
+  def markFailed(email: SentEmail): Future[SentEmail] = {
     collection.withReadPreference(primaryPreferred)
       .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
         update = combine(set("failedCount", email.failedCount + 1), set("status", Codecs.toBson(EmailStatus.FAILED))),

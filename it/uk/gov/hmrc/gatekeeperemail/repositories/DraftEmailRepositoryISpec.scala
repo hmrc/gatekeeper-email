@@ -28,14 +28,14 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailTemplateData, User}
+import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailTemplateData, User}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 import org.mongodb.scala.bson.BsonBoolean
 
-class ComposingEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[Email] with
+class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[DraftEmail] with
   Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
-  val serviceRepo = repository.asInstanceOf[ComposingEmailRepository]
+  val serviceRepo = repository.asInstanceOf[DraftEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
   implicit val materialiser: Materializer = app.injector.instanceOf[Materializer]
@@ -50,13 +50,13 @@ class ComposingEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepository
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override protected def repository: PlayMongoRepository[Email] = app.injector.instanceOf[ComposingEmailRepository]
+  override protected def repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
 
   "persist" should {
     val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
     val users = List(User("example@example.com", "first name", "last name", true),
       User("example2@example2.com", "first name2", "last name2", true))
-    val email = Email("emailId-123", templateData, "DL Team", users, None, "markdownEmailBody", "This is test email",
+    val email = DraftEmail("emailId-123", templateData, "DL Team", users, None, "markdownEmailBody", "This is test email",
       "test subject", "test status", "composedBy", Some("approvedBy"), LocalDateTime.now())
 
     "insert an Email message when it does not exist" in {

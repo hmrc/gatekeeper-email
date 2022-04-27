@@ -31,9 +31,9 @@ case class EmailTemplateData(templateId: String, parameters: Map[String, String]
                              auditData: Map[String, String] = Map.empty,
                              eventUrl: Option[String] = None)
 
-case class Email(emailUUID: String, templateData: EmailTemplateData, recipientTitle: String, recipients: List[User],
-                 attachmentDetails: Option[Seq[UploadedFileWithObjectStore]], markdownEmailBody: String,
-                 htmlEmailBody: String, subject: String, status: String, composedBy: String, approvedBy: Option[String], createDateTime: LocalDateTime)
+case class DraftEmail(emailUUID: String, templateData: EmailTemplateData, recipientTitle: String, recipients: List[User],
+                      attachmentDetails: Option[Seq[UploadedFileWithObjectStore]], markdownEmailBody: String,
+                      htmlEmailBody: String, subject: String, status: String, composedBy: String, approvedBy: Option[String], createDateTime: LocalDateTime)
 
 case class OutgoingEmail(emailUUID: String, recipientTitle: String, recipients: List[User], attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None,
                          markdownEmailBody: String, htmlEmailBody: String, subject: String, status: String,
@@ -47,18 +47,18 @@ object OutgoingEmail {
   implicit val outGoingEmailFmt: OFormat[OutgoingEmail] = Json.format[OutgoingEmail]
 }
 
-object Email {
+object DraftEmail {
   implicit val dateFormatter: Format[LocalDateTime] = MongoJavatimeFormats.localDateTimeFormat
   implicit val userFormatter: OFormat[User] = Json.format[User]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
   implicit val emailTemplateDataFormatter: OFormat[EmailTemplateData] = Json.format[EmailTemplateData]
-  implicit val emailFormatter: OFormat[Email] = Json.format[Email]
+  implicit val emailFormatter: OFormat[DraftEmail] = Json.format[DraftEmail]
 }
 
-case class ReadyEmail(id: UUID=UUID.randomUUID(), createdAt: LocalDateTime, updatedAt: LocalDateTime, emailUuid: UUID, firstName: String,
-                      lastName: String, recipient: String, status: EmailStatus, failedCount: Int)
+case class SentEmail(id: UUID=UUID.randomUUID(), createdAt: LocalDateTime, updatedAt: LocalDateTime, emailUuid: UUID, firstName: String,
+                     lastName: String, recipient: String, status: EmailStatus, failedCount: Int)
 
 sealed abstract class EmailStatus(override val entryName: String)  extends EnumEntry
 

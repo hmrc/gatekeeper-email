@@ -41,7 +41,7 @@ import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.ComposingEmailRepository
+import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
 import uk.gov.hmrc.gatekeeperemail.services.{EmailService, ObjectStoreService}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
@@ -67,7 +67,7 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
   val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
   val users = List(User("example@example.com", "first name", "last name", true),
     User("example2@example2.com", "first name2", "last name2", true))
-  val email = Email("emailId-123", templateData, "DL Team",
+  val email = DraftEmail("emailId-123", templateData, "DL Team",
     users, None, "markdownEmailBody", "This is test email",
     "test subject", "SENT", "composedBy", Some("approvedBy"), now())
   val emailUUIDToAttachFile = "emailUUID111"
@@ -88,7 +88,8 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
   lazy implicit val mat: Materializer = app.materializer
   private val playBodyParsers: PlayBodyParsers = app.injector.instanceOf[PlayBodyParsers]
   val mockEmailConnector: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
-  val mockEmailRepository: ComposingEmailRepository = mock[ComposingEmailRepository]
+  val mockDraftEmailRepository: DraftEmailRepository = mock[DraftEmailRepository]
+  val mockSentEmailRepository: SentEmailRepository = mock[SentEmailRepository]
   val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
 
   override lazy val app: Application = GuiceApplicationBuilder()
@@ -107,7 +108,7 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
     val objectStoreClient = mock[PlayObjectStoreClient]
     val mockAppConfig = mock[AppConfig]
 
-    val emailService = new EmailService(mockEmailConnector, emailRendererConnectorMock, mockEmailRepository)
+    val emailService = new EmailService(mockEmailConnector, emailRendererConnectorMock, mockDraftEmailRepository, mockSentEmailRepository)
     val mockEmailService = mock[EmailService]
     val mockObjectStoreService = mock[ObjectStoreService]
     val controller = new GatekeeperComposeEmailController(Helpers.stubMessagesControllerComponents(),
@@ -120,23 +121,23 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
         "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
 
     val emailUUID: String = UUID.randomUUID().toString
-    val dummyEmailData = Email("", EmailTemplateData("", Map(), false, Map(), None), "", List(),
+    val dummyEmailData = DraftEmail("", EmailTemplateData("", Map(), false, Map(), None), "", List(),
       None, "", "", "", "", "", None, now)
-    when(mockEmailRepository.getEmailData(emailUUID)).thenReturn(Future(dummyEmailData))
+    when(mockDraftEmailRepository.getEmailData(emailUUID)).thenReturn(Future(dummyEmailData))
   }
 
   "POST /gatekeeper-email/send-email" should {
     "return 200" in new Setup {
       when(mockEmailConnector.sendEmail(*)).thenReturn(successful(Status.OK))
-      when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      when(mockEmailRepository.updateEmailSentStatus(*)).thenReturn(successful(email))
+      when(mockDraftEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+      when(mockDraftEmailRepository.updateEmailSentStatus(*)).thenReturn(successful(email))
       val result = controller.sendEmail(emailUUID)(fakeRequest)
       status(result) shouldBe Status.OK
     }
 
     "return 500" in new Setup {
       when(mockEmailConnector.sendEmail(*)).thenReturn(failed(new IOException("can not connect to email service")))
-      when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+      when(mockDraftEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       val result = controller.sendEmail(emailUUID)(fakeRequest)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
