@@ -29,7 +29,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
-import uk.gov.hmrc.gatekeeperemail.models.ReadyEmail
+import uk.gov.hmrc.gatekeeperemail.models.{EmailStatus, ReadyEmail}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
@@ -118,6 +118,21 @@ class ReadyEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
       val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred).find().toFuture())
       fetchedRecords.size shouldBe 1
       fetchedRecords.head.failedCount shouldBe 1
+    }
+  }
+
+  "markFailed" should {
+    "update the fails counter and mark the document as FAILED" in {
+      await(serviceRepo.persist(email))
+
+      val nextEmail = await(serviceRepo.findNextEmailToSend)
+
+      await(serviceRepo.markFailed(nextEmail))
+
+      val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred).find().toFuture())
+      fetchedRecords.size shouldBe 1
+      fetchedRecords.head.failedCount shouldBe 1
+      fetchedRecords.head.status shouldBe FAILED
     }
   }
 }

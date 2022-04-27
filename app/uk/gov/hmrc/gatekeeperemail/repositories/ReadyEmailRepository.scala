@@ -17,13 +17,13 @@
 package uk.gov.hmrc.gatekeeperemail.repositories
 
 import com.mongodb.ReadPreference.primaryPreferred
-import com.mongodb.client.model.{ReturnDocument}
+import com.mongodb.client.model.ReturnDocument
 import javax.inject.{Inject, Singleton}
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
 import org.mongodb.scala.model._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.Updates.set
+import org.mongodb.scala.model.Updates.{combine, set}
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.mongodb.scala.result.InsertOneResult
 import org.mongodb.scala.{MongoClient, MongoCollection}
@@ -46,8 +46,7 @@ class ReadyEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
         IndexOptions()
           .name("emailNextSendIndex")
           .background(true)
-          .unique(false)),
-      )) {
+          .unique(false)))) {
 
   override lazy val collection: MongoCollection[ReadyEmail] =
     CollectionFactory
@@ -82,7 +81,15 @@ class ReadyEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
   def updateFailedCount(email: ReadyEmail): Future[ReadyEmail] = {
     collection.withReadPreference(primaryPreferred)
       .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
-        update = set("failedCount", email.failedCount + 1),
+        update = set("failedCount", email.failedCount + 1) ,
+        options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
+      .head()
+  }
+
+  def markFailed(email: ReadyEmail): Future[ReadyEmail] = {
+    collection.withReadPreference(primaryPreferred)
+      .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
+        update = combine(set("failedCount", email.failedCount + 1), set("status", Codecs.toBson(EmailStatus.FAILED))),
         options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
       .head()
   }
