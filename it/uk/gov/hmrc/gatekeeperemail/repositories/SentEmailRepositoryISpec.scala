@@ -68,11 +68,11 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
       email.recipients.head.firstName, email.recipients.head.lastName, email.recipients.head.email, "PENDING", 0)
 
     "insert an Sent Email message when it does not exist" in {
-      await(serviceRepo.persist(sentEmail))
+      val inserted = await(serviceRepo.persist(sentEmail))
 
-//      val fetchedRecords = await(serviceRepo.findNextEmail(sentEmail))
-//
-//      fetchedRecords.firstName.length shouldBe "first name"
+      inserted.wasAcknowledged() shouldBe true
+
+
     }
   }
 }
