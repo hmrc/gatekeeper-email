@@ -47,7 +47,7 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
     indexes = Seq(IndexModel(ascending("status", "failedCount", "createdAt"),
       IndexOptions()
         .name("emailNextSendIndex")
-        .background(true)),
+        .background(true))
     )) {
   val logger: Logger = Logger(getClass.getName)
 

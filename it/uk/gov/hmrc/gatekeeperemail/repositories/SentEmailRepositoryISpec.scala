@@ -46,11 +46,15 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
     prepareDatabase()
   }
 
+
+  override def afterEach(): Unit = {
+    dropCollection()
+  }
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
-      .configure(
-        "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
-      )
+//      .configure(
+//        "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
+//      )
 
   override protected def repository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
 
@@ -66,17 +70,9 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
     "insert an Sent Email message when it does not exist" in {
       await(serviceRepo.persist(sentEmail))
 
-      val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred).find().toFuture())
+      val fetchedRecords = await(serviceRepo.findNextEmail(sentEmail))
 
-      fetchedRecords.size shouldBe 1
-      fetchedRecords.head shouldEqual email
-    }
-
-    "create index on emailUUID" in {
-      await(serviceRepo.persist(sentEmail))
-
-      val Some(globalIdIndex) = await(serviceRepo.collection.listIndexes().toFuture()).find(i => i.get("name").get.asString().getValue == "emailNextSendIndex")
-      globalIdIndex.get("background").get shouldBe BsonBoolean(true)
+      fetchedRecords.firstName.length shouldBe "first name"
     }
   }
 }
