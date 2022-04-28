@@ -63,10 +63,11 @@ class EmailService @Inject()(emailRendererConnector: GatekeeperEmailRendererConn
   }
 
   private def persistInEmailQueue(email: Email):  Future[Email] = {
-    email.recipients.map(elem =>
-      sentEmailRepository.persist(SentEmail(LocalDateTime.now(), LocalDateTime.now(), UUID.fromString(email.emailUUID),
-        elem.firstName, elem.lastName, elem.email, "PENDING", 0)))
 
+    val sentEmails = email.recipients.map(elem => SentEmail(LocalDateTime.now(), LocalDateTime.now(), UUID.fromString(email.emailUUID),
+      elem.firstName, elem.lastName, elem.email, "PENDING", 0))
+
+    sentEmailRepository.persist(sentEmails)
     Future.successful(email)
   }
 

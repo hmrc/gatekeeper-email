@@ -22,12 +22,12 @@ import java.util.UUID
 import akka.stream.Materializer
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor, urlEqualTo}
 import com.github.tomakehurst.wiremock.http.Fault
-import com.mongodb.client.result.InsertOneResult
+import com.mongodb.client.result.{InsertManyResult, InsertOneResult}
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone.UTC
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.{ArgumentCaptor, ArgumentMatchersSugar, MockitoSugar}
-import org.mongodb.scala.bson.BsonNumber
+import org.mongodb.scala.bson.{BsonNumber, BsonValue}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -47,6 +47,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
 
+import collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.{failed, successful}
@@ -128,10 +129,11 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
 
   "POST /gatekeeper-email/send-email" should {
     "return 200" in new Setup {
+      val emails = Map[Integer, BsonNumber](new Integer(1) -> BsonNumber(1)).asInstanceOf[java.util.Map[java.lang.Integer, BsonValue]]
       when(mockEmailConnector.sendEmail(*)).thenReturn(successful(Status.OK))
       when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       when(mockEmailRepository.updateEmailSentStatus(*)).thenReturn(successful(email))
-      when(mockSentEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+      when(mockSentEmailRepository.persist(*)).thenReturn(Future(InsertManyResult.acknowledged(emails)))
       val result = controller.sendEmail(emailUUID)(fakeRequest)
       status(result) shouldBe Status.OK
     }

@@ -25,9 +25,9 @@ import org.joda.time.{DateTime, Days}
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.set
-import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
-import org.mongodb.scala.result.InsertOneResult
-import org.mongodb.scala.{MongoClient, MongoCollection}
+import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, InsertManyOptions, ReturnDocument}
+import org.mongodb.scala.result.{InsertManyResult, InsertOneResult}
+import org.mongodb.scala.{MongoClient, MongoCollection, SingleObservable}
 import play.api.{Logger, Logging}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailStatus, SentEmail}
@@ -76,9 +76,8 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
       .map(_.asInstanceOf[SentEmail]).head()
   }
 
-  def persist(entity: SentEmail): Future[InsertOneResult] = {
-    logger.info(s"Email ID is ${entity.recipient} created at ${entity.createdAt}")
-    collection.insertOne(entity).toFuture()
+  def persist(entity: List[SentEmail]): Future[InsertManyResult] = {
+    collection.insertMany(entity).toFuture()
   }
 
 }
