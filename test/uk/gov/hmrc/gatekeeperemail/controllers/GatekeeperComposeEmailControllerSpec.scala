@@ -23,6 +23,7 @@ import akka.stream.Materializer
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor, urlEqualTo}
 import com.github.tomakehurst.wiremock.http.Fault
 import com.mongodb.client.result.{InsertManyResult, InsertOneResult}
+import org.bson.BsonValue
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone.UTC
 import org.mockito.ArgumentMatchers.anyString
@@ -129,11 +130,9 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
 
   "POST /gatekeeper-email/send-email" should {
     "return 200" in new Setup {
-      val emails = Map[Integer, BsonNumber](new Integer(1) -> BsonNumber(1)).asInstanceOf[java.util.Map[java.lang.Integer, BsonValue]]
-      when(mockEmailConnector.sendEmail(*)).thenReturn(successful(Status.OK))
       when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       when(mockEmailRepository.updateEmailSentStatus(*)).thenReturn(successful(email))
-      when(mockSentEmailRepository.persist(*)).thenReturn(Future(InsertManyResult.acknowledged(emails)))
+      when(mockSentEmailRepository.persist(*)).thenReturn(Future(InsertManyResult.unacknowledged()))
       val result = controller.sendEmail(emailUUID)(fakeRequest)
       status(result) shouldBe Status.OK
     }
