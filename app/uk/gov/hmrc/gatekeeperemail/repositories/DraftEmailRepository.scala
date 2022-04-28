@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import javax.inject.{Inject, Singleton}
@@ -39,7 +40,7 @@ class DraftEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
                                     (implicit ec: ExecutionContext)
   extends PlayMongoRepository[DraftEmail](
     mongoComponent = mongoComponent,
-    collectionName = "emails",
+    collectionName = "draftemails",
     domainFormat = emailFormatter,
     indexes = Seq(IndexModel(ascending("emailUUID"),
         IndexOptions()
@@ -75,7 +76,7 @@ class DraftEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
     }
 
     def getEmailData(emailUUID: String): Future[DraftEmail] = {
-      for (emailData <- findByEmailUUID(emailUUID)) yield {
+      for (emailData <- findByEmailUUID(UUID.fromString(emailUUID))) yield {
         emailData match {
           case Some(email) => email
           case None         => throw new Exception(s"Email with id ${emailUUID} not found")
@@ -113,7 +114,7 @@ class DraftEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
     ).map(_.asInstanceOf[DraftEmail]).head()
   }
 
-  def findByEmailUUID(emailUUID: String): Future[Option[DraftEmail]] = {
+  def findByEmailUUID(emailUUID: UUID): Future[Option[DraftEmail]] = {
     collection.find(equal("emailUUID", Codecs.toBson(emailUUID))).headOption()
   }
 

@@ -21,8 +21,7 @@ import java.util.UUID
 
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
 import play.api.libs.json.{Format, Json, OFormat}
-import uk.gov.hmrc.mongo.play.json.formats.{MongoJavatimeFormats, MongoJodaFormats}
-import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats._
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import scala.collection.immutable
 
@@ -57,7 +56,7 @@ object DraftEmail {
   implicit val emailFormatter: OFormat[DraftEmail] = Json.format[DraftEmail]
 }
 
-case class SentEmail(id: UUID=UUID.randomUUID(), createdAt: LocalDateTime, updatedAt: LocalDateTime, emailUuid: UUID, firstName: String,
+case class SentEmail(id: UUID = UUID.randomUUID(), createdAt: LocalDateTime, updatedAt: LocalDateTime, emailUuid: UUID, firstName: String,
                      lastName: String, recipient: String, status: EmailStatus, failedCount: Int)
 
 sealed abstract class EmailStatus(override val entryName: String)  extends EnumEntry

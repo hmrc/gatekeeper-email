@@ -17,10 +17,12 @@
 package uk.gov.hmrc.gatekeeperemail.services
 
 import java.time.LocalDateTime
+import java.util.UUID
 
 import akka.Done
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
+import play.api.http.Status.OK
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.IN_PROGRESS
 import uk.gov.hmrc.gatekeeperemail.models._
@@ -55,11 +57,27 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
   }
 
   def sendEmails = {
+
+     findAndSendNextEmail
+
+  }
+
+  def findAndSendNextEmail = {
     for {
-      next <- sentEmailRepository.findNextEmailToSend
-      email <- draftEmailRepository.findByEmailUUID(next.emailUuid.toString)
-      _ <- sendEmailScheduled(email.head)
-    } yield email
+      maybeNext <- sentEmailRepository.findNextEmailToSend
+    } yield for {
+      next <- maybeNext
+    } yield for {
+      maybeEmail <- draftEmailRepository.findByEmailUUID(next.emailUuid)
+    } yield for {
+      email <- maybeEmail
+    } yield for {
+      result <- sendEmailScheduled(email)
+    } yield result
+    }
+
+  def getEmailByUUID(uuid:UUID) = {
+    draftEmailRepository.findByEmailUUID(uuid).map(_.get)
   }
 
   def sendEmail(emailUUID: String): Future[DraftEmail] = {

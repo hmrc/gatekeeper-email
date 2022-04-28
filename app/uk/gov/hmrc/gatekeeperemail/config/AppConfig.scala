@@ -20,6 +20,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import scala.concurrent.duration.Duration
+
 @Singleton
 class AppConfig @Inject()(config: Configuration)
   extends ServicesConfig(config)
@@ -33,6 +35,9 @@ class AppConfig @Inject()(config: Configuration)
   val emailRecordRetentionPeriod: Int = getConfInt("mongodb.ttlInYears", 7)
   val defaultRetentionPeriod: String = getConfString("object-store.default-retention-period", "1-year")
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
+  val initialDelay: Duration = Duration(config.getOptional[String]("scheduled.initDelay").getOrElse("30 sec"))
+  val interval: Duration = Duration(config.getOptional[String]("scheduled.interval").getOrElse("1 sec"))
+
   val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
 }
 

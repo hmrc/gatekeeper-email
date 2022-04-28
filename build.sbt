@@ -82,7 +82,7 @@ def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
   }
 
 coverageFailOnMinimum := true
-coverageMinimum := 77
+coverageMinimumStmtTotal := 73
 coverageExcludedPackages := Seq(
   "<empty>",
   "com.kenshoo.play.metrics",

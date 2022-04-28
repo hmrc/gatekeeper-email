@@ -42,7 +42,7 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
                                    (implicit ec: ExecutionContext)
   extends PlayMongoRepository[SentEmail](
     mongoComponent = mongoComponent,
-    collectionName = "readyemails",
+    collectionName = "sentemails",
     domainFormat = readyEmailFormatter,
     indexes = Seq(IndexModel(ascending("status",  "createdAt"),
         IndexOptions()
@@ -73,12 +73,13 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
     collection.insertOne(entity).toFuture()
   }
 
-  def findNextEmailToSend: Future[SentEmail] = {
+  def findNextEmailToSend: Future[Option[SentEmail]] = {
     collection.withReadPreference(primaryPreferred)
     .find(filter = equal("status", Codecs.toBson(EmailStatus.IN_PROGRESS)))
       .sort(ascending("createdAt"))
       .limit(1)
-      .head()
+      .toFuture()
+      .map(_.headOption)
   }
 
   def updateFailedCount(email: SentEmail): Future[SentEmail] = {
@@ -93,6 +94,14 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
     collection.withReadPreference(primaryPreferred)
       .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
         update = combine(set("failedCount", email.failedCount + 1), set("status", Codecs.toBson(EmailStatus.FAILED))),
+        options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
+      .head()
+  }
+
+  def markSent(email: SentEmail): Future[SentEmail] = {
+    collection.withReadPreference(primaryPreferred)
+      .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
+        update = set("status", Codecs.toBson(EmailStatus.SENT)),
         options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
       .head()
   }

@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import org.mongodb.scala.ReadPreference.primaryPreferred
-import org.mongodb.scala.bson.BsonBoolean
+import org.mongodb.scala.bson.{BsonBoolean, BsonInt64}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -51,57 +51,67 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
 
   override protected def repository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
 
-  val email = SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), emailUuid = UUID.randomUUID(),
+  val sentEmail = SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), emailUuid = UUID.randomUUID(),
     firstName = "first", lastName = "last", recipient = "first.last@digital.hmrc.gov.uk", status = IN_PROGRESS,
     failedCount = 0)
 
   "persist" should {
-    "insert a ready email message when it does not exist" in {
-      await(serviceRepo.persist(email))
+    "insert a sent email message when it does not exist" in {
+      await(serviceRepo.persist(sentEmail))
 
       val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred).find().toFuture())
 
       fetchedRecords.size shouldBe 1
-      fetchedRecords.head shouldEqual email
+      fetchedRecords.head shouldBe sentEmail
     }
 
     "create index on status plus createdAt" in {
-      await(serviceRepo.persist(email))
+      await(serviceRepo.persist(sentEmail))
 
       val Some(emailToSendNextIndex) = await(serviceRepo.collection.listIndexes().toFuture())
         .find(i => i.get("name").get.asString().getValue == "emailNextSendIndex")
       emailToSendNextIndex.get("unique") shouldBe None
       emailToSendNextIndex.get("background").get shouldBe BsonBoolean(true)
     }
+
+    "create a TTL index on createdAt" in {
+      await(serviceRepo.persist(sentEmail))
+
+      val Some(ttlIndex) = await(serviceRepo.collection.listIndexes().toFuture())
+        .find(i => i.get("name").get.asString().getValue == "ttlIndex")
+      ttlIndex.get("unique") shouldBe None
+      ttlIndex.get("background").get shouldBe BsonBoolean(true)
+      ttlIndex.get("expireAfterSeconds") shouldBe Some(BsonInt64(60 * 60 * 24 * 365 * 7))
+    }
   }
 
   "findNextEmailToSend" should {
     "find the oldest pending email" in {
       val expectedNextSendRecipient = "old.email@digital.hmrc.gov.uk"
-      await(serviceRepo.persist(email.copy(createdAt = LocalDateTime.now().minusMinutes(10), recipient = expectedNextSendRecipient)))
-      await(serviceRepo.persist(email))
+      await(serviceRepo.persist(sentEmail.copy(createdAt = LocalDateTime.now().minusMinutes(10), recipient = expectedNextSendRecipient)))
+      await(serviceRepo.persist(sentEmail))
 
-      val nextEmail = await(serviceRepo.findNextEmailToSend)
+      val Some(nextEmail) = await(serviceRepo.findNextEmailToSend)
 
       nextEmail.recipient shouldBe expectedNextSendRecipient
       nextEmail.status shouldBe IN_PROGRESS
     }
 
     "ignore emails with failed status" in {
-      await(serviceRepo.persist(email.copy(status = FAILED, recipient = "failed.send@abc.com")))
-      await(serviceRepo.persist(email))
+      await(serviceRepo.persist(sentEmail.copy(status = FAILED, recipient = "failed.send@abc.com")))
+      await(serviceRepo.persist(sentEmail))
 
-      val nextEmail = await(serviceRepo.findNextEmailToSend)
+      val Some(nextEmail) = await(serviceRepo.findNextEmailToSend)
 
-      nextEmail.recipient shouldBe email.recipient
+      nextEmail.recipient shouldBe sentEmail.recipient
       nextEmail.status shouldBe IN_PROGRESS
     }
 
     "handle documents with the same created time" in {
-      await(serviceRepo.persist(email.copy(recipient = "failed.send@abc.com")))
-      await(serviceRepo.persist(email))
+      await(serviceRepo.persist(sentEmail.copy(recipient = "failed.send@abc.com")))
+      await(serviceRepo.persist(sentEmail))
 
-      val nextEmail = await(serviceRepo.findNextEmailToSend)
+      val Some(nextEmail) = await(serviceRepo.findNextEmailToSend)
 
       nextEmail.status shouldBe IN_PROGRESS
     }
@@ -109,9 +119,9 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
 
   "updateFailedCount" should {
     "increment the fails counter" in {
-      await(serviceRepo.persist(email))
+      await(serviceRepo.persist(sentEmail))
 
-      val nextEmail = await(serviceRepo.findNextEmailToSend)
+      val Some(nextEmail) = await(serviceRepo.findNextEmailToSend)
 
       await(serviceRepo.updateFailedCount(nextEmail))
 
@@ -123,9 +133,9 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
 
   "markFailed" should {
     "increment the fails counter and mark the document as FAILED" in {
-      await(serviceRepo.persist(email))
+      await(serviceRepo.persist(sentEmail))
 
-      val nextEmail = await(serviceRepo.findNextEmailToSend)
+      val Some(nextEmail) = await(serviceRepo.findNextEmailToSend)
 
       await(serviceRepo.markFailed(nextEmail))
 
@@ -133,6 +143,21 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
       fetchedRecords.size shouldBe 1
       fetchedRecords.head.failedCount shouldBe 1
       fetchedRecords.head.status shouldBe FAILED
+    }
+  }
+
+  "markSent" should {
+    "leave unchanged the fails counter and mark the document as SENT" in {
+      await(serviceRepo.persist(sentEmail))
+
+      val Some(nextEmail) = await(serviceRepo.findNextEmailToSend)
+
+      await(serviceRepo.markSent(nextEmail))
+
+      val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred).find().toFuture())
+      fetchedRecords.size shouldBe 1
+      fetchedRecords.head.failedCount shouldBe 0
+      fetchedRecords.head.status shouldBe SENT
     }
   }
 }
