@@ -16,14 +16,11 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import java.time.LocalDateTime
-
 import javax.inject.{Inject, Singleton}
-import play.api.{Logger, Logging}
-import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
+import play.api.Logging
+import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailConnector
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
-import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.gatekeeperemail.repositories.SentEmailRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -33,19 +30,21 @@ class SentEmailService@Inject()(emailConnector: GatekeeperEmailConnector,
                                  sentEmailRepository: SentEmailRepository)
                                 (implicit val ec: ExecutionContext) extends Logging {
 
-  def updateEmailToSent(email:SentEmail): Future[SentEmail] = {
+  private def updateEmailToSent(email:SentEmail): Future[SentEmail] = {
     sentEmailRepository.markSent(email)
   }
 
-  def handleEmailSendingFailed(email:SentEmail): Future[SentEmail] = {
+  private def handleEmailSendingFailed(email:SentEmail): Future[SentEmail] = {
+    logger.info(s"Handling failed message for email with failedCount of ${email.failedCount}")
     if (email.failedCount > 3)  {
       sentEmailRepository.markFailed(email)
     } else {
+      logger.info(s"Incrementing failed counter for email ${email}")
       sentEmailRepository.incrementFailedCount(email)
     }
   }
 
-  def sendEmails = {
+   def sendEmails = {
     findNextEmail.flatMap {
       case None => Future.successful(0)
       case Some(sentEmail:SentEmail) => findAndSendNextEmail(sentEmail).map {status => status match {
@@ -56,24 +55,27 @@ class SentEmailService@Inject()(emailConnector: GatekeeperEmailConnector,
     }
   }
 
-  def findAndSendNextEmail(sentEmail: SentEmail): Future[Int] = {
-   for {
-     email <- fetchEmail(sentEmail.emailUuid.toString)
-     result <- sendEmailScheduled(email)
-   } yield result
+  private def findAndSendNextEmail(sentEmail: SentEmail): Future[Int] = {
+    logger.info(s"Fetching template with UUID ${sentEmail.emailUuid}")
+     for {
+       email <- fetchEmail(sentEmail.emailUuid.toString)
+       result <- sendEmailScheduled(email)
+     } yield result
   }
 
-  def findNextEmail: Future[Option[SentEmail]] = {
+  private def findNextEmail: Future[Option[SentEmail]] = {
     sentEmailRepository.findNextEmailToSend
   }
 
-  def sendEmailScheduled (email: DraftEmail): Future[Int] = {
+  private def sendEmailScheduled (email: DraftEmail): Future[Int] = {
+    logger.info(s"Retrieved email wth id ${email.emailUUID}")
     val emailRequestedData = SendEmailRequest(email.recipients, email.templateData.templateId, email.templateData.parameters,
       email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
+    logger.info(s"Sending email ${emailRequestedData}")
     emailConnector.sendEmail(emailRequestedData)
   }
 
-  def fetchEmail(emailUUID: String): Future[DraftEmail] = {
+  private def fetchEmail(emailUUID: String): Future[DraftEmail] = {
     for {
       email <- draftEmailService.fetchEmail(emailUUID)
     } yield email

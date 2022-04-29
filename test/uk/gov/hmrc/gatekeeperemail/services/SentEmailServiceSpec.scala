@@ -57,34 +57,42 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
         "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
   }
 
-  "handleEmailSendingFailed" should {
-    "increment failed count when maximum fail count not reached" in new Setup {
-      when(sentEmailRepositoryMock.incrementFailedCount(*)).thenReturn(Future(sentEmail))
-
-      underTest.handleEmailSendingFailed(sentEmail)
-
-      verify(sentEmailRepositoryMock).incrementFailedCount(sentEmail)
-    }
-
-  "mark email as failed when maximum fail count is reached" in new Setup {
-    val sentEmailWithFailedCount = sentEmail.copy(failedCount = 4)
-      when(sentEmailRepositoryMock.incrementFailedCount(*)).thenReturn(Future(sentEmail))
-
-      underTest.handleEmailSendingFailed(sentEmailWithFailedCount)
-
-      verify(sentEmailRepositoryMock).markFailed(sentEmailWithFailedCount)
-      verifyNoMoreInteractions(sentEmailRepositoryMock)
-    }
-  }
-
-  "findAndSendNextEmail" should {
-    "successfully find a draft email and send it" in new Setup {
+  "sendEmails" should {
+    "mark email as sent when email connector receives success response" in new Setup {
+      when(sentEmailRepositoryMock.findNextEmailToSend).thenReturn(Future(Some(sentEmail)))
       when(draftEmailServiceMock.fetchEmail(sentEmail.emailUuid.toString)).thenReturn(Future(draftEmail))
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(200))
 
-      val result = await(underTest.findAndSendNextEmail(sentEmail))
+      await(underTest.sendEmails)
 
-      result shouldBe 200
+      verify(sentEmailRepositoryMock).findNextEmailToSend
+      verify(draftEmailServiceMock).fetchEmail(sentEmail.emailUuid.toString)
+      verify(sentEmailRepositoryMock).markSent(sentEmail)
+    }
+
+    "increment failed count when maximum fail count not reached" in new Setup {
+      when(sentEmailRepositoryMock.incrementFailedCount(*)).thenReturn(Future(sentEmail))
+      when(sentEmailRepositoryMock.findNextEmailToSend).thenReturn(Future(Some(sentEmail)))
+      when(draftEmailServiceMock.fetchEmail(sentEmail.emailUuid.toString)).thenReturn(Future(draftEmail))
+      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(400))
+
+      await(underTest.sendEmails)
+
+      verify(draftEmailServiceMock).fetchEmail(sentEmail.emailUuid.toString)
+      verify(sentEmailRepositoryMock).incrementFailedCount(sentEmail)
+    }
+
+    "mark as failed when maximum fail count reached" in new Setup {
+      val emailToSend   = sentEmail.copy(failedCount = 4)
+      when(sentEmailRepositoryMock.markFailed(emailToSend)).thenReturn(Future(emailToSend))
+      when(sentEmailRepositoryMock.findNextEmailToSend).thenReturn(Future(Some(emailToSend)))
+      when(draftEmailServiceMock.fetchEmail(emailToSend.emailUuid.toString)).thenReturn(Future(draftEmail))
+      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(400))
+
+      await(underTest.sendEmails)
+
+      verify(draftEmailServiceMock).fetchEmail(emailToSend.emailUuid.toString)
+      verify(sentEmailRepositoryMock).markFailed(emailToSend)
     }
   }
 }
