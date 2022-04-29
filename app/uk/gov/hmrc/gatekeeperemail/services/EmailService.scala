@@ -56,28 +56,38 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
     } yield renderedEmail
   }
 
-  def sendEmails = {
-
-     findAndSendNextEmail
-
+  def updateEmailToSent(email:SentEmail) = {
+    sentEmailRepository.markSent(email)
   }
 
-  def findAndSendNextEmail = {
-    for {
-      maybeNext <- sentEmailRepository.findNextEmailToSend
-    } yield for {
-      next <- maybeNext
-    } yield for {
-      maybeEmail <- draftEmailRepository.findByEmailUUID(next.emailUuid)
-    } yield for {
-      email <- maybeEmail
-    } yield for {
-      result <- sendEmailScheduled(email)
-    } yield result
+  def handleEmailSendingFailed(email:SentEmail) = {
+    if (email.failedCount > 3)  {
+      sentEmailRepository.markFailed(email)
+    } else {
+      sentEmailRepository.incrementFailedCount(email)
     }
+  }
 
-  def getEmailByUUID(uuid:UUID) = {
-    draftEmailRepository.findByEmailUUID(uuid).map(_.get)
+  def sendEmails = {
+    findNextEmail.flatMap {
+      case None => Future.successful(0)
+      case Some(sentEmail:SentEmail) => findAndSendNextEmail(sentEmail).map {status => status match {
+          case 200 => updateEmailToSent(sentEmail)
+          case _ => handleEmailSendingFailed(sentEmail)
+        }
+      }
+    }
+  }
+
+ def findAndSendNextEmail(sentEmail: SentEmail): Future[Int] = {
+   for {
+     email <- fetchEmail(sentEmail.emailUuid.toString)
+     result <- sendEmailScheduled(email)
+   } yield result
+ }
+
+  def findNextEmail: Future[Option[SentEmail]] = {
+    sentEmailRepository.findNextEmailToSend
   }
 
   def sendEmail(emailUUID: String): Future[DraftEmail] = {

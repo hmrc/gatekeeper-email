@@ -82,7 +82,7 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
       .map(_.headOption)
   }
 
-  def updateFailedCount(email: SentEmail): Future[SentEmail] = {
+  def incrementFailedCount(email: SentEmail): Future[SentEmail] = {
     collection.withReadPreference(primaryPreferred)
       .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
         update = set("failedCount", email.failedCount + 1) ,
