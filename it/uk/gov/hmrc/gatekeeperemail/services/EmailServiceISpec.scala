@@ -28,7 +28,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.EmailRepository
+import uk.gov.hmrc.gatekeeperemail.repositories.{EmailRepository, SentEmailRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
@@ -40,6 +40,7 @@ import scala.concurrent.Future.successful
 class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with MockitoSugar with ArgumentMatchersSugar
   with GuiceOneAppPerSuite with PlayMongoRepositorySupport[Email] {
   val emailRepository = repository.asInstanceOf[EmailRepository]
+  val sentEmailRepository = serepository.asInstanceOf[SentEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
   implicit val materialiser: Materializer = app.injector.instanceOf[Materializer]
@@ -55,6 +56,7 @@ class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEac
       )
 
   override protected def repository: PlayMongoRepository[Email] = app.injector.instanceOf[EmailRepository]
+  protected def serepository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -62,7 +64,7 @@ class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEac
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val emailConnectorMock: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
-    val underTest = new EmailService(emailConnectorMock, emailRendererConnectorMock, emailRepository)
+    val underTest = new EmailService(emailRendererConnectorMock, emailRepository, sentEmailRepository)
     val users = List(User("example@example.com", "first name", "last name", true),
       User("example2@example2.com", "first name2", "last name2", true))
   }
