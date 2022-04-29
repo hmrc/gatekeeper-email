@@ -45,7 +45,7 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
     val sentEmailRepositoryMock: SentEmailRepository = mock[SentEmailRepository]
     val emailConnectorMock: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
-    val underTest = new EmailService(emailConnectorMock, emailRendererConnectorMock, draftEmailRepositoryMock, sentEmailRepositoryMock)
+    val underTest = new EmailService(emailConnectorMock, emailRendererConnectorMock, draftEmailRepositoryMock)
     val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
     val users = List(User("example@example.com", "first name", "last name", true),
       User("example2@example2.com", "first name2", "last name2", true))

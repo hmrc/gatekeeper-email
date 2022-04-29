@@ -108,7 +108,7 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
     val objectStoreClient = mock[PlayObjectStoreClient]
     val mockAppConfig = mock[AppConfig]
 
-    val emailService = new EmailService(mockEmailConnector, emailRendererConnectorMock, mockDraftEmailRepository, mockSentEmailRepository)
+    val emailService = new EmailService(mockEmailConnector, emailRendererConnectorMock, mockDraftEmailRepository)
     val mockEmailService = mock[EmailService]
     val mockObjectStoreService = mock[ObjectStoreService]
     val controller = new GatekeeperComposeEmailController(Helpers.stubMessagesControllerComponents(),

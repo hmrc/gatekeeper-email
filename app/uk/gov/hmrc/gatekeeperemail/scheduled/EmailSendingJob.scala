@@ -18,7 +18,7 @@ package uk.gov.hmrc.gatekeeperemail.scheduled
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.services.EmailService
+import uk.gov.hmrc.gatekeeperemail.services.{EmailService, SentEmailService}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.lock.{LockService, MongoLockRepository}
 
@@ -27,10 +27,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class EmailSendingJob @Inject()(appConfig: AppConfig, override val lockService: LockService,
-                                emailService: EmailService)
+                                sentEmailService: SentEmailService)
   extends LockedScheduledJob {
-
-//  override val releaseLockAfter: Duration = Duration.standardSeconds(appConfig.retryJobLockDuration.toSeconds)
 
   override def name: String = "EmailSendingJob"
 
@@ -39,6 +37,6 @@ class EmailSendingJob @Inject()(appConfig: AppConfig, override val lockService: 
   override def interval: FiniteDuration = appConfig.interval.asInstanceOf[FiniteDuration]
 
   override def executeInLock(implicit ec: ExecutionContext): Future[Result] = {
-    emailService.sendEmails.map(done => Result(done.toString))
+    sentEmailService.sendEmails.map(done => Result(done.toString))
   }
 }

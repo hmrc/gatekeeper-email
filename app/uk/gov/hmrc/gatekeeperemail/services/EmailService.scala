@@ -34,9 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
                              emailRendererConnector: GatekeeperEmailRendererConnector,
-                             draftEmailRepository: DraftEmailRepository,
-                             sentEmailRepository: SentEmailRepository)
-                                           (implicit val ec: ExecutionContext) {
+                             draftEmailRepository: DraftEmailRepository)(implicit val ec: ExecutionContext) {
 
   val logger: Logger = Logger(getClass.getName)
 
@@ -56,40 +54,6 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
     } yield renderedEmail
   }
 
-  def updateEmailToSent(email:SentEmail) = {
-    sentEmailRepository.markSent(email)
-  }
-
-  def handleEmailSendingFailed(email:SentEmail) = {
-    if (email.failedCount > 3)  {
-      sentEmailRepository.markFailed(email)
-    } else {
-      sentEmailRepository.incrementFailedCount(email)
-    }
-  }
-
-  def sendEmails = {
-    findNextEmail.flatMap {
-      case None => Future.successful(0)
-      case Some(sentEmail:SentEmail) => findAndSendNextEmail(sentEmail).map {status => status match {
-          case 200 => updateEmailToSent(sentEmail)
-          case _ => handleEmailSendingFailed(sentEmail)
-        }
-      }
-    }
-  }
-
- def findAndSendNextEmail(sentEmail: SentEmail): Future[Int] = {
-   for {
-     email <- fetchEmail(sentEmail.emailUuid.toString)
-     result <- sendEmailScheduled(email)
-   } yield result
- }
-
-  def findNextEmail: Future[Option[SentEmail]] = {
-    sentEmailRepository.findNextEmailToSend
-  }
-
   def sendEmail(emailUUID: String): Future[DraftEmail] = {
     for {
       email <- draftEmailRepository.getEmailData(emailUUID)
@@ -98,12 +62,6 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
       _ <- emailConnector.sendEmail(emailRequestedData)
       _ <- draftEmailRepository.updateEmailSentStatus(emailUUID)
     } yield email
-  }
-
-  def sendEmailScheduled (email: DraftEmail): Future[Int] = {
-    val emailRequestedData = SendEmailRequest(email.recipients, email.templateData.templateId, email.templateData.parameters,
-      email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
-    emailConnector.sendEmail(emailRequestedData)
   }
 
   def fetchEmail(emailUUID: String): Future[DraftEmail] = {
