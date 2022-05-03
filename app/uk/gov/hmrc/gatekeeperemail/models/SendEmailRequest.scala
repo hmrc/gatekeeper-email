@@ -34,7 +34,6 @@ case class OneEmailRequest(to: List[String],
                             auditData: Map[String, String] = Map.empty,
                             eventUrl: Option[String] = None)
 
-
 case class EmailRequest(to: List[User],
                         templateId: String,
                         emailData: EmailData,
@@ -52,6 +51,7 @@ object SendEmailRequest {
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
   implicit val sendEmailRequestFmt: OFormat[SendEmailRequest] = Json.format[SendEmailRequest]
 }
+
 object OneEmailRequest {
   implicit val userFmt: OFormat[User] = Json.format[User]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
@@ -59,6 +59,7 @@ object OneEmailRequest {
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
   implicit val sendEmailRequestFmt: OFormat[OneEmailRequest] = Json.format[OneEmailRequest]
 }
+
 object EmailRequest {
   implicit val userFmt: OFormat[User] = Json.format[User]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
@@ -66,6 +67,7 @@ object EmailRequest {
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
   implicit val receiveEmailRequestFmt: OFormat[EmailRequest] = Json.format[EmailRequest]
 }
+
 object EmailData {
   implicit val userFmt: OFormat[User] = Json.format[User]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]

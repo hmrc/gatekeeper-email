@@ -51,10 +51,10 @@ class SchedulerPlayModule extends Module {
 
 @Singleton
 class LockClient @Inject()(mongoLockRepository: MongoLockRepository) {
-  val myLock = LockService(mongoLockRepository, lockId = "my-lock", ttl = 1.hour)
+  val myLock = LockService(mongoLockRepository, lockId = "send-email-lock", ttl = 1.hour)
 }
 
 @Singleton
 class LockServiceProvider @Inject()(mongoLockRepository: MongoLockRepository) extends Provider[LockService] {
-  override def get(): LockService = LockService(mongoLockRepository, lockId = "my-lock", ttl = 1.hour)
+  override def get(): LockService = LockService(mongoLockRepository, lockId = "send-email-lock", ttl = 1.hour)
 }

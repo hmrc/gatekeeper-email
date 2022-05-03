@@ -43,7 +43,7 @@ import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, Gatekee
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
-import uk.gov.hmrc.gatekeeperemail.services.{EmailService, ObjectStoreService}
+import uk.gov.hmrc.gatekeeperemail.services.{DraftEmailService, ObjectStoreService}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
@@ -109,8 +109,8 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
     val objectStoreClient = mock[PlayObjectStoreClient]
     val mockAppConfig = mock[AppConfig]
 
-    val emailService = new EmailService(emailRendererConnectorMock, mockDraftEmailRepository, mockSentEmailRepository)
-    val mockEmailService = mock[EmailService]
+    val emailService = new DraftEmailService(emailRendererConnectorMock, mockDraftEmailRepository, mockSentEmailRepository)
+    val mockEmailService = mock[DraftEmailService]
     val mockObjectStoreService = mock[ObjectStoreService]
     val controller = new GatekeeperComposeEmailController(Helpers.stubMessagesControllerComponents(),
       playBodyParsers, emailService, mockObjectStoreService)

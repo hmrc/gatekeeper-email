@@ -37,7 +37,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
 
   trait Setup {
     val draftEmailRepositoryMock: DraftEmailRepository = mock[DraftEmailRepository]
-    val draftEmailServiceMock: EmailService = mock[EmailService]
+    val draftEmailServiceMock: DraftEmailService = mock[DraftEmailService]
     val sentEmailRepositoryMock: SentEmailRepository = mock[SentEmailRepository]
     val emailConnectorMock: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
@@ -63,7 +63,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       when(draftEmailServiceMock.fetchEmail(sentEmail.emailUuid.toString)).thenReturn(Future(draftEmail))
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(200))
 
-      await(underTest.sendEmails)
+      await(underTest.sendAllPendingEmails)
 
       verify(sentEmailRepositoryMock).findNextEmailToSend
       verify(draftEmailServiceMock).fetchEmail(sentEmail.emailUuid.toString)
@@ -76,7 +76,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       when(draftEmailServiceMock.fetchEmail(sentEmail.emailUuid.toString)).thenReturn(Future(draftEmail))
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(400))
 
-      await(underTest.sendEmails)
+      await(underTest.sendAllPendingEmails)
 
       verify(draftEmailServiceMock).fetchEmail(sentEmail.emailUuid.toString)
       verify(sentEmailRepositoryMock).incrementFailedCount(sentEmail)
@@ -89,7 +89,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       when(draftEmailServiceMock.fetchEmail(emailToSend.emailUuid.toString)).thenReturn(Future(draftEmail))
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(400))
 
-      await(underTest.sendEmails)
+      await(underTest.sendAllPendingEmails)
 
       verify(draftEmailServiceMock).fetchEmail(emailToSend.emailUuid.toString)
       verify(sentEmailRepositoryMock).markFailed(emailToSend)

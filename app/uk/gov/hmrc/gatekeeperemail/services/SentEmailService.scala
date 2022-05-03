@@ -18,6 +18,7 @@ package uk.gov.hmrc.gatekeeperemail.services
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logging
+import play.api.http.Status
 import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailConnector
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.SentEmailRepository
@@ -26,8 +27,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SentEmailService@Inject()(emailConnector: GatekeeperEmailConnector,
-                                 draftEmailService: EmailService,
-                                 sentEmailRepository: SentEmailRepository)
+                                draftEmailService: DraftEmailService,
+                                sentEmailRepository: SentEmailRepository)
                                 (implicit val ec: ExecutionContext) extends Logging {
 
   private def updateEmailToSent(email:SentEmail): Future[SentEmail] = {
@@ -36,7 +37,7 @@ class SentEmailService@Inject()(emailConnector: GatekeeperEmailConnector,
 
   private def handleEmailSendingFailed(email:SentEmail): Future[SentEmail] = {
     logger.info(s"Handling failed message for email with failedCount of ${email.failedCount}")
-    if (email.failedCount > 3)  {
+    if (email.failedCount > 2)  {
       sentEmailRepository.markFailed(email)
     } else {
       logger.info(s"Incrementing failed counter for email ${email}")
@@ -44,11 +45,12 @@ class SentEmailService@Inject()(emailConnector: GatekeeperEmailConnector,
     }
   }
 
-   def sendEmails = {
+   def sendAllPendingEmails = {
     findNextEmail.flatMap {
       case None => Future.successful(0)
-      case Some(sentEmail:SentEmail) => findAndSendNextEmail(sentEmail).map {status => status match {
-          case 200 => updateEmailToSent(sentEmail)
+      case Some(sentEmail:SentEmail) => findAndSendNextEmail(sentEmail).map {status =>
+        status match {
+          case Status.OK => updateEmailToSent(sentEmail)
           case _ => handleEmailSendingFailed(sentEmail)
         }
       }
@@ -58,8 +60,8 @@ class SentEmailService@Inject()(emailConnector: GatekeeperEmailConnector,
   private def findAndSendNextEmail(sentEmail: SentEmail): Future[Int] = {
     logger.info(s"Fetching template with UUID ${sentEmail.emailUuid}")
      for {
-       email <- fetchEmail(sentEmail.emailUuid.toString)
-       result <- sendEmailScheduled(email)
+       email <- fetchDraftEmailData(sentEmail.emailUuid.toString)
+       result <- sendEmail(email)
      } yield result
   }
 
@@ -67,7 +69,7 @@ class SentEmailService@Inject()(emailConnector: GatekeeperEmailConnector,
     sentEmailRepository.findNextEmailToSend
   }
 
-  private def sendEmailScheduled (email: DraftEmail): Future[Int] = {
+  private def sendEmail (email: DraftEmail): Future[Int] = {
     logger.info(s"Retrieved email wth id ${email.emailUUID}")
     val emailRequestedData = SendEmailRequest(email.recipients, email.templateData.templateId, email.templateData.parameters,
       email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
@@ -75,7 +77,7 @@ class SentEmailService@Inject()(emailConnector: GatekeeperEmailConnector,
     emailConnector.sendEmail(emailRequestedData)
   }
 
-  private def fetchEmail(emailUUID: String): Future[DraftEmail] = {
+  private def fetchDraftEmailData(emailUUID: String): Future[DraftEmail] = {
     for {
       email <- draftEmailService.fetchEmail(emailUUID)
     } yield email

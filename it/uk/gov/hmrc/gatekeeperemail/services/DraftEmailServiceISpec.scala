@@ -36,7 +36,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.successful
 
-class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with MockitoSugar with ArgumentMatchersSugar
+class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with MockitoSugar with ArgumentMatchersSugar
   with GuiceOneAppPerSuite with PlayMongoRepositorySupport[DraftEmail] {
   val emailRepository = repository.asInstanceOf[DraftEmailRepository]
   val sentEmailRepository = serepository.asInstanceOf[SentEmailRepository]
@@ -62,7 +62,7 @@ class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEac
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val emailConnectorMock: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
-    val underTest = new EmailService(emailRendererConnectorMock, emailRepository, sentEmailRepository)
+    val underTest = new DraftEmailService(emailRendererConnectorMock, emailRepository, sentEmailRepository)
     val users = List(User("example@example.com", "first name", "last name", true),
       User("example2@example2.com", "first name2", "last name2", true))
   }

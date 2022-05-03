@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
+import java.time.LocalDateTime.now
 import java.util.concurrent.TimeUnit
 
 import com.mongodb.ReadPreference.primaryPreferred
@@ -81,7 +82,10 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
   def incrementFailedCount(email: SentEmail): Future[SentEmail] = {
     collection.withReadPreference(primaryPreferred)
       .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
-        update = set("failedCount", email.failedCount + 1) ,
+        update = combine(
+          set("failedCount", email.failedCount + 1),
+          set("updatedAt", Codecs.toBson(now()))
+        ),
         options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
       .head()
   }
@@ -93,7 +97,10 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
   def markFailed(email: SentEmail): Future[SentEmail] = {
     collection.withReadPreference(primaryPreferred)
       .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
-        update = combine(set("failedCount", email.failedCount + 1), set("status", Codecs.toBson(EmailStatus.FAILED))),
+        update = combine(
+          set("status", Codecs.toBson(EmailStatus.FAILED)),
+          set("updatedAt", Codecs.toBson(now()))
+        ),
         options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
       .head()
   }
@@ -101,7 +108,10 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
   def markSent(email: SentEmail): Future[SentEmail] = {
     collection.withReadPreference(primaryPreferred)
       .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
-        update = set("status", Codecs.toBson(EmailStatus.SENT)),
+        update = combine(
+          set("status", Codecs.toBson(EmailStatus.SENT)),
+          set("updatedAt", Codecs.toBson(now()))
+        ),
         options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
       .head()
   }

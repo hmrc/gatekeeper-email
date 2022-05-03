@@ -86,7 +86,7 @@ class DraftEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
 
   def updateEmailSentStatus(emailUUID: String): Future[DraftEmail] = {
     collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(emailUUID)),
-      update = set("status", EmailStatus.SENT),
+      update = set("status", Codecs.toBson(EmailStatus.SENT)),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
     ).map(_.asInstanceOf[DraftEmail]).head()
   }

@@ -46,6 +46,7 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
     }
     )
     //Here need to decide how to send response back.
+    logger.info(s"Return code from email service is $returnCodes")
     returnCodes.head
   }
 

@@ -36,7 +36,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.successful
 
-class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with ArgumentMatchersSugar {
+class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with ArgumentMatchersSugar {
   implicit val mat: Materializer = app.injector.instanceOf[Materializer]
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -46,7 +46,7 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
     val sentEmailRepositoryMock: SentEmailRepository = mock[SentEmailRepository]
     val emailConnectorMock: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
-    val underTest = new EmailService(emailRendererConnectorMock, draftEmailRepositoryMock, sentEmailRepositoryMock)
+    val underTest = new DraftEmailService(emailRendererConnectorMock, draftEmailRepositoryMock, sentEmailRepositoryMock)
     val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
     val users = List(User("example@example.com", "first name", "last name", true),
       User("example2@example2.com", "first name2", "last name2", true))
@@ -60,7 +60,6 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
   }
 
   "saveEmail" should {
-
     "save the email data into mongodb repo" in new Setup {
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(200))
       when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))

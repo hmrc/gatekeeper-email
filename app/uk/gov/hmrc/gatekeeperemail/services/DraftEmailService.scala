@@ -29,10 +29,10 @@ import uk.gov.hmrc.http.UpstreamErrorResponse
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class EmailService @Inject()(emailRendererConnector: GatekeeperEmailRendererConnector,
-                             draftEmailRepository: DraftEmailRepository,
-                             sentEmailRepository: SentEmailRepository)
-                             (implicit val ec: ExecutionContext) {
+class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendererConnector,
+                                  draftEmailRepository: DraftEmailRepository,
+                                  sentEmailRepository: SentEmailRepository)
+                                 (implicit val ec: ExecutionContext) {
 
   val logger: Logger = Logger(getClass.getName)
 
@@ -54,7 +54,6 @@ class EmailService @Inject()(emailRendererConnector: GatekeeperEmailRendererConn
 
   def sendEmail(emailUUID: String): Future[DraftEmail] = {
     for {
-
       email <- draftEmailRepository.getEmailData(emailUUID)
       _ <-  persistInEmailQueue(email)
       _ <- draftEmailRepository.updateEmailSentStatus(emailUUID)
@@ -62,7 +61,6 @@ class EmailService @Inject()(emailRendererConnector: GatekeeperEmailRendererConn
   }
 
   private def persistInEmailQueue(email: DraftEmail):  Future[DraftEmail] = {
-
     val sentEmails = email.recipients.map(elem => SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(),
       emailUuid = UUID.fromString(email.emailUUID), firstName = elem.firstName, lastName = elem.lastName, recipient = elem.email,
       status = EmailStatus.PENDING, failedCount = 0))

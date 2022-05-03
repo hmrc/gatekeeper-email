@@ -145,7 +145,7 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
 
       val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred).find().toFuture())
       fetchedRecords.size shouldBe 1
-      fetchedRecords.head.failedCount shouldBe 1
+      fetchedRecords.head.failedCount shouldBe 0
       fetchedRecords.head.status shouldBe FAILED
     }
   }

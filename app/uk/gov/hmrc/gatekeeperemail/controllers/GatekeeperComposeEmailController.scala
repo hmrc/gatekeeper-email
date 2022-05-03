@@ -23,7 +23,7 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
 import uk.gov.hmrc.gatekeeperemail.models.{UploadedFileWithObjectStore, _}
-import uk.gov.hmrc.gatekeeperemail.services.{EmailService, ObjectStoreService}
+import uk.gov.hmrc.gatekeeperemail.services.{DraftEmailService, ObjectStoreService}
 import uk.gov.hmrc.objectstore.client.ObjectSummaryWithMd5
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -31,10 +31,10 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class GatekeeperComposeEmailController @Inject()(
-  mcc: MessagesControllerComponents,
-  playBodyParsers: PlayBodyParsers,
-  emailService: EmailService,
-  objectStoreService: ObjectStoreService
+                                                  mcc: MessagesControllerComponents,
+                                                  playBodyParsers: PlayBodyParsers,
+                                                  emailService: DraftEmailService,
+                                                  objectStoreService: ObjectStoreService
   )(implicit val ec: ExecutionContext)
     extends BackendController(mcc) with WithJson {
 

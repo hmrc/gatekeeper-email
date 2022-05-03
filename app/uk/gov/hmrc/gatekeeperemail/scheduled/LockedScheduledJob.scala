@@ -38,8 +38,8 @@ trait LockedScheduledJob {
     lockService.withLock{
       executeInLock
     } map {
-      case Some(Result(msg)) => Result(s"Job with $name run and completed with result $msg")
-      case None              => Result(s"Job with $name cannot aquire mongo lock, not running")
+      case Some(Result(msg)) => Result(s"Job named $name ran, and completed, with result $msg")
+      case None              => Result(s"Job named $name cannot acquire Mongo lock, not running")
     }
   override def toString() = s"$name after  every "
 
