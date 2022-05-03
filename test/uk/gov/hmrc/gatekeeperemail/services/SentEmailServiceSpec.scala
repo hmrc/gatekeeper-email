@@ -23,6 +23,7 @@ import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.http.Status._
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
@@ -61,7 +62,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
     "mark email as sent when email connector receives success response" in new Setup {
       when(sentEmailRepositoryMock.findNextEmailToSend).thenReturn(Future(Some(sentEmail)))
       when(draftEmailServiceMock.fetchEmail(sentEmail.emailUuid.toString)).thenReturn(Future(draftEmail))
-      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(200))
+      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(ACCEPTED))
 
       await(underTest.sendAllPendingEmails)
 
@@ -74,7 +75,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       when(sentEmailRepositoryMock.incrementFailedCount(*)).thenReturn(Future(sentEmail))
       when(sentEmailRepositoryMock.findNextEmailToSend).thenReturn(Future(Some(sentEmail)))
       when(draftEmailServiceMock.fetchEmail(sentEmail.emailUuid.toString)).thenReturn(Future(draftEmail))
-      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(400))
+      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(BAD_REQUEST))
 
       await(underTest.sendAllPendingEmails)
 
@@ -87,7 +88,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       when(sentEmailRepositoryMock.markFailed(emailToSend)).thenReturn(Future(emailToSend))
       when(sentEmailRepositoryMock.findNextEmailToSend).thenReturn(Future(Some(emailToSend)))
       when(draftEmailServiceMock.fetchEmail(emailToSend.emailUuid.toString)).thenReturn(Future(draftEmail))
-      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(400))
+      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(BAD_REQUEST))
 
       await(underTest.sendAllPendingEmails)
 

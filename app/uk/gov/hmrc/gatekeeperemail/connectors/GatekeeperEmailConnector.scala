@@ -40,25 +40,16 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
         ("showFooter" -> "true") + ("showHmrcBanner" -> "true")
       val parametersWithModifiedLName = parametersWithModifiedFName + ("lastName" -> s"${user.lastName}")
       val emailRequestModified = emailRequest.copy(to = List(user), parameters = parametersWithModifiedLName)
-      logger.info(s"ReceiveEmailRequest  :${user.email} ${user.firstName} ${user.lastName}")
-      logger.info(s"Email Parameters are  is .to :${emailRequestModified.parameters}")
       postHttpRequest(emailRequestModified)
     }
     )
     //Here need to decide how to send response back.
-    logger.info(s"Return code from email service is $returnCodes")
     returnCodes.head
   }
 
   private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Int] = {
-    logger.info(s"sendEmailRequest:$request")
     val oneEmailRequest = OneEmailRequest(request.to.map(_.email), request.templateId, request.parameters, request.force, request.auditData, request.eventUrl)
     http.POST[OneEmailRequest, HttpResponse](s"$serviceUrl/developer/email",
-      oneEmailRequest) map { response =>
-      logger.info(
-        s"""Requested email service to send email to ${oneEmailRequest.to} firstName ${oneEmailRequest.parameters("firstName")}
-           |lastName ${oneEmailRequest.parameters("lastName")}""".stripMargin)
-      response.status
-    }
+      oneEmailRequest) map { response => response.status }
   }
 }
