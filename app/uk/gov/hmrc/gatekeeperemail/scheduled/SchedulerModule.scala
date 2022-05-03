@@ -58,17 +58,3 @@ class LockClient @Inject()(mongoLockRepository: MongoLockRepository) {
 class LockServiceProvider @Inject()(mongoLockRepository: MongoLockRepository) extends Provider[LockService] {
   override def get(): LockService = LockService(mongoLockRepository, lockId = "my-lock", ttl = 1.hour)
 }
-/*
-class SchedulerPlayModule extends Module {
-  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
-    Seq(
-      bind[LockRepository].toProvider[LockRepositoryProvider]
-    )
-  }
-}
-
-@Singleton
-class LockRepositoryProvider @Inject()(mongoComponent: ReactiveMongoComponent) extends Provider[LockRepository] {
-  override def get(): LockRepository = new LockRepository()(mongoComponent.mongoConnector.db)
-}
-*/

@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import play.api.libs.json.{Format, Json, OFormat}
-import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, EmailTemplateData, UploadCargo, UploadedFile, UploadedFileWithObjectStore, User}
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.gatekeeperemail.models._
 
 private[repositories] object EmailMongoFormatter {
   implicit val userFormatter: OFormat[User] = Json.format[User]

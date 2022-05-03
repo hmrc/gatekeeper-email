@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import akka.stream.Materializer
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.mongodb.scala.ReadPreference.primaryPreferred
 import org.scalatest.BeforeAndAfterEach
@@ -43,7 +42,6 @@ class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEac
   val sentEmailRepository = serepository.asInstanceOf[SentEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
-//  implicit val materialiser: Materializer = app.injector.instanceOf[Materializer]
 
   override def beforeEach(): Unit = {
     prepareDatabase()

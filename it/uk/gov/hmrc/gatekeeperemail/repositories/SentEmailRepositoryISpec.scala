@@ -52,7 +52,7 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
   override protected def repository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
 
   val sentEmail = List(SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), emailUuid = UUID.randomUUID(),
-    firstName = "first", lastName = "last", recipient = "first.last@digital.hmrc.gov.uk", status = IN_PROGRESS,
+    firstName = "first", lastName = "last", recipient = "first.last@digital.hmrc.gov.uk", status = PENDING,
     failedCount = 0))
 
   "persist" should {
@@ -63,7 +63,7 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
 
       inserted.wasAcknowledged() shouldBe true
       fetchedRecords.size shouldBe 1
-      fetchedRecords.head shouldBe sentEmail
+      fetchedRecords.head shouldBe sentEmail.head
     }
 
     "create index on status plus createdAt" in {
@@ -96,7 +96,7 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
       val Some(nextEmail) = await(serviceRepo.findNextEmailToSend)
 
       nextEmail.recipient shouldBe expectedNextSendRecipient
-      nextEmail.status shouldBe IN_PROGRESS
+      nextEmail.status shouldBe PENDING
     }
 
     "ignore emails with failed status" in {
@@ -107,7 +107,7 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
       val Some(nextEmail) = await(serviceRepo.findNextEmailToSend)
 
       nextEmail.recipient shouldBe sentEmail.head.recipient
-      nextEmail.status shouldBe IN_PROGRESS
+      nextEmail.status shouldBe PENDING
     }
 
     "handle documents with the same created time" in {
@@ -117,7 +117,7 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
 
       val Some(nextEmail) = await(serviceRepo.findNextEmailToSend)
 
-      nextEmail.status shouldBe IN_PROGRESS
+      nextEmail.status shouldBe PENDING
     }
   }
 

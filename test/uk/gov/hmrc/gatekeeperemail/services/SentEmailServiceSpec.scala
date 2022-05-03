@@ -25,7 +25,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.IN_PROGRESS
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
 
@@ -47,9 +47,9 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       User("example2@example2.com", "first name2", "last name2", true))
     val draftEmail = DraftEmail("emailId-123", templateData, "DL Team",
       users, None, "markdownEmailBody", "Test email",
-      "test subject", "SENT", "composedBy", Some("approvedBy"), LocalDateTime.now())
+      "test subject", SENT, "composedBy", Some("approvedBy"), LocalDateTime.now())
     val sentEmail = SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), emailUuid = UUID.randomUUID(),
-      firstName = "first", lastName = "last", recipient = "first.last@digital.hmrc.gov.uk", status = IN_PROGRESS,
+      firstName = "first", lastName = "last", recipient = "first.last@digital.hmrc.gov.uk", status = PENDING,
       failedCount = 0)
 
     when(emailRendererConnectorMock.getTemplatedEmail(*))

@@ -19,12 +19,9 @@ package uk.gov.hmrc.gatekeeperemail.services
 import java.time.LocalDateTime
 import java.util.UUID
 
-import akka.Done
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.http.Status.OK
-import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.IN_PROGRESS
+import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailRendererConnector
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
 import uk.gov.hmrc.http.UpstreamErrorResponse
@@ -35,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class EmailService @Inject()(emailRendererConnector: GatekeeperEmailRendererConnector,
                              draftEmailRepository: DraftEmailRepository,
                              sentEmailRepository: SentEmailRepository)
-                                           (implicit val ec: ExecutionContext) {
+                             (implicit val ec: ExecutionContext) {
 
   val logger: Logger = Logger(getClass.getName)
 
@@ -116,7 +113,7 @@ class EmailService @Inject()(emailRendererConnector: GatekeeperEmailRendererConn
 
     DraftEmail(emailUUID,  emailTemplateData, recipientsTitle, emailRequest.to, emailRequest.attachmentDetails,
       emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
-      emailRequest.emailData.emailSubject, EmailStatus.IN_PROGRESS.toString, "composedBy",
+      emailRequest.emailData.emailSubject, EmailStatus.PENDING, "composedBy",
       Some("approvedBy"), LocalDateTime.now())
   }
 

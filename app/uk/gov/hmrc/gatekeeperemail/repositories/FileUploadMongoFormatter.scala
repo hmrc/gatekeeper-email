@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 
 import play.api.libs.json._
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.mongo.play.json.formats.{MongoJavatimeFormats, MongoJodaFormats}
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 object FileUploadMongoFormatter {
   implicit val bsonFormat: OFormat[UploadId] = Json.format[UploadId]
