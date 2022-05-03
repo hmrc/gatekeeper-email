@@ -40,9 +40,10 @@ import scala.concurrent.Future.successful
 class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with MockitoSugar with ArgumentMatchersSugar
   with GuiceOneAppPerSuite with PlayMongoRepositorySupport[DraftEmail] {
   val emailRepository = repository.asInstanceOf[DraftEmailRepository]
+  val sentEmailRepository = serepository.asInstanceOf[SentEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
-  implicit val materialiser: Materializer = app.injector.instanceOf[Materializer]
+//  implicit val materialiser: Materializer = app.injector.instanceOf[Materializer]
 
   override def beforeEach(): Unit = {
     prepareDatabase()
@@ -54,7 +55,8 @@ class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEac
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override protected def sentRepository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
+  override protected def repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
+  protected def serepository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 

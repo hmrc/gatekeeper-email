@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /*
  * Copyright 2022 HM Revenue & Customs
  *
@@ -23,16 +22,15 @@ import com.mongodb.ReadPreference.primaryPreferred
 import com.mongodb.client.model.ReturnDocument
 import javax.inject.{Inject, Singleton}
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
-import org.mongodb.scala.model._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.{combine, set}
-import org.mongodb.scala.model.{IndexModel, IndexOptions}
-import org.mongodb.scala.result.InsertOneResult
+import org.mongodb.scala.model.{IndexModel, IndexOptions, _}
+import org.mongodb.scala.result.InsertManyResult
 import org.mongodb.scala.{MongoClient, MongoCollection}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.models.{EmailStatus, SentEmail}
-import uk.gov.hmrc.gatekeeperemail.repositories.ReadyEmailFormatter.readyEmailFormatter
+import uk.gov.hmrc.gatekeeperemail.repositories.SentEmailFormatter.sentEmailFormatter
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
@@ -44,7 +42,7 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
   extends PlayMongoRepository[SentEmail](
     mongoComponent = mongoComponent,
     collectionName = "sentemails",
-    domainFormat = readyEmailFormatter,
+    domainFormat = sentEmailFormatter,
     indexes = Seq(IndexModel(ascending("status",  "createdAt"),
         IndexOptions()
           .name("emailNextSendIndex")
@@ -70,10 +68,6 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
         )
       )
 
-  def persist(entity: SentEmail): Future[InsertOneResult] = {
-    collection.insertOne(entity).toFuture()
-  }
-
   def findNextEmailToSend: Future[Option[SentEmail]] = {
     collection.withReadPreference(primaryPreferred)
     .find(filter = equal("status", Codecs.toBson(EmailStatus.IN_PROGRESS)))
@@ -89,6 +83,10 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
         update = set("failedCount", email.failedCount + 1) ,
         options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
       .head()
+  }
+
+  def persist(entity: List[SentEmail]): Future[InsertManyResult] = {
+    collection.insertMany(entity).toFuture()
   }
 
   def markFailed(email: SentEmail): Future[SentEmail] = {

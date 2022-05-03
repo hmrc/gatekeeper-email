@@ -65,6 +65,7 @@ object EmailStatus extends Enum[EmailStatus] with PlayJsonEnum[EmailStatus]{
   val values: immutable.IndexedSeq[EmailStatus] = findValues
 
   case object FAILED extends EmailStatus( "FAILED")
+  case object PENDING extends EmailStatus( "PENDING")
   case object IN_PROGRESS  extends EmailStatus("IN_PROGRESS")
   case object SENT extends EmailStatus( "SENT")
 }
