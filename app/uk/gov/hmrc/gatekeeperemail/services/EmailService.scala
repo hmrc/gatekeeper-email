@@ -56,12 +56,20 @@ class EmailService @Inject()(emailConnector: GatekeeperEmailConnector,
 
   def sendEmail(emailUUID: String): Future[DraftEmail] = {
     for {
+
       email <- draftEmailRepository.getEmailData(emailUUID)
-      emailRequestedData = SendEmailRequest(email.recipients, email.templateData.templateId, email.templateData.parameters,
-        email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
-      _ <- emailConnector.sendEmail(emailRequestedData)
+      _ <-  persistInEmailQueue(email)
       _ <- draftEmailRepository.updateEmailSentStatus(emailUUID)
     } yield email
+  }
+
+  private def persistInEmailQueue(email: DraftEmail):  Future[DraftEmail] = {
+
+    val sentEmails = email.recipients.map(elem => SentEmail(LocalDateTime.now(), LocalDateTime.now(), UUID.fromString(email.emailUUID),
+      elem.firstName, elem.lastName, elem.email, "PENDING", 0))
+
+    sentEmailRepository.persist(sentEmails)
+    Future.successful(email)
   }
 
   def fetchEmail(emailUUID: String): Future[DraftEmail] = {

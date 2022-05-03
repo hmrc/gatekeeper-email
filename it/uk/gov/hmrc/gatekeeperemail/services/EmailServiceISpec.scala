@@ -39,8 +39,7 @@ import scala.concurrent.Future.successful
 
 class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with MockitoSugar with ArgumentMatchersSugar
   with GuiceOneAppPerSuite with PlayMongoRepositorySupport[DraftEmail] {
-  override protected def repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
-  /*val emailRepository = draftRepository.asInstanceOf[DraftEmailRepository]
+  val emailRepository = repository.asInstanceOf[DraftEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
   implicit val materialiser: Materializer = app.injector.instanceOf[Materializer]
@@ -63,7 +62,7 @@ class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEac
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val emailConnectorMock: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
-    val underTest = new EmailService(emailConnectorMock, emailRendererConnectorMock, emailRepository)
+    val underTest = new EmailService(emailRendererConnectorMock, emailRepository, sentEmailRepository)
     val users = List(User("example@example.com", "first name", "last name", true),
       User("example2@example2.com", "first name2", "last name2", true))
   }
@@ -86,5 +85,5 @@ class EmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEac
       fetchedRecords.head.markdownEmailBody shouldBe "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls"
 
     }
-  }*/
+  }
 }

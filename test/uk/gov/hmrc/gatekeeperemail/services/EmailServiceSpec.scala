@@ -45,7 +45,7 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
     val sentEmailRepositoryMock: SentEmailRepository = mock[SentEmailRepository]
     val emailConnectorMock: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
-    val underTest = new EmailService(emailConnectorMock, emailRendererConnectorMock, draftEmailRepositoryMock)
+    val underTest = new EmailService(emailRendererConnectorMock, emailRepositoryMock, sentEmailRepositoryMock)
     val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
     val users = List(User("example@example.com", "first name", "last name", true),
       User("example2@example2.com", "first name2", "last name2", true))
@@ -55,9 +55,11 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuit
     when(emailRendererConnectorMock.getTemplatedEmail(*))
       .thenReturn(successful(Right(RenderResult("RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
         "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
+
   }
 
   "saveEmail" should {
+
     "save the email data into mongodb repo" in new Setup {
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(200))
       when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))

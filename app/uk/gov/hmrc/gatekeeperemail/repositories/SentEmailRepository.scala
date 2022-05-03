@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /*
  * Copyright 2022 HM Revenue & Customs
  *
@@ -105,5 +106,4 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
         options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
       .head()
   }
-
 }

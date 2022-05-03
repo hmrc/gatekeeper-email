@@ -17,17 +17,18 @@
 package uk.gov.hmrc.gatekeeperemail.controllers
 
 import java.io.IOException
-import java.time.LocalDateTime.now
-import java.time.{Instant, LocalDateTime, ZonedDateTime}
+import java.time.Instant
 import java.util.UUID
 
 import akka.stream.Materializer
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor, urlEqualTo}
 import com.github.tomakehurst.wiremock.http.Fault
 import com.mongodb.client.result.InsertOneResult
+import org.joda.time.DateTime
+import org.joda.time.DateTimeZone.UTC
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.{ArgumentCaptor, ArgumentMatchersSugar, MockitoSugar}
-import org.mongodb.scala.bson.BsonNumber
+import org.mongodb.scala.bson.{BsonNumber, BsonValue}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -41,12 +42,13 @@ import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
+import uk.gov.hmrc.gatekeeperemail.repositories.{EmailRepository, SentEmailRepository}
 import uk.gov.hmrc.gatekeeperemail.services.{EmailService, ObjectStoreService}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
 
+import collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.{failed, successful}
@@ -108,7 +110,7 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
     val objectStoreClient = mock[PlayObjectStoreClient]
     val mockAppConfig = mock[AppConfig]
 
-    val emailService = new EmailService(mockEmailConnector, emailRendererConnectorMock, mockDraftEmailRepository)
+    val emailService = new EmailService(emailRendererConnectorMock, mockDraftEmailRepository, mockSentEmailRepository)
     val mockEmailService = mock[EmailService]
     val mockObjectStoreService = mock[ObjectStoreService]
     val controller = new GatekeeperComposeEmailController(Helpers.stubMessagesControllerComponents(),
@@ -131,13 +133,15 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
       when(mockEmailConnector.sendEmail(*)).thenReturn(successful(Status.OK))
       when(mockDraftEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       when(mockDraftEmailRepository.updateEmailSentStatus(*)).thenReturn(successful(email))
+      when(mockSentEmailRepository.persist(*)).thenReturn(Future(InsertManyResult.unacknowledged()))
       val result = controller.sendEmail(emailUUID)(fakeRequest)
       status(result) shouldBe Status.OK
     }
 
     "return 500" in new Setup {
-      when(mockEmailConnector.sendEmail(*)).thenReturn(failed(new IOException("can not connect to email service")))
-      when(mockDraftEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+      when(mockDraftEmailRepository.getEmailData(*)).thenReturn(failed(new IOException("can not connect to email service")))
+      when(mockDraftEmailRepository.updateEmailSentStatus(*)).thenReturn(failed(new IOException("can not connect to mongo service")))
+      when(mockSentEmailRepository.persist(*)).thenReturn(failed(new IOException("can not connect to mongo service")))
       val result = controller.sendEmail(emailUUID)(fakeRequest)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
