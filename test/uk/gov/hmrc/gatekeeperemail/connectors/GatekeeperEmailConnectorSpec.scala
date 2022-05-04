@@ -16,20 +16,21 @@
 
 package uk.gov.hmrc.gatekeeperemail.connectors
 
+import java.io.IOException
+
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.{verify => wireMockVerify, _}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import com.github.tomakehurst.wiremock.http.Fault
-import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.OK
+import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.models.{SendEmailRequest, User}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
-import java.io.IOException
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class GatekeeperEmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite {
@@ -87,10 +88,12 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfter
   }
   
   "emailConnector" should {
-    val parameters: Map[String, String] = Map("subject" -> s"$subject", "fromAddress" -> s"$fromAddress",
-                                              "body" -> s"$emailBody", "service" -> s"gatekeeper")
+    val parameters: Map[String, String] = Map( "showFooter" -> "true",
+      "showHmrcBanner" -> "true", "subject" -> s"$subject", "fromAddress" -> s"$fromAddress",
+      "body" -> s"$emailBody", "service" -> s"gatekeeper", "lastName" -> "last name2",
+      "firstName" -> "first name2")
 
-    val emailRequest = SendEmailRequest(users, "gatekeeper", parameters)
+    val emailRequest = SendEmailRequest("example2@example2.com", "gatekeeper", parameters)
 
     "send gatekeeper email" in new Setup with WorkingHttp {
       await(underTest.sendEmail(emailRequest))

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.connectors
 
+import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import play.api.http.HeaderNames.CONTENT_TYPE
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
@@ -23,7 +24,6 @@ import uk.gov.hmrc.gatekeeperemail.models.{OneEmailRequest, SendEmailRequest}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpErrorFunctions, HttpResponse}
 
-import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -32,23 +32,13 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
 
   lazy val serviceUrl = config.emailBaseUrl
 
-  def sendEmail(emailRequest: SendEmailRequest): Future[Int] = {
+ def sendEmail(emailRequest: SendEmailRequest): Future[Int] = {
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(CONTENT_TYPE -> "application/json")
-
-    val returnCodes = emailRequest.to.map( user => {
-      val parametersWithModifiedFName = emailRequest.parameters + ("firstName" -> s"${user.firstName}") +
-        ("showFooter" -> "true") + ("showHmrcBanner" -> "true")
-      val parametersWithModifiedLName = parametersWithModifiedFName + ("lastName" -> s"${user.lastName}")
-      val emailRequestModified = emailRequest.copy(to = List(user), parameters = parametersWithModifiedLName)
-      postHttpRequest(emailRequestModified)
-    }
-    )
-    //Here need to decide how to send response back.
-    returnCodes.head
+    postHttpRequest(emailRequest)
   }
 
-  private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Int] = {
-    val oneEmailRequest = OneEmailRequest(request.to.map(_.email), request.templateId, request.parameters, request.force, request.auditData, request.eventUrl)
+ private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Int] = {
+    val oneEmailRequest = OneEmailRequest(List(request.to), request.templateId, request.parameters, request.force, request.auditData, request.eventUrl)
     http.POST[OneEmailRequest, HttpResponse](s"$serviceUrl/developer/email",
       oneEmailRequest) map { response => response.status }
   }

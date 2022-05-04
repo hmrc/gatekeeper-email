@@ -28,7 +28,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.OK
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.{SendEmailRequest, User}
+import uk.gov.hmrc.gatekeeperemail.models.{DraftEmailRequest, SendEmailRequest, User}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -94,7 +94,7 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with Before
   "emailRendererConnector" should {
     val parameters: Map[String, String] = Map("subject" -> s"$subject", "fromAddress" -> s"$fromAddress",
       "body" -> s"$emailBody", "service" -> s"gatekeeper")
-    val emailRequest = SendEmailRequest(users, templateId, parameters)
+    val emailRequest = DraftEmailRequest(users, templateId, parameters)
 
     "get gatekeeper email template renderer" in new Setup with WorkingHttp {
       await(underTest.getTemplatedEmail(emailRequest))

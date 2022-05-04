@@ -39,7 +39,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
   def persistEmail(emailRequest: EmailRequest, emailUUID: String): Future[DraftEmail] = {
     val email: DraftEmail = emailData(emailRequest, emailUUID)
 
-    val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
+    val sendEmailRequest = DraftEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
     for {
@@ -82,7 +82,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
   def updateEmail(emailRequest: EmailRequest, emailUUID: String): Future[DraftEmail] = {
     val email: DraftEmail = emailData(emailRequest, emailUUID)
 
-    val sendEmailRequest = SendEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
+    val sendEmailRequest = DraftEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
     for {

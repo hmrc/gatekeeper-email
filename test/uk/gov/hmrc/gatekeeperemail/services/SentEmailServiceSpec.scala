@@ -64,11 +64,12 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       when(draftEmailServiceMock.fetchEmail(sentEmail.emailUuid.toString)).thenReturn(Future(draftEmail))
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(ACCEPTED))
 
-      await(underTest.sendAllPendingEmails)
+      await(underTest.sendNextPendingEmail)
 
       verify(sentEmailRepositoryMock).findNextEmailToSend
       verify(draftEmailServiceMock).fetchEmail(sentEmail.emailUuid.toString)
       verify(sentEmailRepositoryMock).markSent(sentEmail)
+      verify(emailConnectorMock).sendEmail(*)
     }
 
     "increment failed count when maximum fail count not reached" in new Setup {
@@ -77,7 +78,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       when(draftEmailServiceMock.fetchEmail(sentEmail.emailUuid.toString)).thenReturn(Future(draftEmail))
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(BAD_REQUEST))
 
-      await(underTest.sendAllPendingEmails)
+      await(underTest.sendNextPendingEmail)
 
       verify(draftEmailServiceMock).fetchEmail(sentEmail.emailUuid.toString)
       verify(sentEmailRepositoryMock).incrementFailedCount(sentEmail)
@@ -90,7 +91,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       when(draftEmailServiceMock.fetchEmail(emailToSend.emailUuid.toString)).thenReturn(Future(draftEmail))
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(BAD_REQUEST))
 
-      await(underTest.sendAllPendingEmails)
+      await(underTest.sendNextPendingEmail)
 
       verify(draftEmailServiceMock).fetchEmail(emailToSend.emailUuid.toString)
       verify(sentEmailRepositoryMock).markFailed(emailToSend)

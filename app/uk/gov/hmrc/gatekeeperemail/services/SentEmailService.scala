@@ -31,29 +31,31 @@ class SentEmailService@Inject()(emailConnector: GatekeeperEmailConnector,
                                 sentEmailRepository: SentEmailRepository)
                                 (implicit val ec: ExecutionContext) extends Logging {
 
-   def sendAllPendingEmails: Future[Int] = {
-
+   def sendNextPendingEmail: Future[Int] = {
      def updateEmailStatusToSent(email:SentEmail): Future[SentEmail] = {
        sentEmailRepository.markSent(email)
      }
 
      def handleEmailSendingFailed(email:SentEmail): Future[SentEmail] = {
-       logger.info(s"Handling failed message for email with failedCount of ${email.failedCount}")
        if (email.failedCount > 2)  {
+         logger.info(s"Marking email with id ${email.id} as failed as sending it has failed 3 times")
          sentEmailRepository.markFailed(email)
        } else {
-         logger.info(s"Incrementing failed counter for email ${email}")
+         logger.info(s"Email with id ${email.id} has now failed to send ${email.failedCount + 1} times")
          sentEmailRepository.incrementFailedCount(email)
        }
      }
 
      def findAndSendNextEmail(sentEmail: SentEmail): Future[Int] = {
-       logger.info(s"Fetching template with UUID ${sentEmail.emailUuid}")
-       for {
-         email <- fetchDraftEmailData(sentEmail.emailUuid.toString)
-         result <- sendEmail(email)
-       } yield result
-     }
+      logger.debug(s"Fetching template with UUID ${sentEmail.emailUuid} to send email with UUID ${sentEmail.id}")
+      for {
+        email <- fetchDraftEmailData(sentEmail.emailUuid.toString)
+        parametersWithRecipientName = buildEmailTemplateParameters(sentEmail, email.templateData.parameters)
+        emailRequestData = SendEmailRequest(sentEmail.recipient, email.templateData.templateId, parametersWithRecipientName,
+          email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
+        result <- sendEmail(emailRequestData)
+      } yield result
+    }
 
      def fetchDraftEmailData(emailUUID: String): Future[DraftEmail] = {
        for {
@@ -65,22 +67,24 @@ class SentEmailService@Inject()(emailConnector: GatekeeperEmailConnector,
        sentEmailRepository.findNextEmailToSend
      }
 
-     def sendEmail (email: DraftEmail): Future[Int] = {
-       logger.info(s"Retrieved email wth id ${email.emailUUID}")
-       val emailRequestedData = SendEmailRequest(email.recipients, email.templateData.templateId, email.templateData.parameters,
-         email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
-       logger.info(s"Sending email ${emailRequestedData}")
-       emailConnector.sendEmail(emailRequestedData)
+     def sendEmail (emailRequest: SendEmailRequest): Future[Int] = {
+       emailConnector.sendEmail(emailRequest)
      }
 
      findNextEmail.flatMap {
       case None => Future.successful(0)
-      case Some(sentEmail:SentEmail) => findAndSendNextEmail(sentEmail).map {status =>
-        status match {
+      case Some(sentEmail:SentEmail) => findAndSendNextEmail(sentEmail).map {
           case ACCEPTED => updateEmailStatusToSent(sentEmail)
           case _ => handleEmailSendingFailed(sentEmail)
         }
       }  map (_ => 1)
-    }
+  }
+
+  private def buildEmailTemplateParameters(sentEmail: SentEmail, parameters: Map[String, String]):Map[String, String] = {
+    parameters +
+      ("firstName" -> s"${sentEmail.firstName}") +
+      ("lastName" -> s"${sentEmail.lastName}") +
+      ("showFooter" -> "true") +
+      ("showHmrcBanner" -> "true")
   }
 }

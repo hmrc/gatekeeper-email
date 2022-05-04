@@ -79,7 +79,7 @@ class DraftEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
       for (emailData <- findByEmailUUID(UUID.fromString(emailUUID))) yield {
         emailData match {
           case Some(email) => email
-          case None         => throw new Exception(s"Email with id ${emailUUID} not found")
+          case None        => throw new Exception(s"Email with id ${emailUUID} not found")
         }
       }
     }

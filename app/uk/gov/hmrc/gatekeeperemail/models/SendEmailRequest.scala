@@ -20,7 +20,14 @@ import play.api.libs.json.{Json, OFormat}
 
 case class EmailData(emailSubject: String, emailBody: String)
 
-case class SendEmailRequest(to: List[User],
+case class SendEmailRequest(to: String,
+                            templateId: String,
+                            parameters: Map[String, String],
+                            force: Boolean = false,
+                            auditData: Map[String, String] = Map.empty,
+                            eventUrl: Option[String] = None)
+
+case class DraftEmailRequest(to: List[User],
                             templateId: String,
                             parameters: Map[String, String],
                             force: Boolean = false,
