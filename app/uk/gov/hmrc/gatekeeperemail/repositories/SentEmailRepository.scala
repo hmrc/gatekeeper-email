@@ -16,21 +16,22 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
+import java.time.LocalDateTime.now
 import java.util.concurrent.TimeUnit
-import com.mongodb.ReadPreference.primaryPreferred
 
+import com.mongodb.ReadPreference.primaryPreferred
+import com.mongodb.client.model.ReturnDocument
 import javax.inject.{Inject, Singleton}
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
-import org.joda.time.{DateTime, Days}
+import org.mongodb.scala.model._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.Updates.set
-import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, InsertManyOptions, ReturnDocument}
-import org.mongodb.scala.result.{InsertManyResult, InsertOneResult}
-import org.mongodb.scala.{MongoClient, MongoCollection, SingleObservable}
-import play.api.{Logger, Logging}
+import org.mongodb.scala.model.Updates.{combine, set}
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.result._
+import org.mongodb.scala.{MongoClient, MongoCollection}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailStatus, SentEmail}
+import uk.gov.hmrc.gatekeeperemail.models.{EmailStatus, SentEmail}
 import uk.gov.hmrc.gatekeeperemail.repositories.SentEmailFormatter.sentEmailFormatter
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
@@ -44,12 +45,17 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
     mongoComponent = mongoComponent,
     collectionName = "sentemails",
     domainFormat = sentEmailFormatter,
-    indexes = Seq(IndexModel(ascending("status", "failedCount", "createdAt"),
-      IndexOptions()
-        .name("emailNextSendIndex")
-        .background(true))
-    )) {
-  val logger: Logger = Logger(getClass.getName)
+    indexes = Seq(IndexModel(ascending("status",  "createdAt"),
+        IndexOptions()
+          .name("emailNextSendIndex")
+          .background(true)
+          .unique(false)),
+      IndexModel(ascending("ttlIndex"),
+        IndexOptions()
+          .name("ttlIndex")
+          .expireAfter(appConfig.emailRecordRetentionPeriod * 365, TimeUnit.DAYS)
+          .background(true)
+          .unique(false)))) {
 
   override lazy val collection: MongoCollection[SentEmail] =
     CollectionFactory
@@ -58,26 +64,55 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
         fromRegistries(
           fromCodecs(
             Codecs.playFormatCodec(domainFormat),
-            Codecs.playFormatCodec(EmailMongoFormatter.emailTemplateDataFormatter),
-            Codecs.playFormatCodec(EmailMongoFormatter.cargoFormat),
-            Codecs.playFormatCodec(EmailMongoFormatter.attachmentDetailsFormat),
-            Codecs.playFormatCodec(EmailMongoFormatter.attachmentDetailsWithObjectStoreFormat),
-            Codecs.playFormatCodec(EmailMongoFormatter.emailFormatter)
+            Codecs.playFormatCodec(EmailStatus.jsonFormat)
           ),
           MongoClient.DEFAULT_CODEC_REGISTRY
         )
       )
 
-  def findNextEmail(email: SentEmail): Future[SentEmail] = {
+  def findNextEmailToSend: Future[Option[SentEmail]] = {
     collection.withReadPreference(primaryPreferred)
-      .find(filter = and(equal("status", EmailStatus.INPROGRESS),
-        and(lt("failedCount", 3))))
+    .find(filter = equal("status", Codecs.toBson(EmailStatus.PENDING)))
       .sort(ascending("createdAt"))
-      .map(_.asInstanceOf[SentEmail]).head()
+      .limit(1)
+      .toFuture()
+      .map(_.headOption)
+  }
+
+  def incrementFailedCount(email: SentEmail): Future[SentEmail] = {
+    collection.withReadPreference(primaryPreferred)
+      .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
+        update = combine(
+          set("failedCount", email.failedCount + 1),
+          set("updatedAt", Codecs.toBson(now()))
+        ),
+        options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
+      .head()
   }
 
   def persist(entity: List[SentEmail]): Future[InsertManyResult] = {
     collection.insertMany(entity).toFuture()
   }
 
+  def markFailed(email: SentEmail): Future[SentEmail] = {
+    collection.withReadPreference(primaryPreferred)
+      .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
+        update = combine(
+          set("status", Codecs.toBson(EmailStatus.FAILED)),
+          set("updatedAt", Codecs.toBson(now()))
+        ),
+        options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
+      .head()
+  }
+
+  def markSent(email: SentEmail): Future[SentEmail] = {
+    collection.withReadPreference(primaryPreferred)
+      .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
+        update = combine(
+          set("status", Codecs.toBson(EmailStatus.SENT)),
+          set("updatedAt", Codecs.toBson(now()))
+        ),
+        options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
+      .head()
+  }
 }

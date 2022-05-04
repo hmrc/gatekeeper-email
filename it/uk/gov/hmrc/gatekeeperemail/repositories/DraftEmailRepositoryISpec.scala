@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import akka.stream.Materializer
-import org.joda.time.DateTime
+import java.time.LocalDateTime
+import java.util.UUID
+
 import org.mongodb.scala.ReadPreference.primaryPreferred
+import org.mongodb.scala.bson.BsonBoolean
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -26,18 +28,15 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.gatekeeperemail.models.{Email, EmailTemplateData, User}
+import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, EmailTemplateData, User}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
-import org.joda.time.DateTimeZone.UTC
-import org.mongodb.scala.bson.BsonBoolean
 
-class EmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[Email] with
+class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[DraftEmail] with
   Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
-  val serviceRepo = repository.asInstanceOf[EmailRepository]
+  val serviceRepo = repository.asInstanceOf[DraftEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
-  implicit val materialiser: Materializer = app.injector.instanceOf[Materializer]
 
   override def beforeEach(): Unit = {
     prepareDatabase()
@@ -49,16 +48,19 @@ class EmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[E
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override protected def repository: PlayMongoRepository[Email] = app.injector.instanceOf[EmailRepository]
+  override protected def repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
 
-  "persist" should {
+  trait Setup {
     val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
     val users = List(User("example@example.com", "first name", "last name", true),
       User("example2@example2.com", "first name2", "last name2", true))
-    val email = Email("emailId-123", templateData, "DL Team", users, None, "markdownEmailBody", "This is test email",
-      "test subject", "test status", "composedBy", Some("approvedBy"), DateTime.now(UTC))
+    val email = DraftEmail(UUID.randomUUID.toString(), templateData, "DL Team", users, None, "markdownEmailBody", "This is test email",
+      "test subject", EmailStatus.FAILED, "composedBy", Some("approvedBy"), LocalDateTime.now())
 
-    "insert an Email message when it does not exist" in {
+  }
+  "persist" should {
+
+    "insert an Email message when it does not exist" in new Setup{
       await(serviceRepo.persist(email))
 
       val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred).find().toFuture())
@@ -67,12 +69,37 @@ class EmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[E
       fetchedRecords.head shouldEqual email
     }
 
-    "create index on emailUUID" in {
+    "create index on emailUUID" in new Setup {
       await(serviceRepo.persist(email))
 
       val Some(globalIdIndex) = await(serviceRepo.collection.listIndexes().toFuture()).find(i => i.get("name").get.asString().getValue == "emailUUIDIndex")
       globalIdIndex.get("unique") shouldBe Some(BsonBoolean(value=true))
       globalIdIndex.get("background").get shouldBe BsonBoolean(true)
+    }
+
+    "create TTL index on createDateTime" in new Setup {
+      await(serviceRepo.persist(email))
+
+      val Some(globalIdIndex) = await(serviceRepo.collection.listIndexes().toFuture()).find(i => i.get("name").get.asString().getValue == "ttlIndex")
+      globalIdIndex.get("unique") shouldBe None
+      globalIdIndex.get("background").get shouldBe BsonBoolean(true)
+    }
+  }
+
+  "getEmailData" should {
+    "find email data when it exists" in new Setup{
+      await(serviceRepo.persist(email))
+
+      val emailData = await(serviceRepo.getEmailData(email.emailUUID))
+
+      emailData shouldBe email
+    }
+
+    "throw exception when email data cannot be found" in new Setup{
+      val exception:Exception = intercept[Exception] {
+        await(serviceRepo.getEmailData(email.emailUUID))
+      }
+      exception.getMessage shouldBe s"Email with id ${email.emailUUID} not found"
     }
   }
 }

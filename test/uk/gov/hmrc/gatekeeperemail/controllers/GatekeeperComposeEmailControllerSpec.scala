@@ -18,17 +18,16 @@ package uk.gov.hmrc.gatekeeperemail.controllers
 
 import java.io.IOException
 import java.time.Instant
+import java.time.LocalDateTime.now
 import java.util.UUID
+
 import akka.stream.Materializer
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor, urlEqualTo}
 import com.github.tomakehurst.wiremock.http.Fault
 import com.mongodb.client.result.{InsertManyResult, InsertOneResult}
-import org.bson.BsonValue
-import org.joda.time.DateTime
-import org.joda.time.DateTimeZone.UTC
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.{ArgumentCaptor, ArgumentMatchersSugar, MockitoSugar}
-import org.mongodb.scala.bson.{BsonNumber, BsonValue}
+import org.mongodb.scala.bson.BsonNumber
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -41,14 +40,14 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.{EmailRepository, SentEmailRepository}
-import uk.gov.hmrc.gatekeeperemail.services.{EmailService, ObjectStoreService}
+import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
+import uk.gov.hmrc.gatekeeperemail.services.{DraftEmailService, ObjectStoreService}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
 
-import collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.{failed, successful}
@@ -69,9 +68,9 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
   val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
   val users = List(User("example@example.com", "first name", "last name", true),
     User("example2@example2.com", "first name2", "last name2", true))
-  val email = Email("emailId-123", templateData, "DL Team",
+  val email = DraftEmail("emailId-123", templateData, "DL Team",
     users, None, "markdownEmailBody", "This is test email",
-    "test subject", "SENT", "composedBy", Some("approvedBy"), DateTime.now(UTC))
+    "test subject", SENT, "composedBy", Some("approvedBy"), now())
   val emailUUIDToAttachFile = "emailUUID111"
   val cargo = Some(UploadCargo(emailUUIDToAttachFile))
   val uploadedFile123: UploadedFileWithObjectStore = UploadedFileWithObjectStore("Ref123", "/gatekeeper/downloadUrl/123", "", "", "file123", "",
@@ -85,12 +84,12 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
     .withBody(Json.toJson(uploadedFileMetadata))
   private val fakeRequest = FakeRequest("POST", "/gatekeeper-email").withBody(Json.toJson(emailRequest))
   private val fakeSaveEmailRequest = FakeRequest("POST", "/gatekeeper-email/save-email").withBody(Json.toJson(emailRequest))
-  private val fakeDeleteEmailRequest = FakeRequest("POST", "/gatekeeper-email/delete-email").withBody()
+  private val fakeDeleteEmailRequest = FakeRequest("POST", "/gatekeeper-email/delete-email")
   private val fakeWrongSaveEmailRequest = FakeRequest("POST", "/gatekeeper-email/save-email").withBody(Json.toJson(emailBody))
   lazy implicit val mat: Materializer = app.materializer
   private val playBodyParsers: PlayBodyParsers = app.injector.instanceOf[PlayBodyParsers]
   val mockEmailConnector: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
-  val mockEmailRepository: EmailRepository = mock[EmailRepository]
+  val mockDraftEmailRepository: DraftEmailRepository = mock[DraftEmailRepository]
   val mockSentEmailRepository: SentEmailRepository = mock[SentEmailRepository]
   val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
 
@@ -110,8 +109,8 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
     val objectStoreClient = mock[PlayObjectStoreClient]
     val mockAppConfig = mock[AppConfig]
 
-    val emailService = new EmailService(emailRendererConnectorMock, mockEmailRepository, mockSentEmailRepository)
-    val mockEmailService = mock[EmailService]
+    val emailService = new DraftEmailService(emailRendererConnectorMock, mockDraftEmailRepository, mockSentEmailRepository)
+    val mockEmailService = mock[DraftEmailService]
     val mockObjectStoreService = mock[ObjectStoreService]
     val controller = new GatekeeperComposeEmailController(Helpers.stubMessagesControllerComponents(),
       playBodyParsers, emailService, mockObjectStoreService)
@@ -123,23 +122,24 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
         "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
 
     val emailUUID: String = UUID.randomUUID().toString
-    val dummyEmailData = Email("", EmailTemplateData("", Map(), false, Map(), None), "", List(),
-      None, "", "", "", "", "", None, DateTime.now)
-    when(mockEmailRepository.getEmailData(emailUUID)).thenReturn(Future(dummyEmailData))
+    val dummyEmailData = DraftEmail("", EmailTemplateData("", Map(), false, Map(), None), "", List(),
+      None, "", "", "", SENT, "", None, now)
+    when(mockDraftEmailRepository.getEmailData(emailUUID)).thenReturn(Future(dummyEmailData))
   }
 
   "POST /gatekeeper-email/send-email" should {
     "return 200" in new Setup {
-      when(mockEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      when(mockEmailRepository.updateEmailSentStatus(*)).thenReturn(successful(email))
+      when(mockEmailConnector.sendEmail(*)).thenReturn(successful(Status.OK))
+      when(mockDraftEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+      when(mockDraftEmailRepository.updateEmailSentStatus(*)).thenReturn(successful(email))
       when(mockSentEmailRepository.persist(*)).thenReturn(Future(InsertManyResult.unacknowledged()))
       val result = controller.sendEmail(emailUUID)(fakeRequest)
       status(result) shouldBe Status.OK
     }
 
     "return 500" in new Setup {
-      when(mockEmailRepository.getEmailData(*)).thenReturn(failed(new IOException("can not connect to email service")))
-      when(mockEmailRepository.updateEmailSentStatus(*)).thenReturn(failed(new IOException("can not connect to mongo service")))
+      when(mockDraftEmailRepository.getEmailData(*)).thenReturn(failed(new IOException("can not connect to email service")))
+      when(mockDraftEmailRepository.updateEmailSentStatus(*)).thenReturn(failed(new IOException("can not connect to mongo service")))
       when(mockSentEmailRepository.persist(*)).thenReturn(failed(new IOException("can not connect to mongo service")))
       val result = controller.sendEmail(emailUUID)(fakeRequest)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR

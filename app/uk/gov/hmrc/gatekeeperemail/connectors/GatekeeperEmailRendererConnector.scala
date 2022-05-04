@@ -19,7 +19,7 @@ package uk.gov.hmrc.gatekeeperemail.connectors
 import play.api.Logging
 import play.api.http.HeaderNames.CONTENT_TYPE
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.{RenderResult, SendEmailRequest, TemplateRenderRequest, TemplateRenderResult}
+import uk.gov.hmrc.gatekeeperemail.models.{DraftEmailRequest, RenderResult, SendEmailRequest, TemplateRenderRequest, TemplateRenderResult}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpClient, HttpErrorFunctions, NotFoundException, UpstreamErrorResponse}
 import javax.inject.{Inject, Singleton}
@@ -33,7 +33,7 @@ class GatekeeperEmailRendererConnector @Inject()(httpClient: HttpClient, config:
 
   lazy val serviceUrl = config.emailRendererBaseUrl
 
-  def getTemplatedEmail(emailRequest: SendEmailRequest): Future[Either[UpstreamErrorResponse, RenderResult]] = {
+  def getTemplatedEmail(emailRequest: DraftEmailRequest): Future[Either[UpstreamErrorResponse, RenderResult]] = {
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(CONTENT_TYPE -> "application/json")
 
     httpClient.POST[TemplateRenderRequest, TemplateRenderResult](

@@ -16,10 +16,8 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import org.joda.time.DateTime
-import play.api.libs.json.{Format, Json, OFormat}
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 
 private[repositories] object SentEmailFormatter {
 

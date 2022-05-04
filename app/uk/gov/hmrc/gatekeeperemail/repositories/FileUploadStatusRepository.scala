@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
+import java.time.LocalDateTime
+
 import javax.inject.{Inject, Singleton}
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
-import org.joda.time.DateTime
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.set
@@ -28,16 +29,15 @@ import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadStatus}
 import uk.gov.hmrc.gatekeeperemail.repositories.FileUploadMongoFormatter._
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class UploadInfo(reference : Reference, status : UploadStatus, createDateTime: DateTime)
+case class UploadInfo(reference : Reference, status : UploadStatus, createDateTime: LocalDateTime)
 
 object UploadInfo {
   val status = "status"
-  implicit val dateFormation : Format[DateTime] = MongoJodaFormats.dateTimeFormat
+//  implicit val dateFormation : Format[DateTime] = MongoJodaFormats.dateTimeFormat
   implicit val format: Format[UploadInfo] =  Json.format[UploadInfo]
 }
 
@@ -65,8 +65,8 @@ class FileUploadStatusRepository @Inject()(mongoComponent: MongoComponent)
             Codecs.playFormatCodec(initiateFormat),
             Codecs.playFormatCodec(failedFormat),
             Codecs.playFormatCodec(uploadedSuccessfullyFormat),
-              Codecs.playFormatCodec(uploadedFailedFormat),
-              Codecs.playFormatCodec(dateFormation)
+            Codecs.playFormatCodec(uploadedFailedFormat),
+            Codecs.playFormatCodec(dateFormatter)
           ),
           MongoClient.DEFAULT_CODEC_REGISTRY
         )
