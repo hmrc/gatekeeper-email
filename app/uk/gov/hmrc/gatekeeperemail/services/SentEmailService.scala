@@ -48,11 +48,13 @@ class SentEmailService@Inject()(emailConnector: GatekeeperEmailConnector,
 
      def findAndSendNextEmail(sentEmail: SentEmail): Future[Int] = {
       logger.debug(s"Fetching template with UUID ${sentEmail.emailUuid} to send email with UUID ${sentEmail.id}")
-      for {
+       val tags = Map[String, String]("regime" -> "API Platform", "template" -> "gatekeeper", "messageId" -> sentEmail.emailUuid.toString)
+
+       for {
         email <- fetchDraftEmailData(sentEmail.emailUuid.toString)
         parametersWithRecipientName = buildEmailTemplateParameters(sentEmail, email.templateData.parameters)
         emailRequestData = SendEmailRequest(sentEmail.recipient, email.templateData.templateId, parametersWithRecipientName,
-          email.templateData.force, email.templateData.auditData, email.templateData.eventUrl)
+          email.templateData.force, email.templateData.auditData, email.templateData.eventUrl, tags)
         result <- sendEmail(emailRequestData)
       } yield result
     }

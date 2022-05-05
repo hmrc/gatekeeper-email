@@ -116,7 +116,8 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfter
               |  "firstName" : "first name2"
               |  },
               |  "force": false,
-              |  "auditData": {}
+              |  "auditData": {},
+              |  "tags" : { }
               |}""".stripMargin))
       )
     }

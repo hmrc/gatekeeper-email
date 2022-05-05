@@ -38,7 +38,8 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
   }
 
  private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Int] = {
-    val oneEmailRequest = OneEmailRequest(List(request.to), request.templateId, request.parameters, request.force, request.auditData, request.eventUrl)
+    val oneEmailRequest = OneEmailRequest(List(request.to), request.templateId, request.parameters, request.force,
+      request.auditData, request.eventUrl, request.tags)
     http.POST[OneEmailRequest, HttpResponse](s"$serviceUrl/developer/email",
       oneEmailRequest) map { response => response.status }
   }
