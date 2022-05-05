@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 import java.util.UUID
 
 import org.mongodb.scala.ReadPreference.primaryPreferred
@@ -28,7 +28,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, EmailTemplateData, User}
+import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, EmailTemplateData, UploadedFileWithObjectStore, User}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
@@ -55,7 +55,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
     val users = List(User("example@example.com", "first name", "last name", true),
       User("example2@example2.com", "first name2", "last name2", true))
     val email = DraftEmail(UUID.randomUUID.toString(), templateData, "DL Team", users, None, "markdownEmailBody", "This is test email",
-      "test subject", EmailStatus.FAILED, "composedBy", Some("approvedBy"), LocalDateTime.now())
+      "test subject", EmailStatus.FAILED, "composedBy", Some("approvedBy"), now())
 
   }
   "persist" should {
@@ -87,7 +87,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
   }
 
   "getEmailData" should {
-    "find email data when it exists" in new Setup{
+    "find email data when it exists" in new Setup {
       await(serviceRepo.persist(email))
 
       val emailData = await(serviceRepo.getEmailData(email.emailUUID))
@@ -95,11 +95,84 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
       emailData shouldBe email
     }
 
-    "throw exception when email data cannot be found" in new Setup{
+    "throw exception when email data cannot be found" in new Setup {
       val exception:Exception = intercept[Exception] {
         await(serviceRepo.getEmailData(email.emailUUID))
       }
       exception.getMessage shouldBe s"Email with id ${email.emailUUID} not found"
+    }
+  }
+
+  "updateEmailSentStatus" should {
+    "find email data when it exists" in new Setup {
+      await(serviceRepo.persist(email))
+
+      val emailData = await(serviceRepo.updateEmailSentStatus(email.emailUUID))
+
+      emailData.status shouldBe EmailStatus.SENT
+    }
+
+    "return null when email data cannot be found. Is this what we want to happen?" in new Setup {
+      val emailData = await(serviceRepo.updateEmailSentStatus(email.emailUUID))
+      emailData shouldBe null
+    }
+  }
+
+  "updateEmail" should {
+    "successfully update a previously persisted email" in new Setup {
+      val templateDataForUpdate = EmailTemplateData("updatedTemplateId", Map(), true, Map(), Some("url"))
+      val objectStoreFile = UploadedFileWithObjectStore("upscanReference", "downloadUrl", "uploadTimestamp", "checksum",
+        "fileName", "fileMimeType", 1024, None, None, None, None, None)
+      val emailUpdate = DraftEmail(emailUUID = email.emailUUID, templateData = templateDataForUpdate, recipientTitle = "Mrs", recipients = List(
+        User("update.email@test.com", "upFirst", "upLast", true)), attachmentDetails = Some(List(objectStoreFile)), markdownEmailBody = "some markdown body",
+        htmlEmailBody = "some html body", subject = "what's it for", status = EmailStatus.PENDING, composedBy = "Ludwig van Beethoven", approvedBy = Some("John Doe"), createDateTime = now())
+      await(serviceRepo.persist(email))
+
+      val updatedEmail = await(serviceRepo.updateEmail(emailUpdate))
+
+      updatedEmail.templateData shouldBe emailUpdate.templateData
+      updatedEmail.htmlEmailBody shouldBe emailUpdate.htmlEmailBody
+      updatedEmail.markdownEmailBody shouldBe emailUpdate.markdownEmailBody
+      updatedEmail.subject shouldBe emailUpdate.subject
+      updatedEmail.attachmentDetails shouldBe emailUpdate.attachmentDetails
+      updatedEmail.emailUUID shouldBe email.emailUUID
+      updatedEmail.recipientTitle shouldBe email.recipientTitle
+      updatedEmail.recipients shouldBe email.recipients
+      updatedEmail.status shouldBe email.status
+      updatedEmail.composedBy shouldBe email.composedBy
+      updatedEmail.approvedBy shouldBe email.approvedBy
+    }
+
+    "return null when email cannot be found" in new Setup {
+        val templateDataForUpdate = EmailTemplateData("updatedTemplateId", Map(), true, Map(), Some("url"))
+        val objectStoreFile = UploadedFileWithObjectStore("upscanReference", "downloadUrl", "uploadTimestamp", "checksum",
+          "fileName", "fileMimeType", 1024, None, None, None, None, None)
+        val emailUpdate = DraftEmail(emailUUID = UUID.randomUUID().toString, templateData = templateDataForUpdate, recipientTitle = "Mrs", recipients = List(
+          User("update.email@test.com", "upFirst", "upLast", true)), attachmentDetails = Some(List(objectStoreFile)), markdownEmailBody = "some markdown body",
+          htmlEmailBody = "some html body", subject = "what's it for", status = EmailStatus.PENDING, composedBy = "Ludwig van Beethoven", approvedBy = Some("John Doe"), createDateTime = now())
+
+        val updatedEmail = await(serviceRepo.updateEmail(emailUpdate))
+
+        updatedEmail shouldBe null
+
+      }
+  }
+
+  "deleteByEmailUUID" should {
+    "successfully delete a document when it exists" in new Setup {
+      await(serviceRepo.persist(email))
+
+      val result = await(serviceRepo.deleteByEmailUUID(email.emailUUID))
+
+      result shouldBe true
+    }
+
+    "fail to delete a document when it doesn't exist" in new Setup {
+      await(serviceRepo.persist(email))
+
+      val result = await(serviceRepo.deleteByEmailUUID("email.emailUUID"))
+
+      result shouldBe false
     }
   }
 }

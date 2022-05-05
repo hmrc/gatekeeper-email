@@ -76,8 +76,8 @@ class SentEmailService@Inject()(emailConnector: GatekeeperEmailConnector,
       case Some(sentEmail:SentEmail) => findAndSendNextEmail(sentEmail).map {
           case ACCEPTED => updateEmailStatusToSent(sentEmail)
           case _ => handleEmailSendingFailed(sentEmail)
-        }
-      }  map (_ => 1)
+        } map (_ => 1)
+      }
   }
 
   private def buildEmailTemplateParameters(sentEmail: SentEmail, parameters: Map[String, String]):Map[String, String] = {
