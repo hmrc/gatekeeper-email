@@ -123,9 +123,10 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfter
     }
 
     "fail to send gatekeeper email" in new Setup with FailingHttp {
-      intercept[IOException] {
-        await(underTest.sendEmail(emailRequest))
-      }
+
+      val result: Int = await(underTest.sendEmail(emailRequest))
+
+      result shouldBe 500
     }
   }
 }
