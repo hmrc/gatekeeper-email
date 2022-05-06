@@ -23,7 +23,7 @@ import javax.inject.{Inject, Singleton}
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.Updates.set
+import org.mongodb.scala.model.Updates.{combine, set}
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
 import org.mongodb.scala.result.InsertOneResult
 import org.mongodb.scala.{MongoClient, MongoCollection}
@@ -76,6 +76,9 @@ class DraftEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
     }
 
     def getEmailData(emailUUID: String): Future[DraftEmail] = {
+      def findByEmailUUID(emailUUID: UUID): Future[Option[DraftEmail]] = {
+        collection.find(equal("emailUUID", Codecs.toBson(emailUUID))).headOption()
+      }
       for (emailData <- findByEmailUUID(UUID.fromString(emailUUID))) yield {
         emailData match {
           case Some(email) => email
@@ -87,38 +90,23 @@ class DraftEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
   def updateEmailSentStatus(emailUUID: String): Future[DraftEmail] = {
     collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(emailUUID)),
       update = set("status", Codecs.toBson(EmailStatus.SENT)),
-      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+      options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
     ).map(_.asInstanceOf[DraftEmail]).head()
   }
 
   def updateEmail(email: DraftEmail): Future[DraftEmail] = {
     collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(email.emailUUID)),
-      update = set("templateData", email.templateData),
-      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-    ).map(_.asInstanceOf[DraftEmail]).head()
-    collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(email.emailUUID)),
-      update = set("htmlEmailBody", email.htmlEmailBody),
-      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-    ).map(_.asInstanceOf[DraftEmail]).head()
-    collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(email.emailUUID)),
-      update = set("markdownEmailBody", email.markdownEmailBody),
-      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-    ).map(_.asInstanceOf[DraftEmail]).head()
-    collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(email.emailUUID)),
-      update = set("subject", email.subject),
-      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-    ).map(_.asInstanceOf[DraftEmail]).head()
-    collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(email.emailUUID)),
-      update = set("attachmentDetails", email.attachmentDetails.getOrElse(Seq.empty)),
-      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+      update = combine(
+        set("templateData", email.templateData),
+        set("htmlEmailBody", email.htmlEmailBody),
+        set("markdownEmailBody", email.markdownEmailBody),
+        set("subject", email.subject),
+        set("attachmentDetails", email.attachmentDetails.getOrElse(Seq.empty))),
+      options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
     ).map(_.asInstanceOf[DraftEmail]).head()
   }
 
-  def findByEmailUUID(emailUUID: UUID): Future[Option[DraftEmail]] = {
-    collection.find(equal("emailUUID", Codecs.toBson(emailUUID))).headOption()
-  }
-
-  def deleteByemailUUID(emailUUID: String)(implicit ec: ExecutionContext): Future[Boolean] = {
-    collection.deleteOne(equal("emailUUID", Codecs.toBson(emailUUID))).head().map(x => x.wasAcknowledged())
+  def deleteByEmailUUID(emailUUID: String): Future[Boolean] = {
+    collection.deleteOne(equal("emailUUID", Codecs.toBson(emailUUID))).head().map(x => x.getDeletedCount() == 1)
   }
 }

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.gatekeeperemail.models
 
 import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 import java.util.UUID
 
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
@@ -56,8 +57,8 @@ object DraftEmail {
   implicit val emailFormatter: OFormat[DraftEmail] = Json.format[DraftEmail]
 }
 
-case class SentEmail(id: UUID = UUID.randomUUID(), createdAt: LocalDateTime, updatedAt: LocalDateTime, emailUuid: UUID, firstName: String,
-                     lastName: String, recipient: String, status: EmailStatus, failedCount: Int)
+case class SentEmail(updatedAt: LocalDateTime, emailUuid: UUID, firstName: String,
+                     lastName: String, recipient: String, status: EmailStatus, failedCount: Int, id: UUID = UUID.randomUUID(), createdAt: LocalDateTime = now())
 
 sealed abstract class EmailStatus(override val entryName: String)  extends EnumEntry
 

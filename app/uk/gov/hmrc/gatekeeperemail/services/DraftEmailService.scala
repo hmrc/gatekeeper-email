@@ -76,7 +76,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
   }
 
   def deleteEmail(emailUUID: String): Future[Boolean] = {
-    draftEmailRepository.deleteByemailUUID(emailUUID)
+    draftEmailRepository.deleteByEmailUUID(emailUUID)
   }
 
   def updateEmail(emailRequest: EmailRequest, emailUUID: String): Future[DraftEmail] = {
