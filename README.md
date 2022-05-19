@@ -5,11 +5,15 @@ This service is a back end for the Gatekeeper Compose Email front end. It takes 
  appropriate renderer to convert it to HTML then deals with sending it to the recipient(s) using the HMRC email service.
 It stores every email sent through it.
 
+It uses the [Digital Contact teams's email service](https://github.com/hmrc/email) to perform the actual sending of the email. 
+This is done gradually by means of a scheduled job which runs once per second (configurable). The scheduled job, when it runs, attempts to send
+one email to the email service. If the response from the email service is not 202 then the email a further attempt will be 
+made the next time the scheduled job runs. If the email service continues to respond with a non-202 status a further 2 times 
+then the email will be marked as failed and not retried.  
+
 ## Testing locally
-It can be tested with a curl command like:
-```
-curl localhost:9620/gatekeeper-email -d '{"to":["sdgdf@sdfds"], "templateId":"gatekeeper", "emailData":{"emailRecipient":"to","emailSubject":"subject","emailBody":"body"},"force":false,"auditData":{"foo":"bar"},"eventUrl":"sdfas"}' -H "Content-Type:application/json"
-```
+It can most easily be tested by going through Gatekeeper to send an email, either to a selected group of recipients or to all
+Developer Hub users.
 
 ### License
 
