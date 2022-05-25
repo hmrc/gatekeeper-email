@@ -22,8 +22,6 @@ import java.time.LocalDateTime.now
 import java.util.UUID
 
 import akka.stream.Materializer
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor, urlEqualTo}
-import com.github.tomakehurst.wiremock.http.Fault
 import com.mongodb.client.result.{InsertManyResult, InsertOneResult}
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.{ArgumentCaptor, ArgumentMatchersSugar, MockitoSugar}
@@ -38,12 +36,16 @@ import play.api.libs.json.Json
 import play.api.mvc.PlayBodyParsers
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
+import play.api.test.Helpers.stubMessagesControllerComponents
+import uk.gov.hmrc.apiplatform.modules.stride.config.StrideAuthConfig
+import uk.gov.hmrc.apiplatform.modules.stride.connectors.AuthConnector
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
 import uk.gov.hmrc.gatekeeperemail.services.{DraftEmailService, ObjectStoreService}
+import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
@@ -88,6 +90,13 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
   private val fakeWrongSaveEmailRequest = FakeRequest("POST", "/gatekeeper-email/save-email").withBody(Json.toJson(emailBody))
   lazy implicit val mat: Materializer = app.materializer
   private val playBodyParsers: PlayBodyParsers = app.injector.instanceOf[PlayBodyParsers]
+  private val requestConverter: RequestConverter = app.injector.instanceOf[RequestConverter]
+//  val config = app.injector.instanceOf[GatekeeperConfig]
+  val strideAuthConfig = app.injector.instanceOf[StrideAuthConfig]
+  val forbiddenHandler = app.injector.instanceOf[ForbiddenHandler]
+//  val mcc = app.injector.instanceOf[ForbiddenHandler]
+//  val errorHandler = app.injector.instanceOf[ErrorHandler]
+
   val mockEmailConnector: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
   val mockDraftEmailRepository: DraftEmailRepository = mock[DraftEmailRepository]
   val mockSentEmailRepository: SentEmailRepository = mock[SentEmailRepository]
@@ -97,10 +106,10 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
     .configure("metrics.enabled" -> false, "auditing.enabled" -> false)
     .build()
 
-  trait FailingHttp {
+  /*trait FailingHttp {
     self: Setup =>
     stubFor(post(urlEqualTo(emailServicePath)).willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)))
-  }
+  }*/
 
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -112,9 +121,10 @@ class GatekeeperComposeEmailControllerSpec extends AnyWordSpec with Matchers wit
     val emailService = new DraftEmailService(emailRendererConnectorMock, mockDraftEmailRepository, mockSentEmailRepository)
     val mockEmailService = mock[DraftEmailService]
     val mockObjectStoreService = mock[ObjectStoreService]
-    val controller = new GatekeeperComposeEmailController(Helpers.stubMessagesControllerComponents(),
+    val mockAuthConnector = mock[AuthConnector]
+    val controller = new GatekeeperComposeEmailController(strideAuthConfig, mockAuthConnector, forbiddenHandler, requestConverter, stubMessagesControllerComponents(),
       playBodyParsers, emailService, mockObjectStoreService)
-    val controller2 = new GatekeeperComposeEmailController(Helpers.stubMessagesControllerComponents(),
+    val controller2 = new GatekeeperComposeEmailController(strideAuthConfig, mockAuthConnector, forbiddenHandler, requestConverter, stubMessagesControllerComponents(),
       playBodyParsers, mockEmailService, mockObjectStoreService)
 
     when(emailRendererConnectorMock.getTemplatedEmail(*))

@@ -22,21 +22,27 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
+import uk.gov.hmrc.apiplatform.modules.stride.config.StrideAuthConfig
+import uk.gov.hmrc.apiplatform.modules.stride.connectors.AuthConnector
 import uk.gov.hmrc.gatekeeperemail.models.{UploadedFileWithObjectStore, _}
 import uk.gov.hmrc.gatekeeperemail.services.{DraftEmailService, ObjectStoreService}
+import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
 import uk.gov.hmrc.objectstore.client.ObjectSummaryWithMd5
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class GatekeeperComposeEmailController @Inject()(
-                                                  mcc: MessagesControllerComponents,
-                                                  playBodyParsers: PlayBodyParsers,
-                                                  emailService: DraftEmailService,
-                                                  objectStoreService: ObjectStoreService
-  )(implicit val ec: ExecutionContext)
-    extends BackendController(mcc) with WithJson {
+    strideAuthConfig: StrideAuthConfig,
+    authConnector: AuthConnector,
+    forbiddenHandler: ForbiddenHandler,
+    requestConverter: RequestConverter,
+    mcc: MessagesControllerComponents,
+    playBodyParsers: PlayBodyParsers,
+    emailService: DraftEmailService,
+    objectStoreService: ObjectStoreService
+  )(implicit override val ec: ExecutionContext)
+    extends GatekeeperBaseController(strideAuthConfig, authConnector, forbiddenHandler, requestConverter, mcc) with WithJson {
 
   def saveEmail(emailUUID: String): Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
     withJson[EmailRequest] { receiveEmailRequest =>
