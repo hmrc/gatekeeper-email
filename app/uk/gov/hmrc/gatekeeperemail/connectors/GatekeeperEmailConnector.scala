@@ -33,7 +33,7 @@ import scala.util.control.NonFatal
 class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnectorConfig)(implicit ec: ExecutionContext)
   extends HttpErrorFunctions with Logging {
 
-  lazy val serviceUrl = config.emailBaseUrl
+  private lazy val serviceUrl = config.emailBaseUrl
 
  def sendEmail(emailRequest: SendEmailRequest): Future[Int] = {
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(CONTENT_TYPE -> "application/json")

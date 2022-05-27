@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Reads}
 import play.api.mvc.Results.BadRequest
 import play.api.mvc.{Request, Result}
@@ -25,8 +25,7 @@ import uk.gov.hmrc.gatekeeperemail.models.{ErrorCode, JsErrorResponse}
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-trait WithJson {
-  val logger: Logger = Logger(getClass.getName)
+trait WithJson extends Logging {
 
   def withJson[T](f: (T) => Future[Result])(implicit request: Request[JsValue], m: Manifest[T], reads: Reads[T]): Future[Result] =
   Try(request.body.validate[T]) match {

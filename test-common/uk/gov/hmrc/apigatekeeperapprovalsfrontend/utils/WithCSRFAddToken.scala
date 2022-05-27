@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.gatekeeperemail.controllers
+package uk.gov.hmrc.apigatekeeperapprovalsfrontend.utils
 
-import javax.inject.Singleton
-import play.api.mvc.Results.Forbidden
-import play.api.mvc.{Request, Result}
-import play.mvc.BodyParser.Json
-import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.test.{CSRFTokenHelper, FakeRequest}
+import play.filters.csrf.CSRFAddToken
 
-@Singleton
-class HandleForbidden extends ForbiddenHandler {
+trait WithCSRFAddToken {
+  self: GuiceOneAppPerSuite =>
 
-  override def handle(msgResult: Request[_]): Result = Forbidden("forbidden")
+  val addToken = app.injector.instanceOf[CSRFAddToken]
+
+  implicit class CSRFRequest[T](request: FakeRequest[T]) {
+    def withCSRFToken: FakeRequest[T] = CSRFTokenHelper.addCSRFToken(request).asInstanceOf[FakeRequest[T]]
+  }
 }

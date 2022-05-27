@@ -24,6 +24,7 @@ import play.api.libs.json.Json.toJson
 import play.api.mvc._
 import uk.gov.hmrc.apiplatform.modules.stride.config.StrideAuthConfig
 import uk.gov.hmrc.apiplatform.modules.stride.connectors.AuthConnector
+import uk.gov.hmrc.gatekeeperemail.controllers.actions.AuthorisationActions
 import uk.gov.hmrc.gatekeeperemail.models.{UploadedFileWithObjectStore, _}
 import uk.gov.hmrc.gatekeeperemail.services.{DraftEmailService, ObjectStoreService}
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
@@ -42,9 +43,9 @@ class GatekeeperComposeEmailController @Inject()(
     emailService: DraftEmailService,
     objectStoreService: ObjectStoreService
   )(implicit override val ec: ExecutionContext)
-    extends GatekeeperBaseController(strideAuthConfig, authConnector, forbiddenHandler, requestConverter, mcc) with WithJson {
+    extends GatekeeperBaseController(strideAuthConfig, authConnector, forbiddenHandler, requestConverter, mcc) with WithJson with AuthorisationActions {
 
-  def saveEmail(emailUUID: String): Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
+  def saveEmail(emailUUID: String): Action[JsValue] = loggedIn() { implicit request =>
     withJson[EmailRequest] { receiveEmailRequest =>
       emailService.persistEmail(receiveEmailRequest, emailUUID)
         .map(email => Ok(toJson(outgoingEmail(email))))
@@ -52,7 +53,7 @@ class GatekeeperComposeEmailController @Inject()(
     }
   }
 
-  def updateEmail(emailUUID: String): Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
+  def updateEmail(emailUUID: String): Action[JsValue] =  loggedIn() { implicit request: Request[JsValue] =>
     withJson[EmailRequest] { receiveEmailRequest =>
       emailService.updateEmail(receiveEmailRequest, emailUUID)
         .map(email => Ok(toJson(outgoingEmail(email))))
