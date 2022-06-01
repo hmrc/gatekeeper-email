@@ -28,7 +28,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.OK
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.{DraftEmailRequest, SendEmailRequest, User}
+import uk.gov.hmrc.gatekeeperemail.models.{DraftEmailRequest, User}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import scala.concurrent.ExecutionContext.Implicits.global

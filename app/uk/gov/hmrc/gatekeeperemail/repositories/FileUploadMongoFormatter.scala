@@ -22,6 +22,8 @@ import play.api.libs.json._
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
+import scala.util.control.NonFatal
+
 object FileUploadMongoFormatter {
   implicit val bsonFormat: OFormat[UploadId] = Json.format[UploadId]
 
@@ -63,6 +65,7 @@ object FileUploadMongoFormatter {
         case Some(JsString("Failed")) => JsSuccess(Failed)
         case Some(JsString("UploadedSuccessfully")) => Json.fromJson[UploadedSuccessfully](jsObject)(uploadedSuccessfullyFormat)
         case Some(JsString("UploadedFailedWithErrors")) => Json.fromJson[UploadedFailedWithErrors](jsObject)(uploadedFailedFormat)
+        case _ => JsError("Unable to decode UploadStatus type")
       }
     }
   }

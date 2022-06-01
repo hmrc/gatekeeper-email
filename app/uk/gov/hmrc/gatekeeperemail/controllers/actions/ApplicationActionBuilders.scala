@@ -23,15 +23,32 @@ import uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperBaseController
 
 import scala.concurrent.Future
 
-trait AuthorisationActions  {
+trait AuthorisationActions {
+ /* def self: GatekeeperBaseController
+  def loggedIn()(block: Request[T] => Future[Result]): Action[T]
+}
+
+trait JsonAuthorisationActions extends AuthorisationActions[JsValue] {*/
   self: GatekeeperBaseController =>
 
-  private def strideRole(minimumGatekeeperRole: GatekeeperRole.GatekeeperRole)(block: MessagesRequest[JsValue] => Future[Result]): Action[JsValue] =
+  private def strideRoleJsValue(minimumGatekeeperRole: GatekeeperRole.GatekeeperRole)(block: MessagesRequest[JsValue] => Future[Result]): Action[JsValue] =
     Action.async(parse.json) { implicit request =>
        gatekeeperRoleActionRefiner(minimumGatekeeperRole)
       .invokeBlock(requestConverter.convert(request), block)
     }
 
-  def loggedIn()(block: Request[JsValue] => Future[Result]): Action[JsValue] =
-    strideRole(GatekeeperRole.USER)(block)
+  def loggedInJsValue()(block: Request[JsValue] => Future[Result]): Action[JsValue] = strideRoleJsValue(GatekeeperRole.USER)(block)
+//}
+
+//trait AnyContentAuthorisationActions extends AuthorisationActions[AnyContent] {
+//  self: GatekeeperBaseController =>
+
+
+ private def strideRoleAnyContent(minimumGatekeeperRole: GatekeeperRole.GatekeeperRole)(block: MessagesRequest[AnyContent] => Future[Result]): Action[AnyContent] =
+    Action.async { implicit request =>
+       gatekeeperRoleActionRefiner(minimumGatekeeperRole)
+      .invokeBlock(requestConverter.convert(request), block)
+    }
+
+  def loggedInAnyContent()(block: Request[AnyContent] => Future[Result]): Action[AnyContent] = strideRoleAnyContent(GatekeeperRole.USER)(block)
 }

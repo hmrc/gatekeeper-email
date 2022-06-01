@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.gatekeeperemail.connectors
 
-import java.io.IOException
-
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.{verify => wireMockVerify, _}

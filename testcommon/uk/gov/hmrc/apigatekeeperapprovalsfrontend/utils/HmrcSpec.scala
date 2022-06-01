@@ -26,4 +26,4 @@ import org.scalatest.matchers.should.Matchers
 
 abstract class HmrcSpec extends AnyWordSpec with Matchers with OptionValues with EitherValues with WsScalaTestClient with MockitoSugar with ArgumentMatchersSugar
 
-abstract class AsyncHmrcSpec extends HmrcSpec with DefaultAwaitTimeout with FutureAwaits {}
+abstract class AsyncHmrcSpec extends HmrcSpec with DefaultAwaitTimeout with FutureAwaits

@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.gatekeeperemail.connectors
 
+import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import play.api.http.HeaderNames.CONTENT_TYPE
+import play.mvc.Http.Status
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.{DraftEmailRequest, RenderResult, SendEmailRequest, TemplateRenderRequest, TemplateRenderResult}
+import uk.gov.hmrc.gatekeeperemail.models.{DraftEmailRequest, RenderResult, TemplateRenderRequest, TemplateRenderResult}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, HttpClient, HttpErrorFunctions, NotFoundException, UpstreamErrorResponse}
-import javax.inject.{Inject, Singleton}
-import play.mvc.Http.Status
 
 import scala.concurrent.{ExecutionContext, Future}
 

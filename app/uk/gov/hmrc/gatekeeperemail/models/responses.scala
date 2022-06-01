@@ -24,6 +24,7 @@ object ErrorCode extends Enumeration {
   val ACCEPT_HEADER_INVALID = Value("ACCEPT_HEADER_INVALID")
   val INVALID_REQUEST_PAYLOAD = Value("INVALID_REQUEST_PAYLOAD")
   val INTERNAL_SERVER_ERROR = Value("INTERNAL_SERVER_ERROR")
+  val BAD_REQUEST = Value("BAD_REQUEST")
 }
 
 object JsErrorResponse {

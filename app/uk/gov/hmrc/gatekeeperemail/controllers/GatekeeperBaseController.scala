@@ -32,6 +32,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
+import play.api.Logging
 import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.apiplatform.modules.stride.config.StrideAuthConfig
 import uk.gov.hmrc.apiplatform.modules.stride.connectors.AuthConnector
@@ -46,6 +47,6 @@ abstract class GatekeeperBaseController(
    val forbiddenHandler: ForbiddenHandler,
    val requestConverter: RequestConverter,
    mcc: MessagesControllerComponents
- )(implicit val ec: ExecutionContext) extends BackendController(mcc) with GatekeeperAuthorisationActions {
+ )(implicit val ec: ExecutionContext) extends BackendController(mcc) with GatekeeperAuthorisationActions with Logging {
 }
 

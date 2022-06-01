@@ -3,7 +3,7 @@ import scoverage.ScoverageKeys._
 object ScoverageSettings {
   def apply() = Seq(
     // Semicolon-separated list of regexs matching classes to exclude
-    coverageMinimum := 92.00,
+    coverageMinimumStmtTotal := 77.00,
     coverageFailOnMinimum := true,
     coverageHighlighting := true,
     coverageExcludedPackages :=  Seq(
@@ -19,7 +19,7 @@ object ScoverageSettings {
       "router\\.*",
       "com.kenshoo.play.metrics.*",
       ".*definition.*",
-      "uk.gov.hmrc.BuildInfo.*",
+      "uk.gov.hmrc.BuildInfo.*"
     ).mkString(";")
   )
 }
