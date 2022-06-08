@@ -91,6 +91,11 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with Before
     stubFor(post(urlEqualTo(emailRendererPath)).willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)))
   }
 
+ trait NotFoundHttp {
+    self: Setup =>
+    stubFor(post(urlEqualTo(emailRendererPath)).willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)))
+  }
+
   "emailRendererConnector" should {
     val parameters: Map[String, String] = Map("subject" -> s"$subject", "fromAddress" -> s"$fromAddress",
       "body" -> s"$emailBody", "service" -> s"gatekeeper")

@@ -3,16 +3,16 @@ import scoverage.ScoverageKeys._
 object ScoverageSettings {
   def apply() = Seq(
     // Semicolon-separated list of regexs matching classes to exclude
-    coverageMinimumStmtTotal := 77.00,
+    coverageMinimumStmtTotal := 88,
+    coverageMinimumBranchTotal := 85,
     coverageFailOnMinimum := true,
     coverageHighlighting := true,
     coverageExcludedPackages :=  Seq(
       "<empty>",
       "prod.*",
-      "testOnly-DoNotUseInAppConf.*",
+      "testOnlyDoNotUseInAppConf.*",
       "app.*",
       "app",
-      "*app.*",
       ".*Reverse.*",
       "Reverse.*",
       "Routes.*",

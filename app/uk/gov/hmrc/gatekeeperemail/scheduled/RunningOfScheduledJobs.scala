@@ -24,34 +24,35 @@ import play.api.{Application, Logging}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-
 /**
- * All implementing classes must be singletons - see https://www.playframework.com/documentation/2.6.x/ScalaDependencyInjection#Stopping/cleaning-up
+ * All implementing classes must be singletons - see https://www.playframework.com/documentation/2.8.x/ScalaDependencyInjection#Stopping/cleaning-up
  */
 trait RunningOfScheduledJobs extends Logging {
 
   implicit val ec: ExecutionContext
   lazy val scheduler: akka.actor.Scheduler = application.actorSystem.scheduler
   val application: Application
-  val scheduledJobs: Seq[LockedScheduledJob]
+  val scheduledJobs: Seq[ScheduledJob]
 
   val applicationLifecycle: ApplicationLifecycle
 
   private[scheduled] var cancellables: Seq[Cancellable] = Seq.empty
 
   cancellables = scheduledJobs.map { job =>
-    scheduler.scheduleWithFixedDelay(job.initialDelay, job.interval)(() => {
-      val stopWatch = new StopWatch
-      stopWatch.start()
-      logger.debug(s"Executing job ${job.name}")
+    scheduler.scheduleWithFixedDelay(job.initialDelay, job.interval)(new Runnable()  {
+      override def run(): Unit = {
+        val stopWatch = new StopWatch
+        stopWatch.start()
+        logger.debug(s"Executing job ${job.name}")
 
-      job.execute.onComplete {
-        case Success(job.Result(message)) =>
-          stopWatch.stop()
-          logger.debug(s"Completed job ${job.name} in $stopWatch: $message")
-        case Failure(throwable) =>
-          stopWatch.stop()
-          logger.error(s"Exception running job ${job.name} after $stopWatch", throwable)
+        job.execute.onComplete {
+          case Success(job.Result(message)) =>
+            stopWatch.stop()
+            logger.debug(s"Completed job ${job.name} in $stopWatch: $message")
+          case Failure(throwable) =>
+            stopWatch.stop()
+            logger.error(s"Exception running job ${job.name} after $stopWatch", throwable)
+        }
       }
     })
   }
