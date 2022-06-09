@@ -53,9 +53,12 @@ trait AuthConnectorMockModule extends MockitoSugar with ArgumentMatchersSugar {
       def thenReturnSessionRecordNotFound() = {
         when(aMock.authorise(*, any[Retrieval[~[Option[Name], Enrolments]]])(*, *)).thenReturn(failed(new SessionRecordNotFound))
       }
-//    def thenReturnNothing() = {
-//        when(aMock.authorise(*, any[Retrieval[~[Option[Name], Enrolments]]])(*, *)).thenReturn(successful(Option.empty[Name] ~ Enrolments))
-//      }
+
+      def thenReturnNoName() = {
+      val response = successful(new ~(Option.empty[Name], Enrolments(Set(Enrolment(adminRole)))))
+
+      when(aMock.authorise(*, any[Retrieval[~[Option[Name], Enrolments]]])(*, *)).thenReturn(response)
+      }
     }
   }
 

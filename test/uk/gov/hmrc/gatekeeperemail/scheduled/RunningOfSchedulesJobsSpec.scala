@@ -28,6 +28,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import play.api.Application
 import play.api.inject.ApplicationLifecycle
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Deadline, DurationInt, FiniteDuration}
@@ -45,7 +46,6 @@ class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFut
       .build()
 
   trait Setup extends TestCase {
-//    val mockJob = mock[EmailSendingJob]
       val subject = new RunningOfScheduledJobs {
       override implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
       override val application: Application = fakeApplication
@@ -53,33 +53,6 @@ class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFut
       override val applicationLifecycle: ApplicationLifecycle = fakeApplication.injector.instanceOf[ApplicationLifecycle]
     }
   }
-
-  /*"Running scheduled jobs" should {
-    "be successful" in new TestCase {
-      var capturedRunnable: Runnable = _
-
-      val scheduledJob = new TestScheduledJob {
-        override def name: String = "testJob"
-      }
-      val subject = new RunningOfScheduledJobs {
-        override implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
-        override val application: Application = fakeApplication
-        override val scheduledJobs: Seq[ScheduledJob] = Seq(scheduledJob)
-        override val applicationLifecycle: ApplicationLifecycle = fakeApplication.injector.instanceOf[ApplicationLifecycle]
-        override lazy val scheduler: akka.actor.Scheduler = new StubbedScheduler {
-          override def scheduleWithFixedDelay(initialDelay: FiniteDuration, interval: FiniteDuration)(runnable: Runnable)
-                                             (implicit executor: ExecutionContext): Cancellable = {
-            capturedRunnable = runnable
-            new Cancellable {
-              override def cancel(): Boolean = true
-              override def isCancelled: Boolean = false
-            }
-          }
-        }
-      }
-      scheduledJob.execute
-    }
-  }*/
 
   "When stopping the app, the scheduled job runner" should {
     "cancel all of the scheduled jobs" in new TestCase {
@@ -93,7 +66,7 @@ class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFut
       runner.cancellables = Seq(new StubCancellable, new StubCancellable)
 
       every(runner.cancellables) should not be 'cancelled
-      testApp.stop()
+      await(testApp.stop())
       every(runner.cancellables) should be ('cancelled)
     }
 

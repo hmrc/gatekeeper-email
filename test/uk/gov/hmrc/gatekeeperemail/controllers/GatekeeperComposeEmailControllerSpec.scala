@@ -135,7 +135,14 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
       AuthConnectorMock.Authorise.thenReturnSessionRecordNotFound()
       val result = controller.saveEmail(emailUUID)(fakeSaveEmailRequest)
       status(result) shouldBe Status.SEE_OTHER
-    }}
+    }
+
+    "return 403 for enrolments but no Name" in new Setup {
+      AuthConnectorMock.Authorise.thenReturnNoName()
+      val result = controller.saveEmail(emailUUID)(fakeSaveEmailRequest)
+      status(result) shouldBe Status.FORBIDDEN
+    }
+  }
 
   "POST /gatekeeper-email/save-email" should {
     "return 200 when email is saved successfully" in new Setup {
@@ -161,6 +168,12 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
 
     "return 403 for InsufficientEnrolments" in new Setup {
       AuthConnectorMock.Authorise.thenReturnInsufficientEnrolments()
+      val result = controller.saveEmail(emailUUID)(fakeSaveEmailRequest)
+      status(result) shouldBe Status.FORBIDDEN
+    }
+
+    "return 403 for enrolments but no Name" in new Setup {
+      AuthConnectorMock.Authorise.thenReturnNoName()
       val result = controller.saveEmail(emailUUID)(fakeSaveEmailRequest)
       status(result) shouldBe Status.FORBIDDEN
     }
@@ -214,6 +227,18 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
       AuthConnectorMock.Authorise.thenReturnInsufficientEnrolments()
       val result = controller.updateEmail(emailUUID)(fakeSaveEmailRequest)
       status(result) shouldBe Status.FORBIDDEN
+    }
+
+    "return 403 for enrolments but no Name" in new Setup {
+      AuthConnectorMock.Authorise.thenReturnNoName()
+      val result = controller.saveEmail(emailUUID)(fakeSaveEmailRequest)
+      status(result) shouldBe Status.FORBIDDEN
+    }
+
+    "return 303 redirect to authorise when no session exists" in new Setup {
+      AuthConnectorMock.Authorise.thenReturnSessionRecordNotFound()
+      val result = controller.saveEmail(emailUUID)(fakeSaveEmailRequest)
+      status(result) shouldBe Status.SEE_OTHER
     }
   }
 

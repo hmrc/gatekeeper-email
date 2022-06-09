@@ -26,6 +26,7 @@ import com.github.tomakehurst.wiremock.http.Fault
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.OK
+import play.mvc.Http.Status
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.models.{DraftEmailRequest, User}
@@ -93,7 +94,7 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with Before
 
  trait NotFoundHttp {
     self: Setup =>
-    stubFor(post(urlEqualTo(emailRendererPath)).willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)))
+    stubFor(post(urlEqualTo(emailRendererPath)).willReturn(aResponse().withStatus(Status.NOT_FOUND)))
   }
 
   "emailRendererConnector" should {
@@ -123,6 +124,13 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with Before
       intercept[IOException] {
         await(underTest.getTemplatedEmail(emailRequest))
       }
+    }
+
+    "fail to get email template as the renderer returns 404" in new Setup with NotFoundHttp {
+      val result = await(underTest.getTemplatedEmail(emailRequest))
+
+      result.left.get.getMessage shouldBe "POST of 'http://localhost:22222/templates/gatekeeper' returned 404. Response body: ''"
+      result.left.get.statusCode shouldBe Status.NOT_FOUND
     }
   }
 }
