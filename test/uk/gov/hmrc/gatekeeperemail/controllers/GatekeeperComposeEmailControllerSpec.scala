@@ -31,7 +31,6 @@ import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{stubMessagesControllerComponents, _}
-import uk.gov.hmrc.apiplatform.modules.stride.config.StrideAuthConfig
 import uk.gov.hmrc.apiplatform.modules.stride.connectors.AuthConnector
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
@@ -50,22 +49,22 @@ import scala.concurrent.Future.{failed, successful}
 
 class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with Matchers with MockitoSugar with ArgumentMatchersSugar {
 
-  val subject = "Email subject"
-  val emailBody = "Body to be used in the email template"
-  val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
-  val users = List(User("example@example.com", "first name", "last name", true),
+  private val subject = "Email subject"
+  private val emailBody = "Body to be used in the email template"
+  private val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
+  private val users = List(User("example@example.com", "first name", "last name", true),
     User("example2@example2.com", "first name2", "last name2", true))
   private val draftEmail = DraftEmail("emailId-123", templateData, "DL Team",
     users, None, "markdownEmailBody", "This is test email",
     "test subject", SENT, "composedBy", Some("approvedBy"), now())
-  val emailUUIDToAttachFile = "emailUUID111"
+  private val emailUUIDToAttachFile = "emailUUID111"
   private val cargo = Some(UploadCargo(emailUUIDToAttachFile))
-  val uploadedFile123: UploadedFileWithObjectStore = UploadedFileWithObjectStore("Ref123", "/gatekeeper/downloadUrl/123", "", "", "file123", "",
-    1024, cargo, None, None, Some(s"/gatekeeper/$emailUUIDToAttachFile"), None)
-  val uploadedFileSeq = Seq(uploadedFile123)
+  private val uploadedFile123: UploadedFileWithObjectStore = UploadedFileWithObjectStore("Ref123", "/gatekeeper/downloadUrl/123", "", "", "file123", "",
+      1024, cargo, None, None, Some(s"/gatekeeper/$emailUUIDToAttachFile"), None)
+  private val uploadedFileSeq = Seq(uploadedFile123)
   private val uploadedFileMetadata: UploadedFileMetadata = UploadedFileMetadata(Nonce.random, uploadedFileSeq, cargo)
   private val emailRequest = EmailRequest(users, "gatekeeper", EmailData(subject, emailBody))
-  val wrongEmailRequest = EmailRequest(users, "gatekeeper", EmailData(subject, emailBody))
+  private val wrongEmailRequest = EmailRequest(users, "gatekeeper", EmailData(subject, emailBody))
   private val fakeRequestToUpdateFiles = FakeRequest("POST", "/gatekeeperemail/updatefiles")
     .withHeaders("Content-Type" -> "application/json")
     .withBody(Json.toJson(uploadedFileMetadata))
@@ -74,13 +73,11 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
   private val fakeRequestWithBodyNotValidJson = FakeRequest("POST", "/gatekeeper-email/save-email").withBody(Json.toJson(emailBody))
   lazy implicit val mat: Materializer = app.materializer
   private val requestConverter: RequestConverter = app.injector.instanceOf[RequestConverter]
-  val strideAuthConfig = app.injector.instanceOf[StrideAuthConfig]
   private val forbiddenHandler = app.injector.instanceOf[ForbiddenHandler]
-
-  val mockEmailConnector: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
-  val mockDraftEmailRepository: DraftEmailRepository = mock[DraftEmailRepository]
-  val mockSentEmailRepository: SentEmailRepository = mock[SentEmailRepository]
-  val mockEmailRendererConnector: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
+  private val mockEmailConnector: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
+  private val mockDraftEmailRepository: DraftEmailRepository = mock[DraftEmailRepository]
+  private val mockSentEmailRepository: SentEmailRepository = mock[SentEmailRepository]
+  private val mockEmailRendererConnector: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
 
   trait Setup extends AbstractSetup {
     implicit val hc: HeaderCarrier = HeaderCarrier()

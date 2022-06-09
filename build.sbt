@@ -80,12 +80,3 @@ def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
       )
     )
   }
-
-/*coverageExcludedPackages := Seq(
-  "<empty>",
-  "com.kenshoo.play.metrics",
-  ".*definition.*",
-  "prod",
-  "testOnlyDoNotUseInAppConf",
-  "uk.gov.hmrc.BuildInfo"
-).mkString(";")*/

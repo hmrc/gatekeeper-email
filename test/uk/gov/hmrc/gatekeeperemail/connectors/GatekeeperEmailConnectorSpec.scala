@@ -80,11 +80,11 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfter
     stubFor(post(urlEqualTo(emailServicePath)).willReturn(aResponse().withStatus(OK)))
   }
 
-  trait FailingHttp {
+  trait FailWithConnectionResetHttp {
       self: Setup =>
     stubFor(post(urlEqualTo(emailServicePath)).willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)))
   }
-  
+
   "emailConnector" should {
     val parameters: Map[String, String] = Map( "showFooter" -> "true",
       "showHmrcBanner" -> "true", "subject" -> s"$subject", "fromAddress" -> s"$fromAddress",
@@ -120,7 +120,7 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfter
       )
     }
 
-    "fail to send gatekeeper email" in new Setup with FailingHttp {
+    "fail to send email due to connection reset" in new Setup with FailWithConnectionResetHttp {
 
       val result: Int = await(underTest.sendEmail(emailRequest))
 

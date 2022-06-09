@@ -133,31 +133,3 @@ class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFut
   }
 
 }
- /* trait TestCase {
-    class StubbedScheduler extends akka.actor.Scheduler {
-      override def scheduleWithFixedDelay(initialDelay: FiniteDuration, delay: FiniteDuration)(runnable: Runnable)(
-        implicit executor: ExecutionContext): Cancellable = new Cancellable {
-        override def cancel(): Boolean = true
-        override def isCancelled: Boolean = false
-      }
-      def maxFrequency: Double  = 1
-      def scheduleOnce(delay: FiniteDuration, runnable: Runnable)(implicit executor: ExecutionContext): Cancellable = new Cancellable {
-        override def cancel(): Boolean = true
-        override def isCancelled: Boolean = false
-      }
-
-      override def schedule(initialDelay: FiniteDuration, interval: FiniteDuration, runnable: Runnable)(implicit executor: ExecutionContext) = ???
-    }
-
-    class TestScheduledJob extends LockedScheduledJob {
-      override def name: String = "TestScheduledJob"
-
-      override def initialDelay: FiniteDuration = 2.seconds
-
-      override def interval: FiniteDuration = 5.seconds
-
-      override def executeInLock(implicit ec: ExecutionContext): Future[Result] = Future.successful(Result("OK"))
-
-      override val lockService: LockService = mock[LockService]
-    }
-  }}*/

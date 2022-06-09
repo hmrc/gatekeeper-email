@@ -23,6 +23,5 @@ import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
 
 @Singleton
 class HandleForbidden extends ForbiddenHandler {
-
   override def handle(msgResult: Request[_]): Result = Forbidden("forbidden")
 }
