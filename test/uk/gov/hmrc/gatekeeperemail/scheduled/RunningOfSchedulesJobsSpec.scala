@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
-import akka.actor.{Cancellable, Scheduler}
+import akka.actor.Cancellable
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually.eventually
@@ -30,7 +30,6 @@ import play.api.inject.ApplicationLifecycle
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Deadline, DurationInt, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
 

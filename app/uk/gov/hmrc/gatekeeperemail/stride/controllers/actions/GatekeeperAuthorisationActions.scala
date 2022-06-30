@@ -17,16 +17,15 @@
 package uk.gov.hmrc.gatekeeperemail.stride.controllers.actions
 
 import play.api.mvc._
-import uk.gov.hmrc.apiplatform.modules.stride.config.StrideAuthConfig
-import uk.gov.hmrc.apiplatform.modules.stride.connectors.AuthConnector
-import uk.gov.hmrc.apiplatform.modules.stride.controllers.models.LoggedInRequest
-import uk.gov.hmrc.apiplatform.modules.stride.domain.models.GatekeeperRole
-import uk.gov.hmrc.apiplatform.modules.stride.domain.models.GatekeeperRole.GatekeeperRole
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.gatekeeperemail.controllers.RequestConverter
+import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig
+import uk.gov.hmrc.gatekeeperemail.stride.controllers.models.LoggedInRequest
+import uk.gov.hmrc.gatekeeperemail.stride.domain.models.GatekeeperRole
+import uk.gov.hmrc.gatekeeperemail.stride.domain.models.GatekeeperRole.GatekeeperRole
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -54,9 +53,9 @@ trait GatekeeperAuthorisationActions {
       def refine[A](msgRequest: MessagesRequest[A]): Future[Either[Result, LoggedInRequest[A]]] = {
         val successUrl = s"${strideAuthConfig.successUrlBase}${msgRequest.uri}"
 
-        lazy val loginRedirect = 
+        lazy val loginRedirect =
           Redirect(
-            strideAuthConfig.strideLoginUrl, 
+            strideAuthConfig.strideLoginUrl,
             Map("successURL" -> Seq(successUrl), "origin" -> Seq(strideAuthConfig.origin))
           )
 

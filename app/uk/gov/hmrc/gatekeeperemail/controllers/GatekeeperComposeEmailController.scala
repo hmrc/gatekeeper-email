@@ -22,11 +22,11 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
-import uk.gov.hmrc.apiplatform.modules.stride.config.StrideAuthConfig
-import uk.gov.hmrc.apiplatform.modules.stride.connectors.AuthConnector
 import uk.gov.hmrc.gatekeeperemail.controllers.actions.AuthorisationActions
 import uk.gov.hmrc.gatekeeperemail.models.{UploadedFileWithObjectStore, _}
 import uk.gov.hmrc.gatekeeperemail.services.{DraftEmailService, ObjectStoreService}
+import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig
+import uk.gov.hmrc.gatekeeperemail.stride.connectors.AuthConnector
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
 import uk.gov.hmrc.objectstore.client.ObjectSummaryWithMd5
 

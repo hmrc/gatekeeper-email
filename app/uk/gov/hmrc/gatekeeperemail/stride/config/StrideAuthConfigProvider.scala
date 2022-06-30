@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatform.modules.stride.config
+package uk.gov.hmrc.gatekeeperemail.stride.config
 
 import javax.inject.{Inject, Provider, Singleton}
 

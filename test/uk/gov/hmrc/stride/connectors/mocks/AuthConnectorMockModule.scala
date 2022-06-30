@@ -18,14 +18,15 @@ package uk.gov.hmrc.apiplatform.modules.stride.connectors.mocks
 
 import org.mockito.MockitoSugar
 import org.mockito.ArgumentMatchersSugar
-import uk.gov.hmrc.apiplatform.modules.stride.connectors.AuthConnector
 import uk.gov.hmrc.auth.core.{Enrolment, Enrolments}
-import uk.gov.hmrc.auth.core.retrieve.{~, Name, Retrieval}
+import uk.gov.hmrc.auth.core.retrieve.{Name, Retrieval, ~}
 
-import scala.concurrent.Future.{successful, failed}
+import scala.concurrent.Future.{failed, successful}
 import java.util.UUID
+
 import uk.gov.hmrc.auth.core.InsufficientEnrolments
 import uk.gov.hmrc.auth.core.SessionRecordNotFound
+import uk.gov.hmrc.gatekeeperemail.stride.connectors.AuthConnector
 
 trait AuthConnectorMockModule extends MockitoSugar with ArgumentMatchersSugar {
   trait BaseAuthConnectorMock {

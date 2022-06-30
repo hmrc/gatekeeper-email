@@ -18,8 +18,8 @@ package uk.gov.hmrc.gatekeeperemail.controllers.actions
 
 import play.api.libs.json.JsValue
 import play.api.mvc._
-import uk.gov.hmrc.apiplatform.modules.stride.domain.models.GatekeeperRole
 import uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperBaseController
+import uk.gov.hmrc.gatekeeperemail.stride.domain.models.GatekeeperRole
 
 import scala.concurrent.Future
 

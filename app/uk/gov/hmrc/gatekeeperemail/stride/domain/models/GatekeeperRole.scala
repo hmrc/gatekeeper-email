@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatform.modules.stride.domain.models
+package uk.gov.hmrc.gatekeeperemail.stride.domain.models
 
 object GatekeeperRole extends Enumeration {
   type GatekeeperRole = Value
