@@ -46,20 +46,19 @@ class LockedScheduledJobSpec extends AnyWordSpec with Matchers with ScalaFutures
     val mockSentEmailSservice = mock[SentEmailService]
     val mockLockService = mock[LockService]
     val mockAppConfig = mock[AppConfig]
-  val subject = new EmailSendingJob(mockAppConfig, mockLockService, mockSentEmailSservice)
+    val subject = new EmailSendingJob(mockAppConfig, mockLockService, mockSentEmailSservice)
   }
 
   "ExclusiveScheduledJob" should {
 
     "back off when Mongo lock cannot be obtained" in new Setup {
       when(mockLockService.withLock(*)(*)).thenReturn(Future.successful(None))
-      when(mockSentEmailSservice.sendNextPendingEmail).thenReturn(Future(1))
+      when(mockSentEmailSservice.sendNextPendingEmail).thenReturn(Future(0))
 
       val result = await(subject.execute)
 
       result.message shouldBe "Job named EmailSendingJob cannot acquire Mongo lock, not running"
       verify(mockLockService).withLock(*)(*)
-      // should this call be being made?
       verify(mockSentEmailSservice).sendNextPendingEmail
     }
 
