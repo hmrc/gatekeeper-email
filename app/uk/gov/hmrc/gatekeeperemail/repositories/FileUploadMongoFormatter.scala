@@ -63,6 +63,7 @@ object FileUploadMongoFormatter {
         case Some(JsString("Failed")) => JsSuccess(Failed)
         case Some(JsString("UploadedSuccessfully")) => Json.fromJson[UploadedSuccessfully](jsObject)(uploadedSuccessfullyFormat)
         case Some(JsString("UploadedFailedWithErrors")) => Json.fromJson[UploadedFailedWithErrors](jsObject)(uploadedFailedFormat)
+        case _ => JsError("Unable to decode UploadStatus type")
       }
     }
   }

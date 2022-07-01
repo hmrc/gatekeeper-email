@@ -1,3 +1,2 @@
 #!/usr/bin/env bash
-sbt clean compile coverage test it:test coverageReport
-python dependencyReport.py gatekeeper-email
+sbt clean compile coverage test IntegrationTest/test coverageReport

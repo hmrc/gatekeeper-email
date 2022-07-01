@@ -16,29 +16,18 @@
 
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
-import uk.gov.hmrc.mongo.lock.LockService
-
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
-trait LockedScheduledJob extends ScheduledJob {
+trait ScheduledJob {
   def name: String
+  def execute(implicit ec: ExecutionContext): Future[Result]
+
+  case class Result(message: String)
+
+  def configKey: String = name
 
   def initialDelay: FiniteDuration
 
   def interval: FiniteDuration
-
-  def executeInLock(implicit ec: ExecutionContext): Future[this.Result]
-
-  val lockService: LockService
-
-  final def execute(implicit ec: ExecutionContext): Future[Result] =
-    lockService.withLock{
-      executeInLock
-    } map {
-      case Some(Result(msg)) => Result(s"Job named $name ran, and completed, with result $msg")
-      case None              => Result(s"Job named $name cannot acquire Mongo lock, not running")
-    }
-
 }
-

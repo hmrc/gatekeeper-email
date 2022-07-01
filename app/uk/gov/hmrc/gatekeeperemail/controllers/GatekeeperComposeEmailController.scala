@@ -22,39 +22,45 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
+import uk.gov.hmrc.gatekeeperemail.controllers.actions.AuthorisationActions
 import uk.gov.hmrc.gatekeeperemail.models.{UploadedFileWithObjectStore, _}
 import uk.gov.hmrc.gatekeeperemail.services.{DraftEmailService, ObjectStoreService}
+import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig
+import uk.gov.hmrc.gatekeeperemail.stride.connectors.AuthConnector
+import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
 import uk.gov.hmrc.objectstore.client.ObjectSummaryWithMd5
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class GatekeeperComposeEmailController @Inject()(
-                                                  mcc: MessagesControllerComponents,
-                                                  playBodyParsers: PlayBodyParsers,
-                                                  emailService: DraftEmailService,
-                                                  objectStoreService: ObjectStoreService
-  )(implicit val ec: ExecutionContext)
-    extends BackendController(mcc) with WithJson {
+    strideAuthConfig: StrideAuthConfig,
+    authConnector: AuthConnector,
+    forbiddenHandler: ForbiddenHandler,
+    requestConverter: RequestConverter,
+    mcc: MessagesControllerComponents,
+    emailService: DraftEmailService,
+    objectStoreService: ObjectStoreService
+  )(implicit override val ec: ExecutionContext)
+    extends GatekeeperBaseController(strideAuthConfig, authConnector, forbiddenHandler, requestConverter, mcc) with AuthorisationActions {
 
-  def saveEmail(emailUUID: String): Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
-    withJson[EmailRequest] { receiveEmailRequest =>
+  def saveEmail(emailUUID: String): Action[JsValue] = loggedInJsValue() { implicit request =>
+    withJsonBody[EmailRequest] { receiveEmailRequest =>
       emailService.persistEmail(receiveEmailRequest, emailUUID)
         .map(email => Ok(toJson(outgoingEmail(email))))
         .recover(recovery)
     }
   }
 
-  def updateEmail(emailUUID: String): Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
-    withJson[EmailRequest] { receiveEmailRequest =>
+  def updateEmail(emailUUID: String): Action[JsValue] = loggedInJsValue() { implicit request =>
+    withJsonBody[EmailRequest] { receiveEmailRequest =>
       emailService.updateEmail(receiveEmailRequest, emailUUID)
         .map(email => Ok(toJson(outgoingEmail(email))))
         .recover(recovery)
     }
   }
 
-  def updateFiles(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+  def updateFiles(): Action[JsValue] = loggedInJsValue() { implicit request =>
     withJsonBody[UploadedFileMetadata] { value: UploadedFileMetadata =>
       logger.info(s"******UPDATE FILES ******")
     val fetchEmail: Future[DraftEmail] = emailService.fetchEmail(emailUUID = value.cargo.get.emailUUID)
@@ -72,7 +78,7 @@ class GatekeeperComposeEmailController @Inject()(
     }.recover(recovery)
   }
 
-  def uploadFilesToObjectStoreAndUpdateEmailRecord(email: DraftEmail, filesToUploadInObjStore: Seq[UploadedFileWithObjectStore]) = {
+  private def uploadFilesToObjectStoreAndUpdateEmailRecord(email: DraftEmail, filesToUploadInObjStore: Seq[UploadedFileWithObjectStore]) = {
     var latestUploadedFiles: Seq[UploadedFileWithObjectStore] = Seq.empty[UploadedFileWithObjectStore]
     filesToUploadInObjStore.foreach(uploadedFile => {
       val objectSummary: Future[ObjectSummaryWithMd5] = objectStoreService.uploadToObjectStore(email.emailUUID, uploadedFile.downloadUrl, uploadedFile.fileName)
@@ -98,7 +104,7 @@ class GatekeeperComposeEmailController @Inject()(
     emailService.updateEmail(er, email.emailUUID)
   }
 
-  def deleteFilesFromObjectStoreAndUpdateEmailRecord(email: DraftEmail, filesToDeleteFromObjStore: Seq[UploadedFileWithObjectStore]) = {
+  private def deleteFilesFromObjectStoreAndUpdateEmailRecord(email: DraftEmail, filesToDeleteFromObjStore: Seq[UploadedFileWithObjectStore]) = {
     filesToDeleteFromObjStore.foreach(uploadedFile => {
         objectStoreService.deleteFromObjectStore(email.emailUUID, uploadedFile.fileName)
         val finalUploadedFiles = email.attachmentDetails match {
@@ -145,14 +151,14 @@ class GatekeeperComposeEmailController @Inject()(
     }
   }
 
-  def fetchEmail(emailUUID: String): Action[AnyContent] = Action.async { implicit request =>
+  def fetchEmail(emailUUID: String): Action[AnyContent] = loggedInAnyContent() { implicit request =>
       logger.info(s"In fetchEmail for $emailUUID")
       emailService.fetchEmail(emailUUID)
         .map(email => Ok(toJson(outgoingEmail(email))))
         .recover(recovery)
   }
 
-  def deleteEmail(emailUUID: String): Action[AnyContent] = Action.async { implicit request =>
+  def deleteEmail(emailUUID: String): Action[AnyContent] = loggedInAnyContent() { implicit request =>
     logger.info(s"In deleteEmail for $emailUUID")
     emailService.deleteEmail(emailUUID)
       .map(email =>
@@ -160,7 +166,7 @@ class GatekeeperComposeEmailController @Inject()(
       .recover(recovery)
   }
 
-  def sendEmail(emailUUID: String): Action[AnyContent] = Action.async{ implicit request =>
+  def sendEmail(emailUUID: String): Action[AnyContent] = loggedInAnyContent() { implicit request =>
     emailService.sendEmail(emailUUID)
       .map(email => Ok(toJson(outgoingEmail(email))))
       .recover(recovery)

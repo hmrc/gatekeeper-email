@@ -1,4 +1,4 @@
-import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, integrationTestSettings, scalaSettings, targetJvm}
+import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings, targetJvm}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import sbt.Keys.baseDirectory
 import sbt.Test
@@ -51,7 +51,7 @@ lazy val microservice = (project in file("."))
     IntegrationTest / unmanagedSourceDirectories += baseDirectory.value / "testcommon",
     IntegrationTest / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-eT"),
     IntegrationTest / testGrouping := oneForkedJvmPerTest(
-      (definedTests in IntegrationTest).value
+      (IntegrationTest / definedTests).value
     ),
     addTestReportOption(IntegrationTest, "int-test-reports")
   )
@@ -60,14 +60,14 @@ lazy val microservice = (project in file("."))
   .settings(
     ComponentTest / unmanagedSourceDirectories += baseDirectory.value / "component",
     ComponentTest / unmanagedSourceDirectories += baseDirectory.value / "testcommon",
-    ComponentTest / testGrouping := oneForkedJvmPerTest((definedTests in ComponentTest).value),
+    ComponentTest / testGrouping := oneForkedJvmPerTest((ComponentTest / definedTests).value),
   )
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
 
 
 lazy val playPublishingSettings: Seq[sbt.Setting[_]] = Seq(
-  publishArtifact in (Compile, packageDoc) := false,
-  publishArtifact in (Compile, packageSrc) := false
+  Compile / packageDoc / publishArtifact  := false,
+  Compile / packageSrc / publishArtifact  := false
 )
 
 def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
@@ -80,14 +80,3 @@ def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
       )
     )
   }
-
-coverageFailOnMinimum := true
-coverageMinimum := 76
-coverageExcludedPackages := Seq(
-  "<empty>",
-  "com.kenshoo.play.metrics",
-  ".*definition.*",
-  "prod",
-  "testOnlyDoNotUseInAppConf",
-  "uk.gov.hmrc.BuildInfo"
-).mkString(";")

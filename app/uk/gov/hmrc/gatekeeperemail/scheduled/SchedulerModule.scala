@@ -20,7 +20,6 @@ import com.google.inject.AbstractModule
 import javax.inject.{Inject, Provider, Singleton}
 import play.api.inject.{ApplicationLifecycle, Binding, Module}
 import play.api.{Application, Configuration, Environment}
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.mongo.lock.{LockService, MongoLockRepository}
 
 import scala.concurrent.ExecutionContext
@@ -35,10 +34,9 @@ class SchedulerModule extends AbstractModule {
 @Singleton
 class Scheduler @Inject()(override val applicationLifecycle: ApplicationLifecycle,
                           override val application: Application,
-                          emailSendingJob: EmailSendingJob,
-                          appConfig: AppConfig)
+                          emailSendingJob: EmailSendingJob)
                          (override implicit val ec: ExecutionContext) extends RunningOfScheduledJobs {
-  override lazy val scheduledJobs: Seq[LockedScheduledJob] = Seq(emailSendingJob)
+  override lazy val scheduledJobs: Seq[ScheduledJob] = Seq(emailSendingJob)
 }
 
 class SchedulerPlayModule extends Module {
@@ -47,11 +45,6 @@ class SchedulerPlayModule extends Module {
       bind[LockService].toProvider[LockServiceProvider]
     )
   }
-}
-
-@Singleton
-class LockClient @Inject()(mongoLockRepository: MongoLockRepository) {
-  val myLock = LockService(mongoLockRepository, lockId = "send-email-lock", ttl = 1.hour)
 }
 
 @Singleton

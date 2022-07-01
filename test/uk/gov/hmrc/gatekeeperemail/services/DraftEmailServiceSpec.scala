@@ -26,11 +26,13 @@ import org.mongodb.scala.bson.{BsonInt32, BsonNumber, BsonValue}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.http.Status
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailRendererConnector
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
+import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -56,9 +58,10 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
         "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
   }
 
-  "saveEmail" should {
+  "persistEmail" should {
     "save the email data into mongodb repo" in new Setup {
       when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+
       val emailRequest = EmailRequest(users, "gatekeeper",
         EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
@@ -75,6 +78,17 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       emailFromMongo.subject shouldBe "Test subject2"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
       emailFromMongo.templateData.templateId shouldBe "gatekeeper"
+    }
+
+    "throw exception when unable to reach the email renderer" in new Setup {
+      when(emailRendererConnectorMock.getTemplatedEmail(*)).thenReturn(successful(Left(UpstreamErrorResponse("error", Status.NOT_FOUND))))
+      when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+      val emailRequest = EmailRequest(users, "gatekeeper",
+        EmailData("Test subject2", "Dear Mr XYZ, This is test email"), false, Map())
+      val error: EmailRendererConnectionError = intercept[EmailRendererConnectionError] {
+        await(underTest.persistEmail(emailRequest, "emailUUID"))
+      }
+      error.getMessage shouldBe "Failed to connect to Email renderer service. error"
     }
   }
 

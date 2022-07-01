@@ -21,6 +21,7 @@ import java.util.UUID
 sealed trait UploadStatus
 case object InProgress extends UploadStatus
 case object Failed extends UploadStatus
+case object BadRequest extends UploadStatus
 case class UploadedSuccessfully(name: String, mimeType: String, downloadUrl: String, size: Option[Long], objectStoreUrl: String) extends UploadStatus
 case class UploadedFailedWithErrors(errorCode: String, errorMessage: String, errorRequestId: String, key: String) extends UploadStatus
 

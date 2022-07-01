@@ -1,12 +1,9 @@
-import play.core.PlayVersion
-import play.sbt.PlayImport._
-import sbt.Keys.libraryDependencies
 import sbt._
 
 object AppDependencies {
 
-  lazy val bootstrapPlayVersion = "5.23.0"
-  lazy val hmrcMongoVersion = "0.63.0"
+  lazy val bootstrapPlayVersion = "5.24.0"
+  lazy val hmrcMongoVersion = "0.66.0"
   lazy val akkaVersion = "2.6.19"
 
   def apply(): Seq[ModuleID] = compile ++ test
