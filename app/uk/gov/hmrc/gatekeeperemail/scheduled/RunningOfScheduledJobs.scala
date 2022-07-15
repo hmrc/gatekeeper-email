@@ -20,6 +20,7 @@ import akka.actor.Cancellable
 import org.apache.commons.lang3.time.StopWatch
 import play.api.inject.ApplicationLifecycle
 import play.api.{Application, Logging}
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}

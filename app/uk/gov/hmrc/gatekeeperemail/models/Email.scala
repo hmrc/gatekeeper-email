@@ -16,18 +16,13 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-import java.util.UUID
+import play.api.libs.json.Json
 
-sealed trait UploadStatus
-case object InProgress extends UploadStatus
-case object Failed extends UploadStatus
-case object BadRequest extends UploadStatus
-case class UploadedSuccessfully(name: String, mimeType: String, downloadUrl: String, size: Option[Long], objectStoreUrl: String) extends UploadStatus
-case class UploadedFailedWithErrors(errorCode: String, errorMessage: String, errorRequestId: String, key: String) extends UploadStatus
+object TopicOptionChoice extends Enumeration {
+  type TopicOptionChoice = Value
 
-case class UploadId(value : UUID) extends AnyVal
+  val BUSINESS_AND_POLICY, TECHNICAL, RELEASE_SCHEDULES, EVENT_INVITES = Value
 
-case class Reference(value: String) extends AnyVal
+  implicit val emailPreferencesChoiceFormat = Json.formatEnum(TopicOptionChoice)
 
-
-
+}

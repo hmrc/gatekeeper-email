@@ -20,7 +20,6 @@ import java.io.IOException
 import java.time.Instant
 import java.time.LocalDateTime.now
 import java.util.UUID
-
 import akka.stream.Materializer
 import com.mongodb.client.result.{InsertManyResult, InsertOneResult}
 import org.mockito.ArgumentMatchers.anyString
@@ -32,7 +31,7 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{stubMessagesControllerComponents, _}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
+import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
@@ -52,10 +51,11 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
   private val subject = "Email subject"
   private val emailBody = "Body to be used in the email template"
   private val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
-  private val users = List(User("example@example.com", "first name", "last name", true),
-    User("example2@example2.com", "first name2", "last name2", true))
+  private val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
+    RegisteredUser("example2@example2.com", "first name2", "last name2", true))
+  val emailPreferences = DevelopersEmailQuery()
   private val draftEmail = DraftEmail("emailId-123", templateData, "DL Team",
-    users, None, "markdownEmailBody", "This is test email",
+    emailPreferences, None, "markdownEmailBody", "This is test email",
     "test subject", SENT, "composedBy", Some("approvedBy"), now())
   private val emailUUIDToAttachFile = "emailUUID111"
   private val cargo = Some(UploadCargo(emailUUIDToAttachFile))
@@ -63,8 +63,8 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
       1024, cargo, None, None, Some(s"/gatekeeper/$emailUUIDToAttachFile"), None)
   private val uploadedFileSeq = Seq(uploadedFile123)
   private val uploadedFileMetadata: UploadedFileMetadata = UploadedFileMetadata(Nonce.random, uploadedFileSeq, cargo)
-  private val emailRequest = EmailRequest(users, "gatekeeper", EmailData(subject, emailBody))
-  private val wrongEmailRequest = EmailRequest(users, "gatekeeper", EmailData(subject, emailBody))
+  private val emailRequest = EmailRequest(emailPreferences, "gatekeeper", EmailData(subject, emailBody))
+  private val wrongEmailRequest = EmailRequest(emailPreferences, "gatekeeper", EmailData(subject, emailBody))
   private val fakeRequestToUpdateFiles = FakeRequest("POST", "/gatekeeperemail/updatefiles")
     .withHeaders("Content-Type" -> "application/json")
     .withBody(Json.toJson(uploadedFileMetadata))
@@ -84,9 +84,12 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
 
     val objectStoreClient = mock[PlayObjectStoreClient]
     val mockAppConfig = mock[AppConfig]
-
-    val emailService = new DraftEmailService(mockEmailRendererConnector, mockDraftEmailRepository, mockSentEmailRepository)
+    val developerConnectorMock: DeveloperConnector = mock[DeveloperConnector]
+    val apmConnectorMock: ApmConnector = mock[ApmConnector]
+    val emailService = new DraftEmailService(mockEmailRendererConnector, developerConnectorMock,
+                                              apmConnectorMock, mockDraftEmailRepository, mockSentEmailRepository)
     val mockEmailService = mock[DraftEmailService]
+
     val mockObjectStoreService = mock[ObjectStoreService]
     val mockAuthConnector = mock[AuthConnector]
 
@@ -98,7 +101,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
         "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
 
     val emailUUID: String = UUID.randomUUID().toString
-    val dummyEmailData = DraftEmail("", EmailTemplateData("", Map(), false, Map(), None), "", List(),
+    val dummyEmailData = DraftEmail("", EmailTemplateData("", Map(), false, Map(), None), "", emailPreferences,
       None, "", "", "", SENT, "", None, now)
     when(mockDraftEmailRepository.getEmailData(emailUUID)).thenReturn(Future(dummyEmailData))
   }
@@ -108,7 +111,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
       AuthConnectorMock.Authorise.thenReturn()
       when(mockEmailService.sendEmail(emailUUID)).thenReturn(successful(draftEmail))
       when(mockEmailConnector.sendEmail(*)).thenReturn(successful(Status.OK))
-      when(mockDraftEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+      when(mockDraftEmailRepository.persist(*, *)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       when(mockDraftEmailRepository.updateEmailSentStatus(*)).thenReturn(successful(draftEmail))
       when(mockSentEmailRepository.persist(*)).thenReturn(Future(InsertManyResult.unacknowledged()))
       val result = controller.sendEmail(emailUUID)(fakeRequest)
