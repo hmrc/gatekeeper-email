@@ -31,11 +31,13 @@ case class EmailTemplateData(templateId: String, parameters: Map[String, String]
                              auditData: Map[String, String] = Map.empty,
                              eventUrl: Option[String] = None)
 
-case class DraftEmail(emailUUID: String, templateData: EmailTemplateData, recipientTitle: String, recipients: List[User],
-                      attachmentDetails: Option[Seq[UploadedFileWithObjectStore]], markdownEmailBody: String,
-                      htmlEmailBody: String, subject: String, status: EmailStatus, composedBy: String, approvedBy: Option[String], createDateTime: LocalDateTime)
+case class DraftEmail(emailUUID: String, templateData: EmailTemplateData, recipientTitle: String, emailPreferences: Seq[(String,String)] = Seq.empty,
+                      attachmentDetails: Option[Seq[UploadedFileWithObjectStore]],
+                      markdownEmailBody: String, htmlEmailBody: String, subject: String, status: EmailStatus, composedBy: String,
+                      approvedBy: Option[String], createDateTime: LocalDateTime)
 
-case class OutgoingEmail(emailUUID: String, recipientTitle: String, recipients: List[User], attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None,
+case class OutgoingEmail(emailUUID: String, recipientTitle: String, emailPreferences: Seq[(String, String)],
+                         attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None,
                          markdownEmailBody: String, htmlEmailBody: String, subject: String, status: EmailStatus,
                          composedBy: String, approvedBy: Option[String])
 

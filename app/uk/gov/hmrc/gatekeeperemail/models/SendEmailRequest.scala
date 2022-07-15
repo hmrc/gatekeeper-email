@@ -28,7 +28,7 @@ case class SendEmailRequest(to: String,
                             eventUrl: Option[String] = None,
                             tags: Map[String, String] = Map.empty)
 
-case class DraftEmailRequest(to: List[User],
+case class DraftEmailRequest(emailPreferences: Seq[(String, String)],
                             templateId: String,
                             parameters: Map[String, String],
                             force: Boolean = false,
@@ -43,7 +43,7 @@ case class OneEmailRequest(to: List[String],
                             eventUrl: Option[String] = None,
                            tags: Map[String, String] = Map.empty)
 
-case class EmailRequest(to: List[User],
+case class EmailRequest(emailPreferences: Seq[(String, String)],
                         templateId: String,
                         emailData: EmailData,
                         force: Boolean = false,

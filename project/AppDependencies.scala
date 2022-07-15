@@ -13,6 +13,8 @@ object AppDependencies {
     "uk.gov.hmrc.mongo"           %%  "hmrc-mongo-play-28"          % hmrcMongoVersion,
     "uk.gov.hmrc.objectstore"     %%  "object-store-client-play-28" % "0.39.0",
     "com.beachape" %% "enumeratum-play-json" % "1.7.0",
+    "uk.gov.hmrc"                 %%  "json-encryption"                   % "4.10.0-play-28",
+    "org.typelevel"               %% "cats-core"                          % "2.3.1",
     "com.lightbend.akka" %% "akka-stream-alpakka-mongodb" % "3.0.1",
     "com.typesafe.akka" %% "akka-stream" % akkaVersion
   )

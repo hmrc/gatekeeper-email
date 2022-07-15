@@ -18,28 +18,28 @@ package uk.gov.hmrc.gatekeeperemail.services
 
 import java.time.LocalDateTime
 import java.util.UUID
-
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailRendererConnector
+import uk.gov.hmrc.gatekeeperemail.connectors.{DeveloperConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
-import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendererConnector,
+                                  developerConnector: DeveloperConnector,
                                   draftEmailRepository: DraftEmailRepository,
                                   sentEmailRepository: SentEmailRepository)
-                                 (implicit val ec: ExecutionContext) {
+                                 (implicit val ec: ExecutionContext, hc: HeaderCarrier) {
 
   val logger: Logger = Logger(getClass.getName)
 
   def persistEmail(emailRequest: EmailRequest, emailUUID: String): Future[DraftEmail] = {
     val email: DraftEmail = emailData(emailRequest, emailUUID)
 
-    val sendEmailRequest = DraftEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
+    val sendEmailRequest = DraftEmailRequest(emailRequest.emailPreferences, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
     for {
@@ -48,20 +48,22 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
       templatedData = EmailTemplateData(sendEmailRequest.templateId, sendEmailRequest.parameters, sendEmailRequest.force,
         sendEmailRequest.auditData, sendEmailRequest.eventUrl)
       renderedEmail = email.copy(templateData = templatedData, htmlEmailBody = emailBody._1, markdownEmailBody = emailBody._2)
-      _ <- draftEmailRepository.persist(renderedEmail)
+      users <- developerConnector.fetchAll()
+      _ <- draftEmailRepository.persist(renderedEmail, users)
     } yield renderedEmail
   }
 
   def sendEmail(emailUUID: String): Future[DraftEmail] = {
     for {
       email <- draftEmailRepository.getEmailData(emailUUID)
-      _ <-  persistInEmailQueue(email)
+      users <- developerConnector.fetchAll()
+      _ <-  persistInEmailQueue(email, users)
       _ <- draftEmailRepository.updateEmailSentStatus(emailUUID)
     } yield email
   }
 
-  private def persistInEmailQueue(email: DraftEmail):  Future[DraftEmail] = {
-    val sentEmails = email.recipients.map(elem => SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(),
+  private def persistInEmailQueue(email: DraftEmail, users: List[RegisteredUser]):  Future[DraftEmail] = {
+    val sentEmails = users.map(elem => SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(),
       emailUuid = UUID.fromString(email.emailUUID), firstName = elem.firstName, lastName = elem.lastName, recipient = elem.email,
       status = EmailStatus.PENDING, failedCount = 0))
 
@@ -82,7 +84,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
   def updateEmail(emailRequest: EmailRequest, emailUUID: String): Future[DraftEmail] = {
     val email: DraftEmail = emailData(emailRequest, emailUUID)
 
-    val sendEmailRequest = DraftEmailRequest(emailRequest.to, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
+    val sendEmailRequest = DraftEmailRequest(emailRequest.emailPreferences, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
     for {
@@ -109,7 +111,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
     val emailTemplateData = EmailTemplateData(emailRequest.templateId, parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
-    DraftEmail(emailUUID,  emailTemplateData, recipientsTitle, emailRequest.to, emailRequest.attachmentDetails,
+    DraftEmail(emailUUID,  emailTemplateData, recipientsTitle, emailRequest.emailPreferences, emailRequest.attachmentDetails,
       emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
       emailRequest.emailData.emailSubject, EmailStatus.PENDING, "composedBy",
       Some("approvedBy"), LocalDateTime.now())

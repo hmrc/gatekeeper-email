@@ -37,6 +37,7 @@ class AppConfig @Inject()(config: Configuration)
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val initialDelay: Duration = Duration(config.getOptional[String]("scheduled.initDelay").getOrElse("30 sec"))
   val interval: Duration = Duration(config.getOptional[String]("scheduled.interval").getOrElse("1 sec"))
+  val developerBaseUrl = baseUrl("third-party-developer")
 
   val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
 }
