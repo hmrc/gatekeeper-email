@@ -31,7 +31,7 @@ case class EmailTemplateData(templateId: String, parameters: Map[String, String]
                              auditData: Map[String, String] = Map.empty,
                              eventUrl: Option[String] = None)
 
-case class DraftEmail(emailUUID: String, templateData: EmailTemplateData, recipientTitle: String, emailPreferences: Seq[(String,String)] = Seq.empty,
+case class DraftEmail(emailUUID: String, templateData: EmailTemplateData, recipientTitle: String, emailPreferences: Map[String, Seq[String]] = Map.empty,
                       attachmentDetails: Option[Seq[UploadedFileWithObjectStore]],
                       markdownEmailBody: String, htmlEmailBody: String, subject: String, status: EmailStatus, composedBy: String,
                       approvedBy: Option[String], createDateTime: LocalDateTime)

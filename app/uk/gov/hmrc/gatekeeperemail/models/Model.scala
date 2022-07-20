@@ -29,6 +29,10 @@ case class UploadId(value : UUID) extends AnyVal
 
 case class Reference(value: String) extends AnyVal
 
-case class User (email: String, firstName: String, lastName: String,
-                 verified: Boolean)
+trait User {
+  def email: String
+  def firstName: String
+  def lastName: String
+}
+
 

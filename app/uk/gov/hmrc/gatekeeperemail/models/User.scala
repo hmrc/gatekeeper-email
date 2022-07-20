@@ -20,10 +20,10 @@ import play.api.libs.json._
 
 
 case class RegisteredUser(
-  email: String,
-  firstName: String,
-  lastName: String,
-  verified: Boolean) {
+  override val email: String,
+  override val firstName: String,
+  override val lastName: String,
+  verified: Boolean) extends User{
 }
 
 object RegisteredUser {

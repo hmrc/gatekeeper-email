@@ -62,6 +62,11 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
     } yield email
   }
 
+  private def calldevConnector(email: DraftEmail): List[RegisteredUser] = {
+    email.emailPreferences.
+    ???
+  }
+
   private def persistInEmailQueue(email: DraftEmail, users: List[RegisteredUser]):  Future[DraftEmail] = {
     val sentEmails = users.map(elem => SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(),
       emailUuid = UUID.fromString(email.emailUUID), firstName = elem.firstName, lastName = elem.lastName, recipient = elem.email,

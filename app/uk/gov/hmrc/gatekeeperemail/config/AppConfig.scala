@@ -37,7 +37,24 @@ class AppConfig @Inject()(config: Configuration)
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val initialDelay: Duration = Duration(config.getOptional[String]("scheduled.initDelay").getOrElse("30 sec"))
   val interval: Duration = Duration(config.getOptional[String]("scheduled.interval").getOrElse("1 sec"))
+
+  private def bearerToken(serviceName: String) = getConfString(s"$serviceName.bearer-token", "")
+  private def apiKey(serviceName: String) = getConfString(s"$serviceName.api-key", "")
+  private def useProxy(serviceName: String) = getConfBool(s"$serviceName.use-proxy", defBool = false)
+
+  private def serviceUrl(key: String)(serviceName: String): String = {
+    if (useProxy(serviceName)) s"${baseUrl(serviceName)}/${getConfString(s"$serviceName.context", key)}"
+    else baseUrl(serviceName)
+  }
+  val applicationSandboxBaseUrl = serviceUrl("third-party-application")("third-party-application-sandbox")
+  val applicationSandboxUseProxy = useProxy("third-party-application-sandbox")
   val developerBaseUrl = baseUrl("third-party-developer")
+  val applicationSandboxBearerToken = bearerToken("third-party-application-sandbox")
+  val applicationSandboxApiKey = apiKey("third-party-application-sandbox")
+  val applicationProductionBaseUrl = serviceUrl("third-party-application")("third-party-application-production")
+  val applicationProductionUseProxy = useProxy("third-party-application-production")
+  val applicationProductionBearerToken = bearerToken("third-party-application-production")
+  val applicationProductionApiKey = apiKey("third-party-application-production")
 
   val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
 }
