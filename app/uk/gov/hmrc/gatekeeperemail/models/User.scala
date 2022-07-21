@@ -19,11 +19,27 @@ package uk.gov.hmrc.gatekeeperemail.models
 import play.api.libs.json._
 
 
+trait User {
+  def email: String
+  def firstName: String
+  def lastName: String
+}
+
+object User {
+  def asSortField(lastName: String, firstName: String): String = s"${lastName.trim().toLowerCase()} ${firstName.trim().toLowerCase()}"
+
+  def status(user: User): StatusFilter = user match {
+    case u : RegisteredUser if (u.verified) => VerifiedStatus
+    case u : RegisteredUser if (!u.verified) => UnverifiedStatus
+    case _ : UnregisteredUser => UnregisteredStatus
+  }
+}
+
 case class RegisteredUser(
-  override val email: String,
-  override val firstName: String,
-  override val lastName: String,
-  verified: Boolean) extends User{
+                           email: String,
+                           firstName: String,
+                           lastName: String,
+                           verified: Boolean) extends User {
 }
 
 object RegisteredUser {
@@ -31,3 +47,7 @@ object RegisteredUser {
   implicit val registeredUserFormat = Json.format[RegisteredUser]
 }
 
+case class UnregisteredUser(email: String) extends User {
+  val firstName = "n/a"
+  val lastName = "n/a"
+}

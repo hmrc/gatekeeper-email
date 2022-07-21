@@ -36,13 +36,12 @@ case class DraftEmail(emailUUID: String, templateData: EmailTemplateData, recipi
                       markdownEmailBody: String, htmlEmailBody: String, subject: String, status: EmailStatus, composedBy: String,
                       approvedBy: Option[String], createDateTime: LocalDateTime)
 
-case class OutgoingEmail(emailUUID: String, recipientTitle: String, emailPreferences: Seq[(String, String)],
+case class OutgoingEmail(emailUUID: String, recipientTitle: String, emailPreferences: Map[String, Seq[String]],
                          attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None,
                          markdownEmailBody: String, htmlEmailBody: String, subject: String, status: EmailStatus,
                          composedBy: String, approvedBy: Option[String])
 
 object OutgoingEmail {
-  implicit val userFormatter: OFormat[User] = Json.format[User]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
@@ -51,7 +50,6 @@ object OutgoingEmail {
 
 object DraftEmail {
   implicit val dateFormatter: Format[LocalDateTime] = MongoJavatimeFormats.localDateTimeFormat
-  implicit val userFormatter: OFormat[User] = Json.format[User]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]

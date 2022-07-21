@@ -30,7 +30,7 @@ object ApiContext {
   implicit val ordering: Ordering[ApiContext] = new Ordering[ApiContext] {
     override def compare(x: ApiContext, y: ApiContext): Int = x.value.compareTo(y.value)
   }
-
+  implicit val formatApiContext = Json.valueFormat[ApiContext]
   def random = ApiContext(Random.alphanumeric.take(10).mkString)
 }
 
@@ -42,6 +42,7 @@ object ApiVersion {
   implicit val ordering: Ordering[ApiVersion] = new Ordering[ApiVersion] {
     override def compare(x: ApiVersion, y: ApiVersion): Int = x.value.compareTo(y.value)
   }
+  implicit val formatApiVersion = Json.valueFormat[ApiVersion]
 
   def random = ApiVersion(Random.nextDouble().toString)
 }

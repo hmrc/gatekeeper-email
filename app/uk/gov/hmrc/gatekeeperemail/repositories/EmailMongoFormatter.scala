@@ -17,10 +17,10 @@
 package uk.gov.hmrc.gatekeeperemail.repositories
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.gatekeeperemail.models.User
 import uk.gov.hmrc.gatekeeperemail.models._
 
 private[repositories] object EmailMongoFormatter {
-  implicit val userFormatter: OFormat[User] = Json.format[User]
   implicit val cargoFormat: OFormat[UploadCargo] = Json.format[UploadCargo]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]

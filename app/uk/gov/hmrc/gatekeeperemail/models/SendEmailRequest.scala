@@ -28,7 +28,7 @@ case class SendEmailRequest(to: String,
                             eventUrl: Option[String] = None,
                             tags: Map[String, String] = Map.empty)
 
-case class DraftEmailRequest(emailPreferences: Seq[(String, String)],
+case class DraftEmailRequest(emailPreferences: Map[String, Seq[String]],
                             templateId: String,
                             parameters: Map[String, String],
                             force: Boolean = false,
@@ -43,7 +43,7 @@ case class OneEmailRequest(to: List[String],
                             eventUrl: Option[String] = None,
                            tags: Map[String, String] = Map.empty)
 
-case class EmailRequest(emailPreferences: Seq[(String, String)],
+case class EmailRequest(emailPreferences: Map[String, Seq[String]],
                         templateId: String,
                         emailData: EmailData,
                         force: Boolean = false,
@@ -54,7 +54,6 @@ case class EmailRequest(emailPreferences: Seq[(String, String)],
 case class EmailSaved(emailUUID: String)
 
 object SendEmailRequest {
-  implicit val userFmt: OFormat[User] = Json.format[User]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
@@ -62,7 +61,6 @@ object SendEmailRequest {
 }
 
 object OneEmailRequest {
-  implicit val userFmt: OFormat[User] = Json.format[User]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
@@ -70,7 +68,6 @@ object OneEmailRequest {
 }
 
 object EmailRequest {
-  implicit val userFmt: OFormat[User] = Json.format[User]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
@@ -78,7 +75,6 @@ object EmailRequest {
 }
 
 object EmailData {
-  implicit val userFmt: OFormat[User] = Json.format[User]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]

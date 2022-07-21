@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.gatekeeperemail.connectors
 
-import play.api.Environment
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
@@ -50,11 +49,26 @@ object ApplicationId {
 
   def random: ApplicationId = ApplicationId(UUID.randomUUID().toString)
 }
+
+object Environment extends Enumeration {
+  type Environment = Value
+  val SANDBOX, PRODUCTION = Value
+  implicit val format = Json.formatEnum(Environment)
+
+  implicit class Display(e: Environment) {
+    def asDisplayed() = e match {
+      case SANDBOX => "Sandbox"
+      case PRODUCTION => "Production"
+    }
+  }
+}
+
 abstract class ApplicationConnector(implicit val ec: ExecutionContext)  {
   import ApplicationConnector._
 
   protected val httpClient: HttpClient
-  val environment: Environment
+  val environment: Environment.Environment
+
   val serviceBaseUrl: String
 
   def http: HttpClient
@@ -73,18 +87,7 @@ abstract class ApplicationConnector(implicit val ec: ExecutionContext)  {
 
 
 }
-object Environment extends Enumeration {
-  type Environment = Value
-  val SANDBOX, PRODUCTION = Value
-  implicit val format = Json.formatEnum(Environment)
 
-  implicit class Display(e: Environment) {
-    def asDisplayed() = e match {
-      case SANDBOX => "Sandbox"
-      case PRODUCTION => "Production"
-    }
-  }
-}
 @Singleton
 class SandboxApplicationConnector @Inject()(val appConfig: AppConfig,
                                             val httpClient: HttpClient,

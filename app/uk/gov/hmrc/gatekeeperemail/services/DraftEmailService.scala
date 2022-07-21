@@ -63,8 +63,8 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
   }
 
   private def calldevConnector(email: DraftEmail): List[RegisteredUser] = {
-    email.emailPreferences.
-    ???
+    email.emailPreferences
+      List.empty
   }
 
   private def persistInEmailQueue(email: DraftEmail, users: List[RegisteredUser]):  Future[DraftEmail] = {
