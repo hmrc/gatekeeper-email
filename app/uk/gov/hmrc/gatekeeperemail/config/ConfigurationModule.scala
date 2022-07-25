@@ -17,11 +17,22 @@
 package uk.gov.hmrc.gatekeeperemail.config
 
 import com.google.inject.AbstractModule
+import com.google.inject.name.Names
+import play.api.{Configuration, Environment}
+import play.api.inject.Module
+import uk.gov.hmrc.gatekeeperemail.connectors.{DeveloperConnector, HttpDeveloperConnector}
 import uk.gov.hmrc.gatekeeperemail.controllers.HandleForbidden
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
 
-class ConfigurationModule extends AbstractModule {
-  override def configure() = {
-    bind(classOf[ForbiddenHandler]).to(classOf[HandleForbidden])
+class ConfigurationModule extends Module {
+
+  override def bindings(environment: Environment, configuration: Configuration) = {
+
+    val developerConnectorBinding = bind[DeveloperConnector].to[HttpDeveloperConnector]
+
+    Seq(
+      developerConnectorBinding,
+      bind[ForbiddenHandler].to[HandleForbidden]
+    )
   }
 }
