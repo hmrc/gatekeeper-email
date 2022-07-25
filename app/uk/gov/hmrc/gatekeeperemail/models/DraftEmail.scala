@@ -19,9 +19,9 @@ package uk.gov.hmrc.gatekeeperemail.models
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 import java.util.UUID
-
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
 import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.gatekeeperemail.models.TopicOptionChoice.TopicOptionChoice
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import scala.collection.immutable
@@ -31,17 +31,18 @@ case class EmailTemplateData(templateId: String, parameters: Map[String, String]
                              auditData: Map[String, String] = Map.empty,
                              eventUrl: Option[String] = None)
 
-case class DraftEmail(emailUUID: String, templateData: EmailTemplateData, recipientTitle: String, emailPreferences: Map[String, Seq[String]] = Map.empty,
+case class DraftEmail(emailUUID: String, templateData: EmailTemplateData, recipientTitle: String, emailPreferences: DevelopersEmailQuery,
                       attachmentDetails: Option[Seq[UploadedFileWithObjectStore]],
                       markdownEmailBody: String, htmlEmailBody: String, subject: String, status: EmailStatus, composedBy: String,
                       approvedBy: Option[String], createDateTime: LocalDateTime)
 
-case class OutgoingEmail(emailUUID: String, recipientTitle: String, emailPreferences: Map[String, Seq[String]],
+case class OutgoingEmail(emailUUID: String, recipientTitle: String, emailPreferences: DevelopersEmailQuery,
                          attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None,
                          markdownEmailBody: String, htmlEmailBody: String, subject: String, status: EmailStatus,
                          composedBy: String, approvedBy: Option[String])
 
 object OutgoingEmail {
+  implicit val developersEmailQueryFormatter: OFormat[DevelopersEmailQuery] = Json.format[DevelopersEmailQuery]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
@@ -50,6 +51,7 @@ object OutgoingEmail {
 
 object DraftEmail {
   implicit val dateFormatter: Format[LocalDateTime] = MongoJavatimeFormats.localDateTimeFormat
+  implicit val developersEmailQueryFormatter: OFormat[DevelopersEmailQuery] = Json.format[DevelopersEmailQuery]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
@@ -69,3 +71,11 @@ object EmailStatus extends Enum[EmailStatus] with PlayJsonEnum[EmailStatus]{
   case object PENDING extends EmailStatus( "PENDING")
   case object SENT extends EmailStatus( "SENT")
 }
+
+case class DevelopersEmailQuery(topic: Option[TopicOptionChoice] = None,
+                                apis: Option[Seq[String]] = None,
+                                apiCategories: Option[Seq[APICategory]] = None,
+                                privateapimatch: Boolean = false,
+                                apiVersionFilter: Option[String] = None,
+                                allUsers: Boolean = false)
+

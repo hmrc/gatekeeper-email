@@ -17,7 +17,6 @@
 package uk.gov.hmrc.gatekeeperemail.connectors
 
 import java.io.IOException
-
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.{verify => wireMockVerify, _}
@@ -29,7 +28,7 @@ import play.api.http.Status.OK
 import play.mvc.Http.Status
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.{DraftEmailRequest, User}
+import uk.gov.hmrc.gatekeeperemail.models.{DevelopersEmailQuery, DraftEmailRequest, RegisteredUser, User}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -64,8 +63,9 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with Before
   val emailBody = "Body to be used in the email template"
   val templateId = "gatekeeper"
   val emailRendererPath = s"/templates/$templateId"
-  val users = List(User("example@example.com", "first name", "last name", true),
-    User("example2@example2.com", "first name2", "last name2", true))
+  val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
+    RegisteredUser("example2@example2.com", "first name2", "last name2", true))
+  val emailPreferences = DevelopersEmailQuery()
 
   trait Setup {
     val httpClient = app.injector.instanceOf[HttpClient]
@@ -100,7 +100,7 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with Before
   "emailRendererConnector" should {
     val parameters: Map[String, String] = Map("subject" -> s"$subject", "fromAddress" -> s"$fromAddress",
       "body" -> s"$emailBody", "service" -> s"gatekeeper")
-    val emailRequest = DraftEmailRequest(users, templateId, parameters)
+    val emailRequest = DraftEmailRequest(emailPreferences, templateId, parameters)
 
     "get gatekeeper email template renderer" in new Setup with WorkingHttp {
       await(underTest.getTemplatedEmail(emailRequest))

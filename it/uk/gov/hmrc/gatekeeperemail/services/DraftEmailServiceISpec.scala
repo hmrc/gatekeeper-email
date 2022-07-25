@@ -25,7 +25,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
+import uk.gov.hmrc.gatekeeperemail.connectors.{DeveloperConnector, GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -59,12 +59,14 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   trait Setup {
+    val emailPreferences = DevelopersEmailQuery()
     implicit val hc: HeaderCarrier = HeaderCarrier()
+    val developerConnectorMock: DeveloperConnector = mock[DeveloperConnector]
     val emailConnectorMock: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
-    val underTest = new DraftEmailService(emailRendererConnectorMock, emailRepository, sentEmailRepository)
-    val users = List(User("example@example.com", "first name", "last name", true),
-      User("example2@example2.com", "first name2", "last name2", true))
+    val underTest = new DraftEmailService(emailRendererConnectorMock, developerConnectorMock, emailRepository, sentEmailRepository)
+    val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
+      RegisteredUser("example2@example2.com", "first name2", "last name2", true))
   }
 
   "saveEmail" should {
@@ -74,7 +76,7 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
       when(emailRendererConnectorMock.getTemplatedEmail(*))
         .thenReturn(successful(Right(RenderResult("RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
           "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
-      val emailRequest = EmailRequest(users, "gatekeeper",
+      val emailRequest = EmailRequest(emailPreferences, "gatekeeper",
         EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
       val email: DraftEmail = await(underTest.persistEmail(emailRequest,"emailUUID"))
       email.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="

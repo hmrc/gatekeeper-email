@@ -26,7 +26,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.OK
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.{SendEmailRequest, User}
+import uk.gov.hmrc.gatekeeperemail.models.{RegisteredUser, SendEmailRequest, User}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -60,8 +60,8 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfter
   val fromAddress = "gateKeeper"
   val emailBody = "Body to be used in the email template"
   val emailServicePath = "/developer/email"
-  val users = List(User("example@example.com", "first name", "last name", true),
-    User("example2@example2.com", "first name2", "last name2", true))
+  val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
+    RegisteredUser("example2@example2.com", "first name2", "last name2", true))
    
   trait Setup {
     val httpClient = app.injector.instanceOf[HttpClient]

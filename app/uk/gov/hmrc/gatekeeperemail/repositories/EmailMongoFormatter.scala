@@ -22,6 +22,7 @@ import uk.gov.hmrc.gatekeeperemail.models._
 
 private[repositories] object EmailMongoFormatter {
   implicit val cargoFormat: OFormat[UploadCargo] = Json.format[UploadCargo]
+  implicit val developersEmailQueryFormatter: OFormat[DevelopersEmailQuery] = Json.format[DevelopersEmailQuery]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
   implicit val emailTemplateDataFormatter: OFormat[EmailTemplateData] = Json.format[EmailTemplateData]

@@ -19,7 +19,6 @@ package uk.gov.hmrc.gatekeeperemail.services
 import java.time.LocalDateTime
 import java.util
 import java.util.UUID
-
 import com.mongodb.client.result.{InsertManyResult, InsertOneResult}
 import org.mockito.{ArgumentCaptor, ArgumentMatchersSugar, MockitoSugar}
 import org.mongodb.scala.bson.{BsonInt32, BsonNumber, BsonValue}
@@ -28,11 +27,11 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailRendererConnector
+import uk.gov.hmrc.gatekeeperemail.connectors.{DeveloperConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
-import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -41,17 +40,20 @@ import scala.concurrent.Future.successful
 class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with ArgumentMatchersSugar {
 
   trait Setup {
+    implicit val hc: HeaderCarrier = HeaderCarrier()
     val draftEmailRepositoryMock: DraftEmailRepository = mock[DraftEmailRepository]
     val sentEmailRepositoryMock: SentEmailRepository = mock[SentEmailRepository]
+    val developerConnectorMock: DeveloperConnector = mock[DeveloperConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
-    val underTest = new DraftEmailService(emailRendererConnectorMock, draftEmailRepositoryMock, sentEmailRepositoryMock)
+    val underTest = new DraftEmailService(emailRendererConnectorMock, developerConnectorMock, draftEmailRepositoryMock, sentEmailRepositoryMock)
     val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
-    val users = List(User("example@example.com", "first name", "last name", true),
-      User("example2@example2.com", "first name2", "last name2", true))
+    val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
+      RegisteredUser("example2@example2.com", "first name2", "last name2", true))
+    val emailPreferences = DevelopersEmailQuery()
     val uuid = UUID.randomUUID()
     val now = LocalDateTime.now()
     val email = DraftEmail(uuid.toString(), templateData, "DL Team",
-      users, None, "markdownEmailBody", "This is test email",
+      emailPreferences, None, "markdownEmailBody", "This is test email",
       "test subject", SENT, "composedBy", Some("approvedBy"), now)
     when(emailRendererConnectorMock.getTemplatedEmail(*))
       .thenReturn(successful(Right(RenderResult("RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
@@ -60,9 +62,9 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
   "persistEmail" should {
     "save the email data into mongodb repo" in new Setup {
-      when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+      when(draftEmailRepositoryMock.persist(*, *)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
 
-      val emailRequest = EmailRequest(users, "gatekeeper",
+      val emailRequest = EmailRequest(emailPreferences, "gatekeeper",
         EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
       emailFromMongo.subject shouldBe "Test subject"
@@ -71,8 +73,8 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
     }
 
     "save the email data into mongodb repo even when fails to send" in new Setup {
-      when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      val emailRequest = EmailRequest(users, "gatekeeper",
+      when(draftEmailRepositoryMock.persist(*, *)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+      val emailRequest = EmailRequest(emailPreferences, "gatekeeper",
         EmailData("Test subject2", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
       emailFromMongo.subject shouldBe "Test subject2"
@@ -82,8 +84,8 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
     "throw exception when unable to reach the email renderer" in new Setup {
       when(emailRendererConnectorMock.getTemplatedEmail(*)).thenReturn(successful(Left(UpstreamErrorResponse("error", Status.NOT_FOUND))))
-      when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      val emailRequest = EmailRequest(users, "gatekeeper",
+      when(draftEmailRepositoryMock.persist(*, *)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+      val emailRequest = EmailRequest(emailPreferences, "gatekeeper",
         EmailData("Test subject2", "Dear Mr XYZ, This is test email"), false, Map())
       val error: EmailRendererConnectionError = intercept[EmailRendererConnectionError] {
         await(underTest.persistEmail(emailRequest, "emailUUID"))
@@ -95,7 +97,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
   "updateEmail" should {
     "update the email data into mongodb repo" in new Setup {
       when(draftEmailRepositoryMock.updateEmail(*)).thenReturn(Future(email))
-      val emailRequest = EmailRequest(users, "gatekeeper",
+      val emailRequest = EmailRequest(emailPreferences, "gatekeeper",
         EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.updateEmail(emailRequest, "emailUUID"))
       emailFromMongo.subject shouldBe "Test subject"
@@ -105,7 +107,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
     "update the email data into mongodb repo even when fails to send" in new Setup {
       when(draftEmailRepositoryMock.updateEmail(*)).thenReturn(Future(email))
-      val emailRequest = EmailRequest(users, "gatekeeper",
+      val emailRequest = EmailRequest(emailPreferences, "gatekeeper",
         EmailData("Test subject2", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.updateEmail(emailRequest, "emailUUID"))
       emailFromMongo.subject shouldBe "Test subject2"

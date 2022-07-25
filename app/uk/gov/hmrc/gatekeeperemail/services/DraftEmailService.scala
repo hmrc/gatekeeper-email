@@ -56,15 +56,18 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
   def sendEmail(emailUUID: String): Future[DraftEmail] = {
     for {
       email <- draftEmailRepository.getEmailData(emailUUID)
-      users <- developerConnector.fetchAll()
+      users <- calldevConnector(email.emailPreferences)
       _ <-  persistInEmailQueue(email, users)
       _ <- draftEmailRepository.updateEmailSentStatus(emailUUID)
     } yield email
   }
 
-  private def calldevConnector(email: DraftEmail): List[RegisteredUser] = {
-    email.emailPreferences
-      List.empty
+  private def calldevConnector(emailPreferences: DevelopersEmailQuery): Future[List[RegisteredUser]] = {
+    if(emailPreferences.allUsers) {
+      developerConnector.fetchAll()
+    } else {
+      developerConnector.fetchByEmailPreferences(emailPreferences.topic.get, emailPreferences.apis, emailPreferences.apiCategories)
+    }
   }
 
   private def persistInEmailQueue(email: DraftEmail, users: List[RegisteredUser]):  Future[DraftEmail] = {
