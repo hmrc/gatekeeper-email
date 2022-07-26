@@ -32,11 +32,13 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
                                   developerConnector: DeveloperConnector,
                                   draftEmailRepository: DraftEmailRepository,
                                   sentEmailRepository: SentEmailRepository)
-                                 (implicit val ec: ExecutionContext, hc: HeaderCarrier) {
+                                 (implicit val ec: ExecutionContext) {
 
   val logger: Logger = Logger(getClass.getName)
 
   def persistEmail(emailRequest: EmailRequest, emailUUID: String): Future[DraftEmail] = {
+    implicit val hc = HeaderCarrier()
+
     val email: DraftEmail = emailData(emailRequest, emailUUID)
 
     val sendEmailRequest = DraftEmailRequest(emailRequest.emailPreferences, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
@@ -63,6 +65,8 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
   }
 
   private def calldevConnector(emailPreferences: DevelopersEmailQuery): Future[List[RegisteredUser]] = {
+    implicit val hc = HeaderCarrier()
+
     if(emailPreferences.allUsers) {
       developerConnector.fetchAll()
     } else {

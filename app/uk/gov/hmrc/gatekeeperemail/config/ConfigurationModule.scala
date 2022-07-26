@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.gatekeeperemail.config
 
-import com.google.inject.AbstractModule
-import com.google.inject.name.Names
 import play.api.{Configuration, Environment}
 import play.api.inject.Module
 import uk.gov.hmrc.gatekeeperemail.connectors.{DeveloperConnector, HttpDeveloperConnector}
