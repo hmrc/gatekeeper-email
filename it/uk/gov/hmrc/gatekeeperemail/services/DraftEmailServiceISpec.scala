@@ -73,6 +73,7 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
 
     "save the email data into mongodb repo" in new Setup {
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(200))
+      when(developerConnectorMock.fetchAll()(*)).thenReturn(Future(users))
       when(emailRendererConnectorMock.getTemplatedEmail(*))
         .thenReturn(successful(Right(RenderResult("RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
           "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))

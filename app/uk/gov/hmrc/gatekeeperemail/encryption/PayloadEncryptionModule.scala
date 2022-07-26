@@ -33,7 +33,7 @@ class PayloadEncryptionModule extends Module {
 class ThirdPartyDeveloperPayloadEncryptionProvider @Inject()(val config: Configuration)
   extends Provider[PayloadEncryption] {
 
-  lazy val jsonEncryptionKey = config.get[String]("third-party-developer.key")
+  lazy val jsonEncryptionKey = config.get[String]("third-party-developer.json.encryption.key")
   lazy val payloadEncrypion = new PayloadEncryption(jsonEncryptionKey)
 
   override def get() = payloadEncrypion
