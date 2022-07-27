@@ -70,7 +70,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
     if(emailPreferences.allUsers) {
       developerConnector.fetchAll()
     } else {
-      val topic = if(emailPreferences.topic.isDefined)  TopicOptionChoice.optionString(emailPreferences.topic.get) else None
+      val topic = TopicOptionChoice.optionString(emailPreferences.topic)
       developerConnector.fetchByEmailPreferences(topic, emailPreferences.apis, emailPreferences.apiCategories)
     }
   }
