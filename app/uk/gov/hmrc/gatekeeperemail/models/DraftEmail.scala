@@ -72,7 +72,7 @@ object EmailStatus extends Enum[EmailStatus] with PlayJsonEnum[EmailStatus]{
   case object SENT extends EmailStatus( "SENT")
 }
 
-case class DevelopersEmailQuery(topic: Option[TopicOptionChoice] = None,
+case class DevelopersEmailQuery(topic: String,
                                 apis: Option[Seq[String]] = None,
                                 apiCategories: Option[Seq[APICategory]] = None,
                                 privateapimatch: Boolean = false,

@@ -70,6 +70,13 @@ object TopicOptionChoice extends Enumeration {
     case EVENT_INVITES => "Event Invites"
   }
 
+  val optionString: String => TopicOptionChoice = {
+    case "Business and policy" => BUSINESS_AND_POLICY
+    case "Technical" => TECHNICAL
+    case "Release schedules" => RELEASE_SCHEDULES
+    case "Event Invites" => EVENT_INVITES
+  }
+
   val optionHint: TopicOptionChoice => String = {
     case BUSINESS_AND_POLICY => "Policy compliance, legislative changes and business guidance support"
     case TECHNICAL => "Specifications, service guides, bux fixes and known errors"

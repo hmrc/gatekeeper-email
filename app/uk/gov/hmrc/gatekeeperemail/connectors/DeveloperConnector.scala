@@ -25,7 +25,6 @@ import uk.gov.hmrc.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 import com.google.inject.name.Named
-import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperStatusFilter.{AllStatus, DeveloperStatusFilter}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.gatekeeperemail.encryption.{PayloadEncryption, SecretRequest, SendsSecretRequest}
 
@@ -38,49 +37,6 @@ case class UnregisteredUser(
                              override val firstName: String,
                              override val lastName: String,
                              verified: Boolean) extends User
-case object DeveloperStatusFilter {
-
-  sealed trait DeveloperStatusFilter {
-    def isMatch(user: User): Boolean
-
-    val value: String
-  }
-
-  case object VerifiedStatus extends DeveloperStatusFilter {
-    val value = "VERIFIED"
-
-    override def isMatch(user: User): Boolean = user match {
-      case r : RegisteredUser => r.verified
-      case u : UnregisteredUser => true   // TODO - really true ??
-    }
-  }
-
-  case object UnverifiedStatus extends DeveloperStatusFilter {
-    val value = "UNVERIFIED"
-
-    override def isMatch(user: User): Boolean = !VerifiedStatus.isMatch(user)
-  }
-
-  case object AllStatus extends DeveloperStatusFilter {
-    val value = "ALL"
-
-    override def isMatch(user: User): Boolean = true
-  }
-
-  def apply(value: Option[String]): DeveloperStatusFilter = {
-    value match {
-      case Some(UnverifiedStatus.value) => UnverifiedStatus
-      case Some(VerifiedStatus.value) => VerifiedStatus
-      case Some(AllStatus.value) => AllStatus
-      case None => AllStatus
-      case Some(text) => throw new Exception("Invalid developer status filter: " + text)
-    }
-  }
-}
-case class Developers2Filter(maybeEmailFilter: Option[String] = None,
-                             maybeApiFilter: Option[ApiContextVersion] = None,
-                             environmentFilter: ApiSubscriptionInEnvironmentFilter = AnyEnvironment,
-                             developerStatusFilter: DeveloperStatusFilter = AllStatus)
 
 trait DeveloperConnector {
 
@@ -96,8 +52,6 @@ trait DeveloperConnector {
 
 @Singleton
 class HttpDeveloperConnector @Inject()(appConfig: AppConfig,
-                                       sandboxApplicationConnector: SandboxApplicationConnector,
-                                       productionApplicationConnector: ProductionApplicationConnector,
                                        http: HttpClient, @Named("ThirdPartyDeveloper") val payloadEncryption: PayloadEncryption)
     (implicit ec: ExecutionContext)
     extends DeveloperConnector
@@ -122,56 +76,5 @@ class HttpDeveloperConnector @Inject()(appConfig: AppConfig,
     http.GET[List[RegisteredUser]](s"${appConfig.developerBaseUrl}/developers/all")
   }
 
-  def searchDevelopers(filter: Developers2Filter)(implicit hc: HeaderCarrier): Future[List[User]] = {
-
-    val unsortedResults: Future[List[User]] = (filter.maybeEmailFilter, filter.maybeApiFilter) match {
-      case (emailFilter, None) => searchDevelopers(emailFilter, filter.developerStatusFilter)
-      case (maybeEmailFilter, Some(apiFilter)) => {
-        for {
-          collaboratorEmails <- getCollaboratorsByApplicationEnvironments(filter.environmentFilter, maybeEmailFilter, apiFilter)
-          users <- fetchByEmails(collaboratorEmails)
-          filteredRegisteredUsers <- Future.successful(users.filter(user => collaboratorEmails.contains(user.email)))
-          filteredByDeveloperStatusUsers <- Future.successful(filteredRegisteredUsers.filter(filter.developerStatusFilter.isMatch))
-        } yield filteredByDeveloperStatusUsers
-      }
-    }
-
-    for {
-      results <- unsortedResults
-    } yield results.sortBy(_.email)
-  }
-
-  private def getCollaboratorsByApplicationEnvironments(environmentFilter: ApiSubscriptionInEnvironmentFilter,
-                                                        maybeEmailFilter: Option[String],
-                                                        apiFilter: ApiContextVersion)
-                                                       (implicit hc: HeaderCarrier): Future[Set[String]] = {
-
-    val environmentApplicationConnectors = environmentFilter match {
-      case ProductionEnvironment => List(productionApplicationConnector)
-      case SandboxEnvironment => List(sandboxApplicationConnector)
-      case AnyEnvironment => List(productionApplicationConnector, sandboxApplicationConnector)
-    }
-
-    val allCollaboratorEmailsFutures: List[Future[List[String]]] = environmentApplicationConnectors
-      .map(_.searchCollaborators(apiFilter.context, apiFilter.version, maybeEmailFilter))
-
-    combine(allCollaboratorEmailsFutures).map(_.toSet)
-  }
-
-  private def combine[T](futures: List[Future[List[T]]]): Future[List[T]] = Future.reduceLeft(futures)(_ ++ _)
-
-
-  def searchDevelopers(maybeEmail: Option[String], status: DeveloperStatusFilter)(implicit hc: HeaderCarrier): Future[List[RegisteredUser]] = {
-
-    val payload = SearchParameters(maybeEmail, Some(status.value))
-
-    secretRequest(payload) { request =>
-      http.POST[SecretRequest, List[RegisteredUser]](s"${appConfig.developerBaseUrl}/developers/search", request)
-    }
-  }
-
-  def fetchByEmails(emails: Iterable[String])(implicit hc: HeaderCarrier): Future[List[RegisteredUser]] = {
-    http.POST[Iterable[String], List[RegisteredUser]](s"${appConfig.developerBaseUrl}/developers/get-by-emails", emails)
-  }
 }
 
