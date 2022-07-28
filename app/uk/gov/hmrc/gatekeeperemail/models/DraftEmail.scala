@@ -31,17 +31,18 @@ case class EmailTemplateData(templateId: String, parameters: Map[String, String]
                              auditData: Map[String, String] = Map.empty,
                              eventUrl: Option[String] = None)
 
-case class DraftEmail(emailUUID: String, templateData: EmailTemplateData, recipientTitle: String, emailPreferences: DevelopersEmailQuery,
+case class DraftEmail(emailUUID: String, templateData: EmailTemplateData, recipientTitle: String, userSelectionQuery: DevelopersEmailQuery,
                       attachmentDetails: Option[Seq[UploadedFileWithObjectStore]],
                       markdownEmailBody: String, htmlEmailBody: String, subject: String, status: EmailStatus, composedBy: String,
                       approvedBy: Option[String], createDateTime: LocalDateTime)
 
-case class OutgoingEmail(emailUUID: String, recipientTitle: String, emailPreferences: DevelopersEmailQuery,
+case class OutgoingEmail(emailUUID: String, recipientTitle: String, userSelectionQuery: DevelopersEmailQuery,
                          attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None,
                          markdownEmailBody: String, htmlEmailBody: String, subject: String, status: EmailStatus,
                          composedBy: String, approvedBy: Option[String])
 
 object OutgoingEmail {
+  implicit val emailOverrideFormatter = Json.format[EmailOverride]
   implicit val developersEmailQueryFormatter: OFormat[DevelopersEmailQuery] = Json.format[DevelopersEmailQuery]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
@@ -51,6 +52,7 @@ object OutgoingEmail {
 
 object DraftEmail {
   implicit val dateFormatter: Format[LocalDateTime] = MongoJavatimeFormats.localDateTimeFormat
+  implicit val emailOverrideFormatter = Json.format[EmailOverride]
   implicit val developersEmailQueryFormatter: OFormat[DevelopersEmailQuery] = Json.format[DevelopersEmailQuery]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
@@ -71,11 +73,12 @@ object EmailStatus extends Enum[EmailStatus] with PlayJsonEnum[EmailStatus]{
   case object PENDING extends EmailStatus( "PENDING")
   case object SENT extends EmailStatus( "SENT")
 }
-
-case class DevelopersEmailQuery(topic: String,
+case class EmailOverride(email: List[RegisteredUser], isOverride: Boolean = false)
+case class DevelopersEmailQuery(topic: Option[String] = None,
                                 apis: Option[Seq[String]] = None,
                                 apiCategories: Option[Seq[APICategory]] = None,
                                 privateapimatch: Boolean = false,
                                 apiVersionFilter: Option[String] = None,
-                                allUsers: Boolean = false)
+                                allUsers: Boolean = false,
+                                emailsForSomeCases: Option[EmailOverride] = None)
 

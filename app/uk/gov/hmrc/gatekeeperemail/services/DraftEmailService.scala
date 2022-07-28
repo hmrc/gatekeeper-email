@@ -36,12 +36,13 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
 
   val logger: Logger = Logger(getClass.getName)
 
+  val OneHundredEmails = 100
   def persistEmail(emailRequest: EmailRequest, emailUUID: String): Future[DraftEmail] = {
     implicit val hc = HeaderCarrier()
 
     val email: DraftEmail = emailData(emailRequest, emailUUID)
 
-    val sendEmailRequest = DraftEmailRequest(emailRequest.emailPreferences, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
+    val sendEmailRequest = DraftEmailRequest(emailRequest.userSelectionQuery, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
     for {
@@ -58,24 +59,34 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
   def sendEmail(emailUUID: String): Future[DraftEmail] = {
     for {
       email <- draftEmailRepository.getEmailData(emailUUID)
-      users <- calldevConnector(email.emailPreferences)
+      users <- callThirdPartyDeveloper(email.userSelectionQuery)
       _ <-  persistInEmailQueue(email, users)
       _ <- draftEmailRepository.updateEmailSentStatus(emailUUID)
     } yield email
   }
 
-  private def calldevConnector(emailPreferences: DevelopersEmailQuery): Future[List[RegisteredUser]] = {
+  private def callThirdPartyDeveloper(emailPreferences: DevelopersEmailQuery): Future[List[RegisteredUser]] = {
     implicit val hc = HeaderCarrier()
-
-    if(emailPreferences.allUsers) {
-      developerConnector.fetchAll()
-    } else {
-      val topic = TopicOptionChoice.optionString(emailPreferences.topic)
-      developerConnector.fetchByEmailPreferences(topic, emailPreferences.apis, emailPreferences.apiCategories)
+    logger.info(s"Email Preferences are $emailPreferences")
+    emailPreferences match {
+      case DevelopersEmailQuery(None,None,None,false,None,true,None) =>
+        logger.info(s"Emailing All Users")
+        developerConnector.fetchAll()
+      case DevelopersEmailQuery(_,_,_,_,_,_,Some(EmailOverride(_, true))) =>
+        logger.info(s"Email are overridden with email list ${emailPreferences.emailsForSomeCases.get.email}")
+        Future.successful(emailPreferences.emailsForSomeCases.get.email)
+      case DevelopersEmailQuery(_,_,_,_,_,_,Some(EmailOverride(_, false))) =>
+        logger.info(s"Email are not overridden, so 100 subscription email list ${emailPreferences.emailsForSomeCases.get.email.take(OneHundredEmails)}")
+        Future.successful(emailPreferences.emailsForSomeCases.get.email)
+      case _ =>
+        emailPreferences.topic.map(t =>
+        developerConnector.fetchByEmailPreferences(TopicOptionChoice.withName(t),
+          emailPreferences.apis, emailPreferences.apiCategories)).getOrElse(Future.successful(List.empty))
     }
   }
 
   private def persistInEmailQueue(email: DraftEmail, users: List[RegisteredUser]):  Future[DraftEmail] = {
+    logger.info(s"100 Emails fetched from TPD or api-gatekeeper  ${users.take(OneHundredEmails)}")
     val sentEmails = users.map(elem => SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(),
       emailUuid = UUID.fromString(email.emailUUID), firstName = elem.firstName, lastName = elem.lastName, recipient = elem.email,
       status = EmailStatus.PENDING, failedCount = 0))
@@ -97,7 +108,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
   def updateEmail(emailRequest: EmailRequest, emailUUID: String): Future[DraftEmail] = {
     val email: DraftEmail = emailData(emailRequest, emailUUID)
 
-    val sendEmailRequest = DraftEmailRequest(emailRequest.emailPreferences, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
+    val sendEmailRequest = DraftEmailRequest(emailRequest.userSelectionQuery, emailRequest.templateId, email.templateData.parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
     for {
@@ -124,7 +135,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
     val emailTemplateData = EmailTemplateData(emailRequest.templateId, parameters, emailRequest.force,
       emailRequest.auditData, emailRequest.eventUrl)
 
-    DraftEmail(emailUUID,  emailTemplateData, recipientsTitle, emailRequest.emailPreferences, emailRequest.attachmentDetails,
+    DraftEmail(emailUUID,  emailTemplateData, recipientsTitle, emailRequest.userSelectionQuery, emailRequest.attachmentDetails,
       emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
       emailRequest.emailData.emailSubject, EmailStatus.PENDING, "composedBy",
       Some("approvedBy"), LocalDateTime.now())

@@ -28,12 +28,12 @@ case class SendEmailRequest(to: String,
                             eventUrl: Option[String] = None,
                             tags: Map[String, String] = Map.empty)
 
-case class DraftEmailRequest(emailPreferences: DevelopersEmailQuery,
-                            templateId: String,
-                            parameters: Map[String, String],
-                            force: Boolean = false,
-                            auditData: Map[String, String] = Map.empty,
-                            eventUrl: Option[String] = None)
+case class DraftEmailRequest(userSelectionQuery: DevelopersEmailQuery,
+                             templateId: String,
+                             parameters: Map[String, String],
+                             force: Boolean = false,
+                             auditData: Map[String, String] = Map.empty,
+                             eventUrl: Option[String] = None)
 
 case class OneEmailRequest(to: List[String],
                             templateId: String,
@@ -43,7 +43,7 @@ case class OneEmailRequest(to: List[String],
                             eventUrl: Option[String] = None,
                            tags: Map[String, String] = Map.empty)
 
-case class EmailRequest(emailPreferences: DevelopersEmailQuery,
+case class EmailRequest(userSelectionQuery: DevelopersEmailQuery,
                         templateId: String,
                         emailData: EmailData,
                         force: Boolean = false,
@@ -55,6 +55,7 @@ case class EmailSaved(emailUUID: String)
 
 object SendEmailRequest {
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
+  implicit val emailOverrideFormatter = Json.format[EmailOverride]
   implicit val developersEmailQueryFormatter: OFormat[DevelopersEmailQuery] = Json.format[DevelopersEmailQuery]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
@@ -69,6 +70,7 @@ object OneEmailRequest {
 }
 
 object EmailRequest {
+  implicit val emailOverrideFormatter = Json.format[EmailOverride]
   implicit val developersEmailQueryFormatter: OFormat[DevelopersEmailQuery] = Json.format[DevelopersEmailQuery]
   implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
   implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
