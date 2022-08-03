@@ -70,7 +70,7 @@ class DraftEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
         )
       )
 
-    def persist(entity: DraftEmail, users: List[RegisteredUser]): Future[InsertOneResult] = {
+    def persist(entity: DraftEmail): Future[InsertOneResult] = {
       collection.insertOne(entity).toFuture()
     }
 
@@ -86,9 +86,11 @@ class DraftEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
       }
     }
 
-  def updateEmailSentStatus(emailUUID: String): Future[DraftEmail] = {
+  def updateEmailSentStatus(emailUUID: String, emailCount: Int): Future[DraftEmail] = {
     collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(emailUUID)),
-      update = set("status", Codecs.toBson(EmailStatus.SENT)),
+      update = combine(
+        set("status", Codecs.toBson(EmailStatus.SENT)),
+        set("emailsCount", emailCount)),
       options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
     ).map(_.asInstanceOf[DraftEmail]).head()
   }

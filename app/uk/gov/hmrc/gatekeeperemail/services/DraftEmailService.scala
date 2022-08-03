@@ -57,7 +57,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
         sendEmailRequest.auditData, sendEmailRequest.eventUrl)
       renderedEmail = email.copy(templateData = templatedData, htmlEmailBody = emailBody._1, markdownEmailBody = emailBody._2)
       users <- callThirdPartyDeveloper(email.userSelectionQuery)
-      _ <- draftEmailRepository.persist(renderedEmail, users)
+      _ <- draftEmailRepository.persist(renderedEmail)
     } yield renderedEmail
   }
 
@@ -66,7 +66,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
       email <- draftEmailRepository.getEmailData(emailUUID)
       users <- callThirdPartyDeveloper(email.userSelectionQuery)
       _ <-  persistInEmailQueue(email, users)
-      _ <- draftEmailRepository.updateEmailSentStatus(emailUUID)
+      _ <- draftEmailRepository.updateEmailSentStatus(emailUUID, users.length)
     } yield email
   }
 

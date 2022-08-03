@@ -111,8 +111,8 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
       AuthConnectorMock.Authorise.thenReturn()
       when(mockEmailService.sendEmail(emailUUID)).thenReturn(successful(draftEmail))
       when(mockEmailConnector.sendEmail(*)).thenReturn(successful(Status.OK))
-      when(mockDraftEmailRepository.persist(*, *)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      when(mockDraftEmailRepository.updateEmailSentStatus(*)).thenReturn(successful(draftEmail))
+      when(mockDraftEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+      when(mockDraftEmailRepository.updateEmailSentStatus(*, *)).thenReturn(successful(draftEmail))
       when(mockSentEmailRepository.persist(*)).thenReturn(Future(InsertManyResult.unacknowledged()))
       val result = controller.sendEmail(emailUUID)(fakeRequest)
       status(result) shouldBe Status.OK

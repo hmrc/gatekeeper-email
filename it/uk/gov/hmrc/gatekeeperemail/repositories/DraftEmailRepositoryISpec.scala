@@ -62,7 +62,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
   "persist" should {
 
     "insert an Email message when it does not exist" in new Setup{
-      await(serviceRepo.persist(email, users))
+      await(serviceRepo.persist(email))
 
       val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred).find().toFuture())
 
@@ -71,7 +71,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
     }
 
     "create index on emailUUID" in new Setup {
-      await(serviceRepo.persist(email, users))
+      await(serviceRepo.persist(email))
 
       val Some(globalIdIndex) = await(serviceRepo.collection.listIndexes().toFuture()).find(i => i.get("name").get.asString().getValue == "emailUUIDIndex")
       globalIdIndex.get("unique") shouldBe Some(BsonBoolean(value=true))
@@ -79,7 +79,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
     }
 
     "create TTL index on createDateTime" in new Setup {
-      await(serviceRepo.persist(email, users))
+      await(serviceRepo.persist(email))
 
       val Some(globalIdIndex) = await(serviceRepo.collection.listIndexes().toFuture()).find(i => i.get("name").get.asString().getValue == "ttlIndex")
       globalIdIndex.get("unique") shouldBe None
@@ -89,7 +89,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
 
   "getEmailData" should {
     "find email data when it exists" in new Setup {
-      await(serviceRepo.persist(email, users))
+      await(serviceRepo.persist(email))
 
       val emailData = await(serviceRepo.getEmailData(email.emailUUID))
 
@@ -106,15 +106,15 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
 
   "updateEmailSentStatus" should {
     "find email data when it exists" in new Setup {
-      await(serviceRepo.persist(email, users))
+      await(serviceRepo.persist(email))
 
-      val emailData = await(serviceRepo.updateEmailSentStatus(email.emailUUID))
+      val emailData = await(serviceRepo.updateEmailSentStatus(email.emailUUID, email.emailsCount))
 
       emailData.status shouldBe EmailStatus.SENT
     }
 
     "return null when email data cannot be found. Is this what we want to happen?" in new Setup {
-      val emailData = await(serviceRepo.updateEmailSentStatus(email.emailUUID))
+      val emailData = await(serviceRepo.updateEmailSentStatus(email.emailUUID, email.emailsCount))
       emailData shouldBe null
     }
   }
@@ -126,7 +126,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
         "fileName", "fileMimeType", 1024, None, None, None, None, None)
       val emailUpdate = DraftEmail(emailUUID = email.emailUUID, templateData = templateDataForUpdate, recipientTitle = "Mrs", emailPreferences, attachmentDetails = Some(List(objectStoreFile)), markdownEmailBody = "some markdown body",
         htmlEmailBody = "some html body", subject = "what's it for", status = EmailStatus.PENDING, composedBy = "Ludwig van Beethoven", approvedBy = Some("John Doe"), createDateTime = now())
-      await(serviceRepo.persist(email, users))
+      await(serviceRepo.persist(email))
 
       val updatedEmail = await(serviceRepo.updateEmail(emailUpdate))
 
@@ -158,7 +158,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
 
   "deleteByEmailUUID" should {
     "successfully delete a document when it exists" in new Setup {
-      await(serviceRepo.persist(email, users))
+      await(serviceRepo.persist(email))
 
       val result = await(serviceRepo.deleteByEmailUUID(email.emailUUID))
 
@@ -166,7 +166,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
     }
 
     "fail to delete a document when it doesn't exist" in new Setup {
-      await(serviceRepo.persist(email, users))
+      await(serviceRepo.persist(email))
 
       val result = await(serviceRepo.deleteByEmailUUID("email.emailUUID"))
 
