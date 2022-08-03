@@ -72,12 +72,13 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
 
   private def callThirdPartyDeveloper(emailPreferences: DevelopersEmailQuery): Future[List[RegisteredUser]] = {
     implicit val hc = HeaderCarrier()
-    logger.info(s"Email Preferences are $emailPreferences")
+    logger.info(s"Email Preferences are BEFORE CALLING TPD $emailPreferences")
     emailPreferences match {
       case DevelopersEmailQuery(None,None,None,false,None,true,None) =>
         logger.info(s"Emailing All Users")
         developerConnector.fetchAll()
-      case DevelopersEmailQuery(topic, Some(selectedAPIs), _, _, _, _, _) => {
+      case DevelopersEmailQuery(topic, Some(selectedAPIs), _, _, _, _, None) =>
+        logger.info(s"Emailing Selected Apis to users that are not overridden")
         val selectedTopic: Option[TopicOptionChoice.Value] = topic.map(TopicOptionChoice.withName)
         if (selectedAPIs.forall(_.isEmpty)) {
           Future.successful(List.empty)
@@ -91,7 +92,6 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
             usersAsJson = Json.toJson(combinedUsers)
           } yield combinedUsers
         }
-      }
       case DevelopersEmailQuery(_,_,_,_,_,_,Some(EmailOverride(_, true))) =>
         logger.info(s"Email are overridden with email list ${emailPreferences.emailsForSomeCases.get.email}")
         Future.successful(emailPreferences.emailsForSomeCases.get.email)
@@ -99,6 +99,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
         logger.info(s"Email are not overridden, so 100 subscription email list ${emailPreferences.emailsForSomeCases.get.email.take(OneHundredEmails)}")
         Future.successful(emailPreferences.emailsForSomeCases.get.email)
       case _ =>
+        logger.info("GET EMAILS DEFAULT")
         emailPreferences.topic.map(t =>
         developerConnector.fetchByEmailPreferences(TopicOptionChoice.withName(t),
           emailPreferences.apis, emailPreferences.apiCategories)).getOrElse(Future.successful(List.empty))
