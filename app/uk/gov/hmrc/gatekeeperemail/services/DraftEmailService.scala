@@ -136,7 +136,13 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
       emailUuid = UUID.fromString(email.emailUUID), firstName = elem.firstName, lastName = elem.lastName, recipient = elem.email,
       status = EmailStatus.PENDING, failedCount = 0))
 
-    sentEmailRepository.persist(sentEmails)
+    if(!sentEmails.isEmpty) {
+      sentEmailRepository.persist(sentEmails)
+    }
+    else{
+      logger.warn(s"No Email Addresses selected for sending emails")
+    }
+
     Future.successful(email)
   }
 
