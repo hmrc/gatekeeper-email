@@ -190,7 +190,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
     DraftEmail(emailUUID,  emailTemplateData, recipientsTitle, emailRequest.userSelectionQuery, emailRequest.attachmentDetails,
       emailRequest.emailData.emailBody, emailRequest.emailData.emailBody,
       emailRequest.emailData.emailSubject, EmailStatus.PENDING, "composedBy",
-      Some("approvedBy"), LocalDateTime.now())
+      Some("approvedBy"), LocalDateTime.now(), 0)
   }
 
   private def getEmailBody(rendererResult: Either[UpstreamErrorResponse, RenderResult]) = {

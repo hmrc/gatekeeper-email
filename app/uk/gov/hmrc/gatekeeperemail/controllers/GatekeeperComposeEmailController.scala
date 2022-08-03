@@ -175,7 +175,7 @@ class GatekeeperComposeEmailController @Inject()(
   private def outgoingEmail(email: DraftEmail): OutgoingEmail = {
     OutgoingEmail(email.emailUUID, email.recipientTitle, email.userSelectionQuery, email.attachmentDetails,
       email.markdownEmailBody, email.htmlEmailBody, email.subject, email.status,
-      email.composedBy, email.approvedBy)
+      email.composedBy, email.approvedBy, email.emailsCount)
   }
 
   private def recovery: PartialFunction[Throwable, Result] = {

@@ -34,12 +34,12 @@ case class EmailTemplateData(templateId: String, parameters: Map[String, String]
 case class DraftEmail(emailUUID: String, templateData: EmailTemplateData, recipientTitle: String, userSelectionQuery: DevelopersEmailQuery,
                       attachmentDetails: Option[Seq[UploadedFileWithObjectStore]],
                       markdownEmailBody: String, htmlEmailBody: String, subject: String, status: EmailStatus, composedBy: String,
-                      approvedBy: Option[String], createDateTime: LocalDateTime, emailsCount: Int = 0)
+                      approvedBy: Option[String], createDateTime: LocalDateTime, emailsCount: Int)
 
 case class OutgoingEmail(emailUUID: String, recipientTitle: String, userSelectionQuery: DevelopersEmailQuery,
                          attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None,
                          markdownEmailBody: String, htmlEmailBody: String, subject: String, status: EmailStatus,
-                         composedBy: String, approvedBy: Option[String], emailsCount: Int = 0)
+                         composedBy: String, approvedBy: Option[String], emailsCount: Int)
 
 object OutgoingEmail {
   implicit val emailOverrideFormatter = Json.format[EmailOverride]
