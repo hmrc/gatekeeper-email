@@ -77,7 +77,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
       case DevelopersEmailQuery(None,None,None,false,None,true,None) =>
         logger.info(s"Emailing All Users")
         developerConnector.fetchAll()
-      case DevelopersEmailQuery(topic, Some(selectedAPIs), _, _, _, _, None) =>
+      case DevelopersEmailQuery(topic, Some(selectedAPIs), None, _, None, false, None) =>
         logger.info(s"Emailing Selected Apis to users that are not overridden")
         val selectedTopic: Option[TopicOptionChoice.Value] = topic.map(TopicOptionChoice.withName)
         if (selectedAPIs.forall(_.isEmpty)) {
