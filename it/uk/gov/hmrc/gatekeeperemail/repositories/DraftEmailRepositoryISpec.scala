@@ -56,7 +56,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
     val emailPreferences = DevelopersEmailQuery()
 
     val email = DraftEmail(UUID.randomUUID.toString(), templateData, "DL Team", emailPreferences, None, "markdownEmailBody", "This is test email",
-      "test subject", EmailStatus.FAILED, "composedBy", Some("approvedBy"), now())
+      "test subject", EmailStatus.FAILED, "composedBy", Some("approvedBy"), now(), 1)
 
   }
   "persist" should {
@@ -125,7 +125,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
       val objectStoreFile = UploadedFileWithObjectStore("upscanReference", "downloadUrl", "uploadTimestamp", "checksum",
         "fileName", "fileMimeType", 1024, None, None, None, None, None)
       val emailUpdate = DraftEmail(emailUUID = email.emailUUID, templateData = templateDataForUpdate, recipientTitle = "Mrs", emailPreferences, attachmentDetails = Some(List(objectStoreFile)), markdownEmailBody = "some markdown body",
-        htmlEmailBody = "some html body", subject = "what's it for", status = EmailStatus.PENDING, composedBy = "Ludwig van Beethoven", approvedBy = Some("John Doe"), createDateTime = now())
+        htmlEmailBody = "some html body", subject = "what's it for", status = EmailStatus.PENDING, composedBy = "Ludwig van Beethoven", approvedBy = Some("John Doe"), createDateTime = now(), 1)
       await(serviceRepo.persist(email))
 
       val updatedEmail = await(serviceRepo.updateEmail(emailUpdate))
@@ -147,7 +147,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
         val objectStoreFile = UploadedFileWithObjectStore("upscanReference", "downloadUrl", "uploadTimestamp", "checksum",
           "fileName", "fileMimeType", 1024, None, None, None, None, None)
         val emailUpdate = DraftEmail(emailUUID = UUID.randomUUID().toString, templateData = templateDataForUpdate, recipientTitle = "Mrs", emailPreferences, attachmentDetails = Some(List(objectStoreFile)), markdownEmailBody = "some markdown body",
-          htmlEmailBody = "some html body", subject = "what's it for", status = EmailStatus.PENDING, composedBy = "Ludwig van Beethoven", approvedBy = Some("John Doe"), createDateTime = now())
+          htmlEmailBody = "some html body", subject = "what's it for", status = EmailStatus.PENDING, composedBy = "Ludwig van Beethoven", approvedBy = Some("John Doe"), createDateTime = now(), 1)
 
         val updatedEmail = await(serviceRepo.updateEmail(emailUpdate))
 

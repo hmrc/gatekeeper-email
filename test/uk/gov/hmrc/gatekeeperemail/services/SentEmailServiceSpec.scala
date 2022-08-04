@@ -50,7 +50,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
 
     val draftEmail = DraftEmail("emailId-123", templateData, "DL Team",
       emailPreferences, None, "markdownEmailBody", "Test email",
-      "test subject", SENT, "composedBy", Some("approvedBy"), LocalDateTime.now())
+      "test subject", SENT, "composedBy", Some("approvedBy"), LocalDateTime.now(), 1)
     val sentEmail = SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), emailUuid = UUID.randomUUID(),
       firstName = "first", lastName = "last", recipient = "first.last@digital.hmrc.gov.uk", status = PENDING,
       failedCount = 0)

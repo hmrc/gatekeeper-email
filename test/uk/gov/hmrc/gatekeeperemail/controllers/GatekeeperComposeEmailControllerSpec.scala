@@ -56,7 +56,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
   val emailPreferences = DevelopersEmailQuery()
   private val draftEmail = DraftEmail("emailId-123", templateData, "DL Team",
     emailPreferences, None, "markdownEmailBody", "This is test email",
-    "test subject", SENT, "composedBy", Some("approvedBy"), now())
+    "test subject", SENT, "composedBy", Some("approvedBy"), now(), 1)
   private val emailUUIDToAttachFile = "emailUUID111"
   private val cargo = Some(UploadCargo(emailUUIDToAttachFile))
   private val uploadedFile123: UploadedFileWithObjectStore = UploadedFileWithObjectStore("Ref123", "/gatekeeper/downloadUrl/123", "", "", "file123", "",
@@ -102,7 +102,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
 
     val emailUUID: String = UUID.randomUUID().toString
     val dummyEmailData = DraftEmail("", EmailTemplateData("", Map(), false, Map(), None), "", emailPreferences,
-      None, "", "", "", SENT, "", None, now)
+      None, "", "", "", SENT, "", None, now, 1)
     when(mockDraftEmailRepository.getEmailData(emailUUID)).thenReturn(Future(dummyEmailData))
   }
 

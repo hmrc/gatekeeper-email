@@ -66,8 +66,8 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
       email <- draftEmailRepository.getEmailData(emailUUID)
       users <- callThirdPartyDeveloper(email.userSelectionQuery)
       _ <-  persistInEmailQueue(email, users)
-      _ <- draftEmailRepository.updateEmailSentStatus(emailUUID, users.length)
-    } yield email
+      draftEmail <- draftEmailRepository.updateEmailSentStatus(emailUUID, users.size)
+    } yield draftEmail
   }
 
   private def callThirdPartyDeveloper(emailPreferences: DevelopersEmailQuery): Future[List[RegisteredUser]] = {
@@ -90,10 +90,12 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
             privateUsers <- handleGettingApiUsers(filteredApis, selectedTopic, PRIVATE)
             combinedUsers = publicUsers ++ privateUsers
             usersAsJson = Json.toJson(combinedUsers)
+            _ = logger.info(s"OUTGOING EMAILS count is ${combinedUsers.size}")
           } yield combinedUsers
         }
       case DevelopersEmailQuery(_,_,_,_,_,_,Some(EmailOverride(_, true))) =>
         logger.info(s"Email are overridden with email list ${emailPreferences.emailsForSomeCases.get.email}")
+        logger.info(s"OUTGOING EMAILS count when overridden is ${emailPreferences.emailsForSomeCases.get.email.size}")
         Future.successful(emailPreferences.emailsForSomeCases.get.email)
       case DevelopersEmailQuery(_,_,_,_,_,_,Some(EmailOverride(_, false))) =>
         logger.info(s"Email are not overridden, so 100 subscription email list ${emailPreferences.emailsForSomeCases.get.email.take(OneHundredEmails)}")
