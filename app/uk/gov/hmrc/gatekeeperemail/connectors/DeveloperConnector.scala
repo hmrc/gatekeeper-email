@@ -25,6 +25,7 @@ import uk.gov.hmrc.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 import com.google.inject.name.Named
+import play.api.Logging
 import uk.gov.hmrc.http.HttpReads.Implicits._
 
 
@@ -44,13 +45,14 @@ trait DeveloperConnector {
 class HttpDeveloperConnector @Inject()(appConfig: AppConfig,
                                        http: HttpClient)
     (implicit ec: ExecutionContext)
-    extends DeveloperConnector {
+    extends DeveloperConnector with Logging{
 
 
   def fetchByEmailPreferences(topic: TopicOptionChoice,
                               maybeApis: Option[Seq[String]] = None,
                               maybeApiCategories: Option[Seq[APICategory]] = None,
                               privateapimatch: Boolean = false)(implicit hc: HeaderCarrier): Future[List[RegisteredUser]] = {
+    logger.info(s"fetchByEmailPreferences topic is $topic maybeApis: $maybeApis maybeApuCategories $maybeApiCategories privateapimatch $privateapimatch")
     val regimes: Seq[(String,String)] = maybeApiCategories.fold(Seq.empty[(String,String)])(regimes =>
                                             regimes.flatMap(regime => Seq("regime" -> regime.value)))
     val privateapimatchParams = if(privateapimatch) Seq("privateapimatch" -> "true") else Seq.empty
