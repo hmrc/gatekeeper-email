@@ -90,9 +90,13 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
         } else {
           for {
             apis <- apmConnector.fetchAllCombinedApis()
+            _ = logger.info(s"fetchAllCombinedAPIS are  $apis")
             filteredApis = filterSelectedApis(Some(selectedAPIs.toList), apis).sortBy(_.displayName)
+            _ = logger.info(s"filteredApis are  $filteredApis")
             publicUsers <- handleGettingApiUsers(filteredApis, selectedTopic, PUBLIC)
+            _ = logger.info(s"publicUsers are  $publicUsers")
             privateUsers <- handleGettingApiUsers(filteredApis, selectedTopic, PRIVATE)
+            _ = logger.info(s"privateUsers are  $privateUsers")
             combinedUsers = publicUsers ++ privateUsers
             _ = logger.info(s"OUTGOING EMAILS count is ${combinedUsers.size}")
           } yield combinedUsers
@@ -119,6 +123,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
                                     apiAcessType: APIAccessType)(implicit hc: HeaderCarrier): Future[List[RegisteredUser]] ={
     //APSR-1418 - the accesstype inside combined api is option as a temporary measure until APM version which conatins the change to
     //return this is deployed out to all environments
+    logger.info(s"In handleGettingApiUsers  apis: $apis  selectedTopic $selectedTopic apiAccessType ${apiAcessType.toString}")
     val filteredApis = apis.filter(_.accessType.getOrElse(APIAccessType.PUBLIC) == apiAcessType)
     val categories = filteredApis.flatMap(_.categories.map(toAPICategory))
     val apiNames = filteredApis.map(_.serviceName)
@@ -127,8 +132,10 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
         case (_, Nil) =>
           successful(List.empty[RegisteredUser])
         case (PUBLIC, _)  =>
+          logger.info(s"Before fetchByEmailPreferences topic: $topic  apiNames: $apiNames categories.distinct: ${categories.distinct} privateapimatch: false")
           developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories.distinct), false).map(_.filter(_.verified))
         case (PRIVATE, _) =>
+          logger.info(s"Before fetchByEmailPreferences topic: $topic  apiNames: $apiNames categories.distinct: ${categories.distinct} privateapimatch: false")
           developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories.distinct), true).map(_.filter(_.verified))
       }
 
@@ -151,7 +158,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
 
     if(!sentEmails.isEmpty) {
       logger.info(s"Sending to these Emails fetched from TPD or api-gatekeeper  or config overrides  $sentEmails")
-      sentEmailRepository.persist(sentEmails)
+      //sentEmailRepository.persist(sentEmails)
     }
     else{
       logger.warn(s"No Email Addresses selected for sending emails")
