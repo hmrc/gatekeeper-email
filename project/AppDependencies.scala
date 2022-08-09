@@ -3,7 +3,7 @@ import sbt._
 object AppDependencies {
 
   lazy val bootstrapPlayVersion = "5.24.0"
-  lazy val hmrcMongoVersion = "0.66.0"
+  lazy val hmrcMongoVersion = "0.68.0"
   lazy val akkaVersion = "2.6.19"
 
   def apply(): Seq[ModuleID] = compile ++ test
