@@ -55,7 +55,6 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
       templatedData = EmailTemplateData(sendEmailRequest.templateId, sendEmailRequest.parameters, sendEmailRequest.force,
         sendEmailRequest.auditData, sendEmailRequest.eventUrl)
       renderedEmail = email.copy(templateData = templatedData, htmlEmailBody = emailBody._1, markdownEmailBody = emailBody._2)
-      users <- callThirdPartyDeveloper(email.userSelectionQuery)
       _ <- draftEmailRepository.persist(renderedEmail)
     } yield renderedEmail
   }
@@ -77,7 +76,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
 
   private def callThirdPartyDeveloper(emailPreferences: DevelopersEmailQuery): Future[List[RegisteredUser]] = {
     implicit val hc = HeaderCarrier()
-    logger.info(s"Email Preferences are BEFORE CALLING TPD $emailPreferences")
+    logger.info(s"Email Preferences BEFORE CALLING TPD are $emailPreferences")
 
     val emails = emailPreferences match {
       case DevelopersEmailQuery(None,None,None,false,None,true,None) =>
