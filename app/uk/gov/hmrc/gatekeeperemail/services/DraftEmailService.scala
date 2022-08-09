@@ -41,7 +41,6 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
 
   val logger: Logger = Logger(getClass.getName)
 
-  val OneHundredEmails = 100
   def persistEmail(emailRequest: EmailRequest, emailUUID: String): Future[DraftEmail] = {
     implicit val hc = HeaderCarrier()
 
@@ -64,19 +63,26 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
   def sendEmail(emailUUID: String): Future[DraftEmail] = {
     for {
       email <- draftEmailRepository.getEmailData(emailUUID)
-      users <- callThirdPartyDeveloper(email.userSelectionQuery)
-      _ <-  persistInEmailQueue(email, users)
-      draftEmail <- draftEmailRepository.updateEmailSentStatus(emailUUID, users.size)
+      users <-
+        if(email.userSelectionQuery.emailsForSomeCases.exists(_.isOverride)) {
+          callThirdPartyDeveloper(email.userSelectionQuery.copy(emailsForSomeCases = None))
+        }
+      else {
+        callThirdPartyDeveloper(email.userSelectionQuery)
+      }
+      usersModified <-  persistInEmailQueue(email, users)
+      draftEmail <- draftEmailRepository.updateEmailSentStatus(emailUUID, usersModified.size)
     } yield draftEmail
   }
 
   private def callThirdPartyDeveloper(emailPreferences: DevelopersEmailQuery): Future[List[RegisteredUser]] = {
     implicit val hc = HeaderCarrier()
     logger.info(s"Email Preferences are BEFORE CALLING TPD $emailPreferences")
-    emailPreferences match {
+
+    val emails = emailPreferences match {
       case DevelopersEmailQuery(None,None,None,false,None,true,None) =>
-        logger.info(s"Emailing All Users")
-        developerConnector.fetchAll()
+          logger.info(s"Emailing All Users scenario.. ")
+          developerConnector.fetchAll()
       case DevelopersEmailQuery(topic, Some(selectedAPIs), None, _, None, false, None) =>
         logger.info(s"Emailing Selected Apis to users that are not overridden")
         val selectedTopic: Option[TopicOptionChoice.Value] = topic.map(TopicOptionChoice.withName)
@@ -89,16 +95,11 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
             publicUsers <- handleGettingApiUsers(filteredApis, selectedTopic, PUBLIC)
             privateUsers <- handleGettingApiUsers(filteredApis, selectedTopic, PRIVATE)
             combinedUsers = publicUsers ++ privateUsers
-            usersAsJson = Json.toJson(combinedUsers)
             _ = logger.info(s"OUTGOING EMAILS count is ${combinedUsers.size}")
           } yield combinedUsers
         }
-      case DevelopersEmailQuery(_,_,_,_,_,_,Some(EmailOverride(_, true))) =>
-        logger.info(s"Email are overridden with email list ${emailPreferences.emailsForSomeCases.get.email}")
-        logger.info(s"OUTGOING EMAILS count when overridden is ${emailPreferences.emailsForSomeCases.get.email.size}")
-        Future.successful(emailPreferences.emailsForSomeCases.get.email)
       case DevelopersEmailQuery(_,_,_,_,_,_,Some(EmailOverride(_, false))) =>
-        logger.info(s"Email are not overridden, so 100 subscription email list ${emailPreferences.emailsForSomeCases.get.email.take(OneHundredEmails)}")
+        logger.info(s"Email are not overridden, so subscription email list ${emailPreferences.emailsForSomeCases.get.email}")
         Future.successful(emailPreferences.emailsForSomeCases.get.email)
       case _ =>
         logger.info("GET EMAILS DEFAULT")
@@ -106,7 +107,9 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
         developerConnector.fetchByEmailPreferences(TopicOptionChoice.withName(t),
           emailPreferences.apis, emailPreferences.apiCategories)).getOrElse(Future.successful(List.empty))
     }
+    emails
   }
+
 
   private def filterSelectedApis(maybeSelectedAPIs: Option[List[String]], apiList: List[CombinedApi]) = {
     maybeSelectedAPIs.fold(List.empty[CombinedApi])(selectedAPIs => apiList.filter(api => selectedAPIs.contains(api.serviceName)))
@@ -133,20 +136,29 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
     })
   }
 
-  private def persistInEmailQueue(email: DraftEmail, users: List[RegisteredUser]):  Future[DraftEmail] = {
-    logger.info(s"100 Emails fetched from TPD or api-gatekeeper  ${users.take(OneHundredEmails)}")
-    val sentEmails = users.map(elem => SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(),
+  private def persistInEmailQueue(email: DraftEmail, users: List[RegisteredUser]):  Future[List[RegisteredUser]] = {
+    logger.info(s"Emails fetched from TPD or api-gatekeeper  $users")
+
+    val usersModified = if(email.userSelectionQuery.emailsForSomeCases.exists(_.isOverride)) {
+      email.userSelectionQuery.emailsForSomeCases.get.email
+    }
+    else {
+      users
+    }
+
+    val sentEmails = usersModified.map(elem => SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(),
       emailUuid = UUID.fromString(email.emailUUID), firstName = elem.firstName, lastName = elem.lastName, recipient = elem.email,
       status = EmailStatus.PENDING, failedCount = 0))
 
     if(!sentEmails.isEmpty) {
+      logger.info(s"Sending to these Emails fetched from TPD or api-gatekeeper  or config overrides  $sentEmails")
       sentEmailRepository.persist(sentEmails)
     }
     else{
       logger.warn(s"No Email Addresses selected for sending emails")
     }
 
-    Future.successful(email)
+    Future.successful(usersModified)
   }
 
   def fetchEmail(emailUUID: String): Future[DraftEmail] = {

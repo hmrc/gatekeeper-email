@@ -79,11 +79,11 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
     }
 
     "save the email data when sending email to overridden emails addresses into mongodb repo" in new Setup {
+      val overriddenPref = DevelopersEmailQuery(emailsForSomeCases = Some(EmailOverride(users, true)))
       when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
+      when(draftEmailRepositoryMock.getEmailData(*)).thenReturn(Future(email.copy(userSelectionQuery = overriddenPref)))
       when(developerConnectorMock.fetchAll()(*)).thenReturn(Future(users))
 
-      DevelopersEmailQuery(emailsForSomeCases = Some(EmailOverride(users, true)))
-      val overriddenPref = DevelopersEmailQuery(emailsForSomeCases = Some(EmailOverride(users, true)))
 
       val emailRequest = EmailRequest(overriddenPref, "gatekeeper",
         EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
@@ -255,6 +255,35 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
       val insertIds = new util.HashMap[Integer, BsonValue]{new Integer(1)-> new BsonInt32(33)}
       when(draftEmailRepositoryMock.getEmailData(*)).thenReturn(Future(email))
+      when(draftEmailRepositoryMock.updateEmailSentStatus(email.emailUUID, 2)).thenReturn(Future(email))
+      when(sentEmailRepositoryMock.persist(sentEmailCaptor.capture())).thenReturn(Future(InsertManyResult.acknowledged(insertIds)))
+      when(developerConnectorMock.fetchAll()(*)).thenReturn(Future(users))
+
+      await(underTest.sendEmail(email.emailUUID))
+
+      verify(draftEmailRepositoryMock).getEmailData(email.emailUUID)
+      verify(draftEmailRepositoryMock).updateEmailSentStatus(email.emailUUID, email.emailsCount)
+      verify(sentEmailRepositoryMock).persist(*)
+      val listOfSentMailsInserted = sentEmailCaptor.getValue
+      listOfSentMailsInserted.size shouldBe 2
+      listOfSentMailsInserted(0).recipient shouldBe users(0).email
+      listOfSentMailsInserted(0).firstName shouldBe users(0).firstName
+      listOfSentMailsInserted(0).lastName shouldBe users(0).lastName
+      listOfSentMailsInserted(0).failedCount shouldBe 0
+      listOfSentMailsInserted(0).status shouldBe PENDING
+      listOfSentMailsInserted(1).recipient shouldBe users(1).email
+      listOfSentMailsInserted(1).firstName shouldBe users(1).firstName
+      listOfSentMailsInserted(1).lastName shouldBe users(1).lastName
+      listOfSentMailsInserted(1).failedCount shouldBe 0
+      listOfSentMailsInserted(1).status shouldBe PENDING
+    }
+
+    "successfully send (into Mongo) an email with two recipients from overridden email addresses" in new Setup {
+      val sentEmailCaptor: ArgumentCaptor[List[SentEmail]] = ArgumentCaptor.forClass(classOf[List[SentEmail]])
+
+      val insertIds = new util.HashMap[Integer, BsonValue]{new Integer(1)-> new BsonInt32(33)}
+      when(draftEmailRepositoryMock.getEmailData(*)).thenReturn(Future(
+        email.copy(userSelectionQuery = DevelopersEmailQuery(emailsForSomeCases =  Some(EmailOverride(users, true))))))
       when(draftEmailRepositoryMock.updateEmailSentStatus(email.emailUUID, 2)).thenReturn(Future(email))
       when(sentEmailRepositoryMock.persist(sentEmailCaptor.capture())).thenReturn(Future(InsertManyResult.acknowledged(insertIds)))
       when(developerConnectorMock.fetchAll()(*)).thenReturn(Future(users))
