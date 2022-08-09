@@ -145,6 +145,27 @@ class HttpDeveloperConnectorSpec  extends AsyncHmrcSpec
 
         result shouldBe List(user)
       }
+
+      "make a call with topic, api categories and apis passed and privateapimatch as true into the service and return users from response" in new Setup {
+        val url = s"""/developers/email-preferences\\?topic=${TopicOptionChoice.BUSINESS_AND_POLICY.toString}&regime=VAT&regime=API1&service=service1&service=service2&privateapimatch=true"""
+        val user = aUserResponse(developerEmail)
+        val matching = urlMatching(url)
+
+        stubFor(
+          get(matching)
+            .willReturn(
+              aResponse()
+                .withStatus(OK)
+                .withBody(Json.toJson(Seq(user)).toString())
+            )
+        )
+
+        val result = await(connector.fetchByEmailPreferences(TopicOptionChoice.BUSINESS_AND_POLICY, maybeApis = Some(Seq("service1", "service2")), maybeApiCategories = Some(Seq(APICategory("VAT"), APICategory("API1"))), privateapimatch = true))
+
+        wireMockVerify(getRequestedFor(matching))
+
+        result shouldBe List(user)
+      }
     }
   }
 
