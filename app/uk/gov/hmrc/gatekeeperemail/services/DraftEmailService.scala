@@ -94,14 +94,14 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
             publicUsers <- handleGettingApiUsers(filteredApis, selectedTopic, PUBLIC)
             privateUsers <- handleGettingApiUsers(filteredApis, selectedTopic, PRIVATE)
             combinedUsers = publicUsers ++ privateUsers
-            _ = logger.info(s"OUTGOING EMAILS count is ${combinedUsers.size}")
+            _ = logger.info(s"Outgoing Emails count is ${combinedUsers.size}")
           } yield combinedUsers
         }
       case DevelopersEmailQuery(_,_,_,_,_,_,Some(EmailOverride(_, false))) =>
         logger.info(s"Email are not overridden, so subscription email list ${emailPreferences.emailsForSomeCases.get.email}")
         Future.successful(emailPreferences.emailsForSomeCases.get.email)
       case _ =>
-        logger.info("GET EMAILS DEFAULT")
+        logger.info("Getting Emails for Default match case")
         emailPreferences.topic.map(t =>
         developerConnector.fetchByEmailPreferences(TopicOptionChoice.withName(t),
           emailPreferences.apis, emailPreferences.apiCategories)).getOrElse(Future.successful(List.empty))
