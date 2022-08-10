@@ -139,7 +139,6 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
   }
 
   private def persistInEmailQueue(email: DraftEmail, users: List[RegisteredUser]):  Future[List[RegisteredUser]] = {
-    logger.info(s"Emails fetched from TPD or api-gatekeeper  $users")
 
     val usersModified = if(email.userSelectionQuery.emailsForSomeCases.exists(_.isOverride)) {
       email.userSelectionQuery.emailsForSomeCases.get.email
@@ -153,7 +152,6 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
       status = EmailStatus.PENDING, failedCount = 0))
 
     if(!sentEmails.isEmpty) {
-      logger.info(s"Sending to these Emails fetched from TPD or api-gatekeeper  or config overrides  $sentEmails")
       sentEmailRepository.persist(sentEmails)
     }
     else{
