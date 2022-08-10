@@ -97,7 +97,7 @@ class GatekeeperComposeEmailController @Inject()(
 
   private def updateEmailWithAttachments(email: DraftEmail, finalUploadedFiles: Seq[UploadedFileWithObjectStore]) = {
     val er = EmailRequest(
-      email.recipients,
+      email.userSelectionQuery,
       templateId = "gatekeeper",
       EmailData(email.subject, email.markdownEmailBody),
       attachmentDetails = Some(finalUploadedFiles))
@@ -173,9 +173,9 @@ class GatekeeperComposeEmailController @Inject()(
   }
 
   private def outgoingEmail(email: DraftEmail): OutgoingEmail = {
-    OutgoingEmail(email.emailUUID, email.recipientTitle, email.recipients, email.attachmentDetails,
+    OutgoingEmail(email.emailUUID, email.recipientTitle, email.userSelectionQuery, email.attachmentDetails,
       email.markdownEmailBody, email.htmlEmailBody, email.subject, email.status,
-      email.composedBy, email.approvedBy)
+      email.composedBy, email.approvedBy, email.emailsCount)
   }
 
   private def recovery: PartialFunction[Throwable, Result] = {

@@ -16,18 +16,24 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-import java.util.UUID
+import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
+import play.api.libs.json.Json
 
-sealed trait UploadStatus
-case object InProgress extends UploadStatus
-case object Failed extends UploadStatus
-case object BadRequest extends UploadStatus
-case class UploadedSuccessfully(name: String, mimeType: String, downloadUrl: String, size: Option[Long], objectStoreUrl: String) extends UploadStatus
-case class UploadedFailedWithErrors(errorCode: String, errorMessage: String, errorRequestId: String, key: String) extends UploadStatus
+import scala.util.Random
+import java.net.URLEncoder.encode
 
-case class UploadId(value : UUID) extends AnyVal
 
-case class Reference(value: String) extends AnyVal
+sealed trait APIAccessType extends EnumEntry
 
+object APIAccessType extends Enum[APIAccessType] with PlayJsonEnum[APIAccessType] {
+  val values = findValues
+  case object PRIVATE extends APIAccessType
+  case object PUBLIC extends APIAccessType
+}
+
+case class APICategory(value: String) extends AnyVal
+object APICategory{
+  implicit val formatApiCategory = Json.valueFormat[APICategory]
+}
 
 

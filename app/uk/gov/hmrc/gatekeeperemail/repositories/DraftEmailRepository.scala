@@ -18,7 +18,6 @@ package uk.gov.hmrc.gatekeeperemail.repositories
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-
 import javax.inject.{Inject, Singleton}
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
 import org.mongodb.scala.model.Filters.equal
@@ -28,7 +27,7 @@ import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOption
 import org.mongodb.scala.result.InsertOneResult
 import org.mongodb.scala.{MongoClient, MongoCollection}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus}
+import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, RegisteredUser}
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.emailFormatter
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
@@ -87,9 +86,11 @@ class DraftEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
       }
     }
 
-  def updateEmailSentStatus(emailUUID: String): Future[DraftEmail] = {
+  def updateEmailSentStatus(emailUUID: String, emailCount: Int): Future[DraftEmail] = {
     collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(emailUUID)),
-      update = set("status", Codecs.toBson(EmailStatus.SENT)),
+      update = combine(
+        set("status", Codecs.toBson(EmailStatus.SENT)),
+        set("emailsCount", emailCount)),
       options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
     ).map(_.asInstanceOf[DraftEmail]).head()
   }

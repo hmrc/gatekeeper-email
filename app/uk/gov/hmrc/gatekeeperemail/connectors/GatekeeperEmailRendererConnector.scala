@@ -37,7 +37,7 @@ class GatekeeperEmailRendererConnector @Inject()(httpClient: HttpClient, config:
 
     httpClient.POST[TemplateRenderRequest, TemplateRenderResult](
       s"$serviceUrl/templates/${emailRequest.templateId}",
-      TemplateRenderRequest(emailRequest.parameters, takeOnlyIfOneEmail(emailRequest.to.map(_.email)))) map { result =>
+      TemplateRenderRequest(emailRequest.parameters, None)) map { result =>
       Right(
           RenderResult(
           result.plain,
@@ -50,11 +50,4 @@ class GatekeeperEmailRendererConnector @Inject()(httpClient: HttpClient, config:
         Left(errorResponse)
     }
   }
-
-  def takeOnlyIfOneEmail(emails: List[String]): Option[String] =
-    emails match {
-      case first :: Nil => Some(first)
-      case _            => None
-    }
-
 }

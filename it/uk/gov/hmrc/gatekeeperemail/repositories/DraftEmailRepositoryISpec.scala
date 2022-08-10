@@ -18,7 +18,6 @@ package uk.gov.hmrc.gatekeeperemail.repositories
 
 import java.time.LocalDateTime.now
 import java.util.UUID
-
 import org.mongodb.scala.ReadPreference.primaryPreferred
 import org.mongodb.scala.bson.BsonBoolean
 import org.scalatest.BeforeAndAfterEach
@@ -28,7 +27,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, EmailTemplateData, UploadedFileWithObjectStore, User}
+import uk.gov.hmrc.gatekeeperemail.models.{DevelopersEmailQuery, DraftEmail, EmailStatus, EmailTemplateData, RegisteredUser, UploadedFileWithObjectStore, User}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
@@ -52,10 +51,12 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
 
   trait Setup {
     val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
-    val users = List(User("example@example.com", "first name", "last name", true),
-      User("example2@example2.com", "first name2", "last name2", true))
-    val email = DraftEmail(UUID.randomUUID.toString(), templateData, "DL Team", users, None, "markdownEmailBody", "This is test email",
-      "test subject", EmailStatus.FAILED, "composedBy", Some("approvedBy"), now())
+    val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
+      RegisteredUser("example2@example2.com", "first name2", "last name2", true))
+    val emailPreferences = DevelopersEmailQuery()
+
+    val email = DraftEmail(UUID.randomUUID.toString(), templateData, "DL Team", emailPreferences, None, "markdownEmailBody", "This is test email",
+      "test subject", EmailStatus.FAILED, "composedBy", Some("approvedBy"), now(), 1)
 
   }
   "persist" should {
@@ -107,13 +108,13 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
     "find email data when it exists" in new Setup {
       await(serviceRepo.persist(email))
 
-      val emailData = await(serviceRepo.updateEmailSentStatus(email.emailUUID))
+      val emailData = await(serviceRepo.updateEmailSentStatus(email.emailUUID, email.emailsCount))
 
       emailData.status shouldBe EmailStatus.SENT
     }
 
     "return null when email data cannot be found. Is this what we want to happen?" in new Setup {
-      val emailData = await(serviceRepo.updateEmailSentStatus(email.emailUUID))
+      val emailData = await(serviceRepo.updateEmailSentStatus(email.emailUUID, email.emailsCount))
       emailData shouldBe null
     }
   }
@@ -123,9 +124,8 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
       val templateDataForUpdate = EmailTemplateData("updatedTemplateId", Map(), true, Map(), Some("url"))
       val objectStoreFile = UploadedFileWithObjectStore("upscanReference", "downloadUrl", "uploadTimestamp", "checksum",
         "fileName", "fileMimeType", 1024, None, None, None, None, None)
-      val emailUpdate = DraftEmail(emailUUID = email.emailUUID, templateData = templateDataForUpdate, recipientTitle = "Mrs", recipients = List(
-        User("update.email@test.com", "upFirst", "upLast", true)), attachmentDetails = Some(List(objectStoreFile)), markdownEmailBody = "some markdown body",
-        htmlEmailBody = "some html body", subject = "what's it for", status = EmailStatus.PENDING, composedBy = "Ludwig van Beethoven", approvedBy = Some("John Doe"), createDateTime = now())
+      val emailUpdate = DraftEmail(emailUUID = email.emailUUID, templateData = templateDataForUpdate, recipientTitle = "Mrs", emailPreferences, attachmentDetails = Some(List(objectStoreFile)), markdownEmailBody = "some markdown body",
+        htmlEmailBody = "some html body", subject = "what's it for", status = EmailStatus.PENDING, composedBy = "Ludwig van Beethoven", approvedBy = Some("John Doe"), createDateTime = now(), 1)
       await(serviceRepo.persist(email))
 
       val updatedEmail = await(serviceRepo.updateEmail(emailUpdate))
@@ -137,7 +137,6 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
       updatedEmail.attachmentDetails shouldBe emailUpdate.attachmentDetails
       updatedEmail.emailUUID shouldBe email.emailUUID
       updatedEmail.recipientTitle shouldBe email.recipientTitle
-      updatedEmail.recipients shouldBe email.recipients
       updatedEmail.status shouldBe email.status
       updatedEmail.composedBy shouldBe email.composedBy
       updatedEmail.approvedBy shouldBe email.approvedBy
@@ -147,9 +146,8 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
         val templateDataForUpdate = EmailTemplateData("updatedTemplateId", Map(), true, Map(), Some("url"))
         val objectStoreFile = UploadedFileWithObjectStore("upscanReference", "downloadUrl", "uploadTimestamp", "checksum",
           "fileName", "fileMimeType", 1024, None, None, None, None, None)
-        val emailUpdate = DraftEmail(emailUUID = UUID.randomUUID().toString, templateData = templateDataForUpdate, recipientTitle = "Mrs", recipients = List(
-          User("update.email@test.com", "upFirst", "upLast", true)), attachmentDetails = Some(List(objectStoreFile)), markdownEmailBody = "some markdown body",
-          htmlEmailBody = "some html body", subject = "what's it for", status = EmailStatus.PENDING, composedBy = "Ludwig van Beethoven", approvedBy = Some("John Doe"), createDateTime = now())
+        val emailUpdate = DraftEmail(emailUUID = UUID.randomUUID().toString, templateData = templateDataForUpdate, recipientTitle = "Mrs", emailPreferences, attachmentDetails = Some(List(objectStoreFile)), markdownEmailBody = "some markdown body",
+          htmlEmailBody = "some html body", subject = "what's it for", status = EmailStatus.PENDING, composedBy = "Ludwig van Beethoven", approvedBy = Some("John Doe"), createDateTime = now(), 1)
 
         val updatedEmail = await(serviceRepo.updateEmail(emailUpdate))
 

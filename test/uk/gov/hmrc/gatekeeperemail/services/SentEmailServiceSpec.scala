@@ -44,11 +44,13 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
     val underTest = new SentEmailService(emailConnectorMock, draftEmailServiceMock, sentEmailRepositoryMock)
     val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
-    val users = List(User("example@example.com", "first name", "last name", true),
-      User("example2@example2.com", "first name2", "last name2", true))
+    val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
+      RegisteredUser("example2@example2.com", "first name2", "last name2", true))
+    val emailPreferences = DevelopersEmailQuery()
+
     val draftEmail = DraftEmail("emailId-123", templateData, "DL Team",
-      users, None, "markdownEmailBody", "Test email",
-      "test subject", SENT, "composedBy", Some("approvedBy"), LocalDateTime.now())
+      emailPreferences, None, "markdownEmailBody", "Test email",
+      "test subject", SENT, "composedBy", Some("approvedBy"), LocalDateTime.now(), 1)
     val sentEmail = SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), emailUuid = UUID.randomUUID(),
       firstName = "first", lastName = "last", recipient = "first.last@digital.hmrc.gov.uk", status = PENDING,
       failedCount = 0)
