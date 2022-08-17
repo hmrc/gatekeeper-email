@@ -143,8 +143,6 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
                               case (((a,b),c),d) if (!a.isEmpty && !d.isEmpty) => List(RegisteredUser(a,b,c,d.toBoolean))
                               case _ => List.empty}.flatten
 
-    logger.info(s"********************AdditionalUsers = $additionalUsers")
-
     //if sendToActualRecipients is true then actualUsers   + additional recipients
     //if sendToActualRecipients is false  then just  additional recipients
     val usersModified = if(appConfig.sendToActualRecipients) {
