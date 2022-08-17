@@ -371,19 +371,19 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
         CombinedApi("CORP", "CORP", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
         CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))))
       )
-      when(appConfigMock.additionalRecipientsEmail).thenReturn("example@example.com;example2@example2.com")
-      when(appConfigMock.additionalRecipientsFname).thenReturn("first name;first name2")
-      when(appConfigMock.additionalRecipientsLname).thenReturn("last name;last name 2")
-      when(appConfigMock.additionalRecipientsVerified).thenReturn("true;true")
+      when(appConfigMock.additionalRecipientsEmail).thenReturn("example@example.com")
+      when(appConfigMock.additionalRecipientsFname).thenReturn("first name")
+      when(appConfigMock.additionalRecipientsLname).thenReturn("last name")
+      when(appConfigMock.additionalRecipientsVerified).thenReturn("true")
 
       when(appConfigMock.sendToActualRecipients).thenReturn(true)
       await(underTest.sendEmail(email.emailUUID))
 
       verify(draftEmailRepositoryMock).getEmailData(email.emailUUID)
-      verify(draftEmailRepositoryMock).updateEmailSentStatus(email.emailUUID, 6)
+      verify(draftEmailRepositoryMock).updateEmailSentStatus(email.emailUUID, 5)
       verify(sentEmailRepositoryMock).persist(*)
       val listOfSentMailsInserted = sentEmailCaptor.getValue
-      listOfSentMailsInserted.size shouldBe 6
+      listOfSentMailsInserted.size shouldBe 5
       listOfSentMailsInserted(0).recipient shouldBe users(0).email
       listOfSentMailsInserted(0).firstName shouldBe users(0).firstName
       listOfSentMailsInserted(0).lastName shouldBe users(0).lastName
