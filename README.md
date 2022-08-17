@@ -1,5 +1,4 @@
 
-# readme for gatekeeper-email
 # Gatekeeper Compose Email backend
 
 This service is a back end for the Gatekeeper Compose Email front end. It takes an email composed in that service, which may include markup in its body, and calls the 
