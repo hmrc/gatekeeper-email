@@ -146,9 +146,11 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
     //if sendToActualRecipients is true then actualUsers   + additional recipients
     //if sendToActualRecipients is false  then just  additional recipients
     val usersModified = if(appConfig.sendToActualRecipients) {
+      logger.info(s"Sending emails to Actual Recipients + additionalUsers ${users ++ additionalUsers}")
       users ++ additionalUsers
     }
     else {
+      logger.info(s"Sending emails to additionalUsers $additionalUsers")
       additionalUsers
     }
 
