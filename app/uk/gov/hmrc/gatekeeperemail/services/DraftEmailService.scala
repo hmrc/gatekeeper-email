@@ -199,7 +199,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
     val recipientsTitle = "TL API PLATFORM TEAM"
     val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
       "fromAddress" -> "gateKeeper",
-      "body" -> s"${emailRequest.emailData.emailBody}",
+      "body" -> s"\n${emailRequest.emailData.emailBody}",
       "service" -> "gatekeeper",
       "firstName" -> "((first name))",
       "lastName" -> "((last name))",
