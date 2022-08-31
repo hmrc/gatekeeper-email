@@ -87,7 +87,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
     val developerConnectorMock: DeveloperConnector = mock[DeveloperConnector]
     val apmConnectorMock: ApmConnector = mock[ApmConnector]
     val emailService = new DraftEmailService(mockEmailRendererConnector, developerConnectorMock,
-                                              apmConnectorMock, mockDraftEmailRepository, mockSentEmailRepository)
+                                              apmConnectorMock, mockDraftEmailRepository, mockSentEmailRepository, mockAppConfig)
     val mockEmailService = mock[DraftEmailService]
 
     val mockObjectStoreService = mock[ObjectStoreService]

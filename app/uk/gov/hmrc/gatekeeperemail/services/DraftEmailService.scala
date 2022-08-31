@@ -20,9 +20,10 @@ import java.time.LocalDateTime
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.libs.json.Json
+import play.api.libs.json.{JsError, JsSuccess, Json}
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models.APIAccessType.{PUBLIC, PRIVATE}
+import uk.gov.hmrc.gatekeeperemail.models.APIAccessType.{PRIVATE, PUBLIC}
 import uk.gov.hmrc.gatekeeperemail.models.CombinedApiCategory.toAPICategory
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
@@ -36,7 +37,8 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
                                   developerConnector: DeveloperConnector,
                                   apmConnector: ApmConnector,
                                   draftEmailRepository: DraftEmailRepository,
-                                  sentEmailRepository: SentEmailRepository)
+                                  sentEmailRepository: SentEmailRepository,
+                                  appConfig: AppConfig)
                                  (implicit val ec: ExecutionContext) {
 
   val logger: Logger = Logger(getClass.getName)
@@ -62,13 +64,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
   def sendEmail(emailUUID: String): Future[DraftEmail] = {
     for {
       email <- draftEmailRepository.getEmailData(emailUUID)
-      users <-
-        if(email.userSelectionQuery.emailsForSomeCases.exists(_.isOverride)) {
-          callThirdPartyDeveloper(email.userSelectionQuery.copy(emailsForSomeCases = None))
-        }
-      else {
-        callThirdPartyDeveloper(email.userSelectionQuery)
-      }
+      users <- callThirdPartyDeveloper(email.userSelectionQuery)
       usersModified <-  persistInEmailQueue(email, users)
       draftEmail <- draftEmailRepository.updateEmailSentStatus(emailUUID, usersModified.size)
     } yield draftEmail
@@ -140,11 +136,22 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
 
   private def persistInEmailQueue(email: DraftEmail, users: List[RegisteredUser]):  Future[List[RegisteredUser]] = {
 
-    val usersModified = if(email.userSelectionQuery.emailsForSomeCases.exists(_.isOverride)) {
-      email.userSelectionQuery.emailsForSomeCases.get.email
+    val additionalUsers = (appConfig.additionalRecipientsEmail.split(";").toList zip
+                            appConfig.additionalRecipientsFname.split(";").toList zip
+                            appConfig.additionalRecipientsLname.split(";").toList zip
+                            appConfig.additionalRecipientsVerified.split(";")).map{
+                              case (((a,b),c),d) if (!a.isEmpty && !d.isEmpty) => List(RegisteredUser(a,b,c,d.toBoolean))
+                              case _ => List.empty}.flatten
+
+    //if sendToActualRecipients is true then actualUsers   + additional recipients
+    //if sendToActualRecipients is false  then just  additional recipients
+    val usersModified = if(appConfig.sendToActualRecipients) {
+      logger.info(s"Sending emails to Actual Recipients + additionalUsers ${users ++ additionalUsers}")
+      users ++ additionalUsers
     }
     else {
-      users
+      logger.info(s"Sending emails to additionalUsers $additionalUsers")
+      additionalUsers
     }
 
     val sentEmails = usersModified.map(elem => SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(),
@@ -192,7 +199,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
     val recipientsTitle = "TL API PLATFORM TEAM"
     val parameters: Map[String, String] = Map("subject" -> s"${emailRequest.emailData.emailSubject}",
       "fromAddress" -> "gateKeeper",
-      "body" -> s"${emailRequest.emailData.emailBody}",
+      "body" -> s"\n${emailRequest.emailData.emailBody}",
       "service" -> "gatekeeper",
       "firstName" -> "((first name))",
       "lastName" -> "((last name))",

@@ -25,6 +25,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
@@ -61,11 +62,13 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
   trait Setup {
     val emailPreferences = DevelopersEmailQuery()
     implicit val hc: HeaderCarrier = HeaderCarrier()
+    val appConfigMock = mock[AppConfig]
     val developerConnectorMock: DeveloperConnector = mock[DeveloperConnector]
     val apmConnectorMock: ApmConnector = mock[ApmConnector]
     val emailConnectorMock: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
-    val underTest = new DraftEmailService(emailRendererConnectorMock, developerConnectorMock, apmConnectorMock, emailRepository, sentEmailRepository)
+    val underTest = new DraftEmailService(emailRendererConnectorMock, developerConnectorMock, apmConnectorMock,
+                                            emailRepository, sentEmailRepository, appConfigMock)
     val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
       RegisteredUser("example2@example2.com", "first name2", "last name2", true))
   }

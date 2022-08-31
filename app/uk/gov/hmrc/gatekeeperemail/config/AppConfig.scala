@@ -17,21 +17,29 @@
 package uk.gov.hmrc.gatekeeperemail.config
 
 import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+import play.api.{Configuration, Logging}
+import play.api.libs.json.{JsError, JsSuccess, Json}
+import uk.gov.hmrc.gatekeeperemail.models.RegisteredUser
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.duration.Duration
-
 @Singleton
 class AppConfig @Inject()(config: Configuration)
   extends ServicesConfig(config)
     with EmailConnectorConfig
-    with EmailRendererConnectorConfig
+    with EmailRendererConnectorConfig with Logging
 {
 
   val authBaseUrl: String = baseUrl("auth")
   val emailBaseUrl: String = baseUrl("email")
   val emailRendererBaseUrl: String = baseUrl("developer-email-renderer")
+  val additionalRecipientsEmail = config.getOptional[String]("additionalRecipients.email").getOrElse("")
+  val additionalRecipientsFname = config.getOptional[String]("additionalRecipients.firstName").getOrElse("")
+  val additionalRecipientsLname = config.getOptional[String]("additionalRecipients.lastName").getOrElse("")
+  val additionalRecipientsVerified = config.getOptional[String]("additionalRecipients.verified").getOrElse("")
+  val sendToActualRecipients = getBoolean("sendToActualRecipients")
+
+
   val emailRecordRetentionPeriod: Int = getConfInt("mongodb.ttlInYears", 7)
   val defaultRetentionPeriod: String = getConfString("object-store.default-retention-period", "1-year")
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
