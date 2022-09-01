@@ -36,8 +36,7 @@ class AppConfig @Inject()(config: Configuration)
   val additionalRecipientsEmail = config.getOptional[String]("additionalRecipients.email").getOrElse("")
   val additionalRecipientsFname = config.getOptional[String]("additionalRecipients.firstName").getOrElse("")
   val additionalRecipientsLname = config.getOptional[String]("additionalRecipients.lastName").getOrElse("")
-  val additionalRecipientsVerified = config.getOptional[String]("additionalRecipients.verified").getOrElse("")
-  val sendToActualRecipients = getBoolean("sendToActualRecipients")
+  val sendToActualRecipients = config.get[Boolean]("sendToActualRecipients")
 
 
   val emailRecordRetentionPeriod: Int = getConfInt("mongodb.ttlInYears", 7)

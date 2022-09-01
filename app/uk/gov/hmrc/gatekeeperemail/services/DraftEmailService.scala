@@ -136,12 +136,7 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
 
   private def persistInEmailQueue(email: DraftEmail, users: List[RegisteredUser]):  Future[List[RegisteredUser]] = {
 
-    val additionalUsers = (appConfig.additionalRecipientsEmail.split(";").toList zip
-                            appConfig.additionalRecipientsFname.split(";").toList zip
-                            appConfig.additionalRecipientsLname.split(";").toList zip
-                            appConfig.additionalRecipientsVerified.split(";")).map{
-                              case (((a,b),c),d) if (!a.isEmpty && !d.isEmpty) => List(RegisteredUser(a,b,c,d.toBoolean))
-                              case _ => List.empty}.flatten
+    val additionalUsers = List(RegisteredUser(appConfig.additionalRecipientsEmail,appConfig.additionalRecipientsFname,appConfig.additionalRecipientsLname,true))
 
     //if sendToActualRecipients is true then actualUsers   + additional recipients
     //if sendToActualRecipients is false  then just  additional recipients
