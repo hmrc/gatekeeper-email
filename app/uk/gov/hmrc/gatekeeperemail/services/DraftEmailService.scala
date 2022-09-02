@@ -136,17 +136,29 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
 
   private def persistInEmailQueue(email: DraftEmail, users: List[RegisteredUser]):  Future[List[RegisteredUser]] = {
 
-    val additionalUsers = List(RegisteredUser(appConfig.additionalRecipientsEmail,appConfig.additionalRecipientsFname,appConfig.additionalRecipientsLname,true))
+    val additionalUsers1 =
+      if(!appConfig.additionalRecipientsEmail1.isEmpty) {
+        List(RegisteredUser(appConfig.additionalRecipientsEmail1,appConfig.additionalRecipientsFname1,
+                                appConfig.additionalRecipientsLname1,true))
+      }
+      else List.empty
+
+    val additionalUsers2 =
+      if(!appConfig.additionalRecipientsEmail2.isEmpty) {
+        List(RegisteredUser(appConfig.additionalRecipientsEmail2,appConfig.additionalRecipientsFname2,
+          appConfig.additionalRecipientsLname2,true))
+      }
+      else List.empty
 
     //if sendToActualRecipients is true then actualUsers   + additional recipients
     //if sendToActualRecipients is false  then just  additional recipients
     val usersModified = if(appConfig.sendToActualRecipients) {
-      logger.info(s"Sending emails to Actual Recipients + additionalUsers ${users ++ additionalUsers}")
-      users ++ additionalUsers
+      logger.info(s"Sending emails to Actual Recipients + additionalUsers ${users ++ additionalUsers1 ++ additionalUsers2}")
+      users ++ additionalUsers1 ++ additionalUsers2
     }
     else {
-      logger.info(s"Sending emails to additionalUsers $additionalUsers")
-      additionalUsers
+      logger.info(s"Sending emails to additionalUsers ${additionalUsers1 ++ additionalUsers2}")
+      additionalUsers1 ++ additionalUsers2
     }
 
     val sentEmails = usersModified.map(elem => SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(),
