@@ -56,9 +56,9 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
     val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
     val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
       RegisteredUser("example2@example2.com", "first name2", "last name2", true))
-    when(appConfigMock.additionalRecipientsEmail).thenReturn("example@example.com;example2@example2.com")
-    when(appConfigMock.additionalRecipientsFname).thenReturn("first name;first name2")
-    when(appConfigMock.additionalRecipientsLname).thenReturn("last name;last name2")
+    when(appConfigMock.additionalRecipientsEmail1).thenReturn("example@example.com;example2@example2.com")
+    when(appConfigMock.additionalRecipientsFname1).thenReturn("first name;first name2")
+    when(appConfigMock.additionalRecipientsLname1).thenReturn("last name;last name2")
     when(appConfigMock.sendToActualRecipients).thenReturn(true)
 
     val emailPreferences = DevelopersEmailQuery(allUsers = true)
@@ -338,9 +338,9 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
         CombinedApi("CORP", "CORP", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
         CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))))
       )
-      when(appConfigMock.additionalRecipientsEmail).thenReturn("example@example.com")
-      when(appConfigMock.additionalRecipientsFname).thenReturn("first name")
-      when(appConfigMock.additionalRecipientsLname).thenReturn("last name")
+      when(appConfigMock.additionalRecipientsEmail1).thenReturn("example@example.com")
+      when(appConfigMock.additionalRecipientsFname1).thenReturn("first name")
+      when(appConfigMock.additionalRecipientsLname1).thenReturn("last name")
 
       when(appConfigMock.sendToActualRecipients).thenReturn(true)
       await(underTest.sendEmail(email.emailUUID))
@@ -379,9 +379,9 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
         CombinedApi("CORP", "CORP", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
         CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))))
       )
-      when(appConfigMock.additionalRecipientsEmail).thenReturn("example@example.com")
-      when(appConfigMock.additionalRecipientsFname).thenReturn("first name")
-      when(appConfigMock.additionalRecipientsLname).thenReturn("last name")
+      when(appConfigMock.additionalRecipientsEmail1).thenReturn("example@example.com")
+      when(appConfigMock.additionalRecipientsFname1).thenReturn("first name")
+      when(appConfigMock.additionalRecipientsLname1).thenReturn("last name")
 
       when(appConfigMock.sendToActualRecipients).thenReturn(true)
       await(underTest.sendEmail(email.emailUUID))
@@ -414,18 +414,20 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
         CombinedApi("CORP", "CORP", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
         CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))))
       )
-      when(appConfigMock.additionalRecipientsEmail).thenReturn("example@example.com")
-      when(appConfigMock.additionalRecipientsFname).thenReturn("first name")
-      when(appConfigMock.additionalRecipientsLname).thenReturn("last name")
-
+      when(appConfigMock.additionalRecipientsEmail1).thenReturn("example@example.com")
+      when(appConfigMock.additionalRecipientsFname1).thenReturn("first name")
+      when(appConfigMock.additionalRecipientsLname1).thenReturn("last name")
+      when(appConfigMock.additionalRecipientsEmail2).thenReturn("example@example2.com")
+      when(appConfigMock.additionalRecipientsFname2).thenReturn("first name2")
+      when(appConfigMock.additionalRecipientsLname2).thenReturn("last name2")
       when(appConfigMock.sendToActualRecipients).thenReturn(true)
       await(underTest.sendEmail(email.emailUUID))
 
       verify(draftEmailRepositoryMock).getEmailData(email.emailUUID)
-      verify(draftEmailRepositoryMock).updateEmailSentStatus(email.emailUUID, 3)
+      verify(draftEmailRepositoryMock).updateEmailSentStatus(email.emailUUID, 4)
       verify(sentEmailRepositoryMock).persist(*)
       val listOfSentMailsInserted = sentEmailCaptor.getValue
-      listOfSentMailsInserted.size shouldBe 3
+      listOfSentMailsInserted.size shouldBe 4
       listOfSentMailsInserted(0).recipient shouldBe users(0).email
       listOfSentMailsInserted(0).firstName shouldBe users(0).firstName
       listOfSentMailsInserted(0).lastName shouldBe users(0).lastName
@@ -444,18 +446,18 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
       val insertIds = new util.HashMap[Integer, BsonValue]{new Integer(1)-> new BsonInt32(33)}
       when(draftEmailRepositoryMock.getEmailData(*)).thenReturn(Future(email))
-      when(draftEmailRepositoryMock.updateEmailSentStatus(email.emailUUID, 1)).thenReturn(Future(email))
+      when(draftEmailRepositoryMock.updateEmailSentStatus(email.emailUUID, 0)).thenReturn(Future(email))
       when(sentEmailRepositoryMock.persist(sentEmailCaptor.capture())).thenReturn(Future(InsertManyResult.acknowledged(insertIds)))
       when(developerConnectorMock.fetchAll()(*)).thenReturn(Future(List.empty))
-      when(appConfigMock.additionalRecipientsEmail).thenReturn("")
-      when(appConfigMock.additionalRecipientsFname).thenReturn("")
-      when(appConfigMock.additionalRecipientsLname).thenReturn("")
+      when(appConfigMock.additionalRecipientsEmail1).thenReturn("")
+      when(appConfigMock.additionalRecipientsFname1).thenReturn("")
+      when(appConfigMock.additionalRecipientsLname1).thenReturn("")
 
       when(appConfigMock.sendToActualRecipients).thenReturn(false)
       await(underTest.sendEmail(email.emailUUID))
 
       verify(draftEmailRepositoryMock).getEmailData(email.emailUUID)
-      verify(draftEmailRepositoryMock).updateEmailSentStatus(email.emailUUID, 1)
+      verify(draftEmailRepositoryMock).updateEmailSentStatus(email.emailUUID, 0)
 
     }
   }
