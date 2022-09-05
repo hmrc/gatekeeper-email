@@ -94,7 +94,6 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
           } yield combinedUsers
         }
       case DevelopersEmailQuery(_,_,_,_,_,_,Some(EmailOverride(_, false))) =>
-        logger.info(s"Email are not overridden, so subscription email list ${emailPreferences.emailsForSomeCases.get.email}")
         Future.successful(emailPreferences.emailsForSomeCases.get.email)
       case _ =>
         logger.info("Getting Emails for Default match case")
@@ -153,11 +152,9 @@ class DraftEmailService @Inject()(emailRendererConnector: GatekeeperEmailRendere
     //if sendToActualRecipients is true then actualUsers   + additional recipients
     //if sendToActualRecipients is false  then just  additional recipients
     val usersModified = if(appConfig.sendToActualRecipients) {
-      logger.info(s"Sending emails to Actual Recipients + additionalUsers ${users ++ additionalUsers1 ++ additionalUsers2}")
       users ++ additionalUsers1 ++ additionalUsers2
     }
     else {
-      logger.info(s"Sending emails to additionalUsers ${additionalUsers1 ++ additionalUsers2}")
       additionalUsers1 ++ additionalUsers2
     }
 
