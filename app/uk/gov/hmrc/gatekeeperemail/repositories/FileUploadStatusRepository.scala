@@ -37,7 +37,6 @@ case class UploadInfo(reference : Reference, status : UploadStatus, createDateTi
 
 object UploadInfo {
   val status = "status"
-//  implicit val dateFormation : Format[DateTime] = MongoJodaFormats.dateTimeFormat
   implicit val format: Format[UploadInfo] =  Json.format[UploadInfo]
 }
 
