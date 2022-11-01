@@ -2,7 +2,6 @@ package uk.gov.hmrc.gatekeeperemail.repositories
 
 import java.time.LocalDateTime
 import java.util.UUID
-
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.util.Timeout
@@ -15,6 +14,7 @@ import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcSpec
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
+import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
 
@@ -46,7 +46,7 @@ class FileUploadStatusRepositorySpec
   "save" should {
     "create a file upload status and retrieve it from database" in {
       val fileReference = Reference(UUID.randomUUID().toString)
-      val fileStatus = UploadInfo(fileReference, InProgress, LocalDateTime.now())
+      val fileStatus = UploadInfo(fileReference, InProgress, LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
       await(repository.requestUpload(fileStatus))
 
       val retrieved  = await(repository.findByUploadId(fileReference)).get
@@ -60,7 +60,7 @@ class FileUploadStatusRepositorySpec
 
   "update a fileStatus to success" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus = UploadInfo(fileReference, InProgress, LocalDateTime.now())
+    val fileStatus = UploadInfo(fileReference, InProgress, LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
     await(repository.requestUpload(fileStatus))
 
     val retrieved  = await(repository.findByUploadId(fileReference)).get
@@ -81,7 +81,7 @@ class FileUploadStatusRepositorySpec
 
   "update a fileStatus to failedwithErrors" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus = UploadInfo(fileReference, InProgress, LocalDateTime.now())
+    val fileStatus = UploadInfo(fileReference, InProgress, LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
     await(repository.requestUpload(fileStatus))
 
     val retrieved  = await(repository.findByUploadId(fileReference)).get
@@ -102,7 +102,7 @@ class FileUploadStatusRepositorySpec
 
   "update a fileStatus to failed" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus = UploadInfo(fileReference, InProgress, LocalDateTime.now())
+    val fileStatus = UploadInfo(fileReference, InProgress, LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
     await(repository.requestUpload(fileStatus))
 
     val retrieved  = await(repository.findByUploadId(fileReference)).get
@@ -124,7 +124,7 @@ class FileUploadStatusRepositorySpec
 
   "update a fileStatus to InProgress" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus = UploadInfo(fileReference, InProgress, LocalDateTime.now())
+    val fileStatus = UploadInfo(fileReference, InProgress, LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
     await(repository.requestUpload(fileStatus))
 
     val retrieved  = await(repository.findByUploadId(fileReference)).get

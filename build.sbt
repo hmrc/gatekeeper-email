@@ -25,7 +25,6 @@ lazy val microservice = (project in file("."))
   .settings(defaultSettings(): _*)
   .settings(
     name := appName,
-    targetJvm := "jvm-1.8",
     scalaVersion := "2.12.15",
     libraryDependencies ++= AppDependencies(),
     majorVersion := 0,
