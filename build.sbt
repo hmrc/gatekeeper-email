@@ -11,7 +11,7 @@ val appName = "gatekeeper-email"
 lazy val playSettings: Seq[Setting[_]] = Seq.empty
 lazy val ComponentTest = config("component") extend Test
 
-lazy val microservice = (project in file("."))
+lazy val microservice = Project(appName, file("."))
   .enablePlugins(
     play.sbt.PlayScala,
     SbtAutoBuildPlugin,
