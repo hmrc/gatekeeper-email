@@ -3,7 +3,7 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import sbt.Keys.baseDirectory
 import sbt.Test
 import sbt.Tests.{Group, SubProcess}
-import uk.gov.hmrc.SbtAutoBuildPlugin
+import uk.gov.hmrc.{DefaultBuildSettings, SbtAutoBuildPlugin}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 
 val appName = "gatekeeper-email"
@@ -42,7 +42,7 @@ lazy val microservice = Project(appName, file("."))
     Test / unmanagedSourceDirectories += baseDirectory.value / "testcommon"
   )
   .configs(IntegrationTest)
-  .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
+  .settings(DefaultBuildSettings.integrationTestSettings())
   .settings(
     IntegrationTest / fork := false,
     IntegrationTest / parallelExecution := false,
