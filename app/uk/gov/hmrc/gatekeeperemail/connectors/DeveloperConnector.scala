@@ -28,37 +28,38 @@ import com.google.inject.name.Named
 import play.api.Logging
 import uk.gov.hmrc.http.HttpReads.Implicits._
 
-
 trait DeveloperConnector {
 
   def fetchAll()(implicit hc: HeaderCarrier): Future[List[RegisteredUser]]
 
-  def fetchByEmailPreferences(topic: TopicOptionChoice,
-                              maybeApis: Option[Seq[String]] = None,
-                              maybeApiCategory: Option[Seq[APICategory]] = None,
-                              privateapimatch: Boolean = false)(implicit hc: HeaderCarrier): Future[List[RegisteredUser]]
+  def fetchByEmailPreferences(
+      topic: TopicOptionChoice,
+      maybeApis: Option[Seq[String]] = None,
+      maybeApiCategory: Option[Seq[APICategory]] = None,
+      privateapimatch: Boolean = false
+    )(implicit hc: HeaderCarrier
+    ): Future[List[RegisteredUser]]
 }
 
-
-
 @Singleton
-class HttpDeveloperConnector @Inject()(appConfig: AppConfig,
-                                       http: HttpClient)
-    (implicit ec: ExecutionContext)
-    extends DeveloperConnector with Logging{
+class HttpDeveloperConnector @Inject() (appConfig: AppConfig, http: HttpClient)(implicit ec: ExecutionContext)
+    extends DeveloperConnector with Logging {
 
-
-  def fetchByEmailPreferences(topic: TopicOptionChoice,
-                              maybeApis: Option[Seq[String]] = None,
-                              maybeApiCategories: Option[Seq[APICategory]] = None,
-                              privateapimatch: Boolean = false)(implicit hc: HeaderCarrier): Future[List[RegisteredUser]] = {
+  def fetchByEmailPreferences(
+      topic: TopicOptionChoice,
+      maybeApis: Option[Seq[String]] = None,
+      maybeApiCategories: Option[Seq[APICategory]] = None,
+      privateapimatch: Boolean = false
+    )(implicit hc: HeaderCarrier
+    ): Future[List[RegisteredUser]] = {
     logger.info(s"fetchByEmailPreferences topic is $topic maybeApis: $maybeApis maybeApuCategories $maybeApiCategories privateapimatch $privateapimatch")
-    val regimes: Seq[(String,String)] = maybeApiCategories.fold(Seq.empty[(String,String)])(regimes =>
-                                            regimes.flatMap(regime => Seq("regime" -> regime.value)))
-    val privateapimatchParams = if(privateapimatch) Seq("privateapimatch" -> "true") else Seq.empty
-    val queryParams =
+    val regimes: Seq[(String, String)] = maybeApiCategories.fold(Seq.empty[(String, String)])(regimes =>
+      regimes.flatMap(regime => Seq("regime" -> regime.value))
+    )
+    val privateapimatchParams          = if (privateapimatch) Seq("privateapimatch" -> "true") else Seq.empty
+    val queryParams                    =
       Seq("topic" -> topic.toString) ++ regimes ++
-      maybeApis.fold(Seq.empty[(String,String)])(apis => apis.map(("service" -> _))) ++ privateapimatchParams
+        maybeApis.fold(Seq.empty[(String, String)])(apis => apis.map(("service" -> _))) ++ privateapimatchParams
 
     http.GET[List[RegisteredUser]](s"${appConfig.developerBaseUrl}/developers/email-preferences", queryParams)
   }
@@ -68,4 +69,3 @@ class HttpDeveloperConnector @Inject()(appConfig: AppConfig,
   }
 
 }
-

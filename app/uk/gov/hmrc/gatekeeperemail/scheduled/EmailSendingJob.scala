@@ -25,9 +25,8 @@ import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class EmailSendingJob @Inject()(appConfig: AppConfig, override val lockService: LockService,
-                                sentEmailService: SentEmailService)
-  extends LockedScheduledJob {
+class EmailSendingJob @Inject() (appConfig: AppConfig, override val lockService: LockService, sentEmailService: SentEmailService)
+    extends LockedScheduledJob {
 
   override def name: String = "EmailSendingJob"
 

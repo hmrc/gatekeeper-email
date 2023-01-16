@@ -39,23 +39,29 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoReposito
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: AppConfig)
-                                   (implicit ec: ExecutionContext)
-  extends PlayMongoRepository[SentEmail](
-    mongoComponent = mongoComponent,
-    collectionName = "sentemails",
-    domainFormat = sentEmailFormatter,
-    indexes = Seq(IndexModel(ascending("status",  "createdAt"),
-        IndexOptions()
-          .name("emailNextSendIndex")
-          .background(true)
-          .unique(false)),
-      IndexModel(ascending("ttlIndex"),
-        IndexOptions()
-          .name("ttlIndex")
-          .expireAfter(appConfig.emailRecordRetentionPeriod * 365, TimeUnit.DAYS)
-          .background(true)
-          .unique(false)))) {
+class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[SentEmail](
+      mongoComponent = mongoComponent,
+      collectionName = "sentemails",
+      domainFormat = sentEmailFormatter,
+      indexes = Seq(
+        IndexModel(
+          ascending("status", "createdAt"),
+          IndexOptions()
+            .name("emailNextSendIndex")
+            .background(true)
+            .unique(false)
+        ),
+        IndexModel(
+          ascending("ttlIndex"),
+          IndexOptions()
+            .name("ttlIndex")
+            .expireAfter(appConfig.emailRecordRetentionPeriod * 365, TimeUnit.DAYS)
+            .background(true)
+            .unique(false)
+        )
+      )
+    ) {
 
   override lazy val collection: MongoCollection[SentEmail] =
     CollectionFactory
@@ -72,7 +78,7 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
 
   def findNextEmailToSend: Future[Option[SentEmail]] = {
     collection.withReadPreference(primaryPreferred)
-    .find(filter = equal("status", Codecs.toBson(EmailStatus.PENDING)))
+      .find(filter = equal("status", Codecs.toBson(EmailStatus.PENDING)))
       .sort(ascending("createdAt"))
       .limit(1)
       .toFuture()
@@ -81,12 +87,14 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
 
   def incrementFailedCount(email: SentEmail): Future[SentEmail] = {
     collection.withReadPreference(primaryPreferred)
-      .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
+      .findOneAndUpdate(
+        filter = equal("id", Codecs.toBson(email.id)),
         update = combine(
           set("failedCount", email.failedCount + 1),
           set("updatedAt", Codecs.toBson(now()))
         ),
-        options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
+        options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+      )
       .head()
   }
 
@@ -96,23 +104,27 @@ class SentEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: A
 
   def markFailed(email: SentEmail): Future[SentEmail] = {
     collection.withReadPreference(primaryPreferred)
-      .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
+      .findOneAndUpdate(
+        filter = equal("id", Codecs.toBson(email.id)),
         update = combine(
           set("status", Codecs.toBson(EmailStatus.FAILED)),
           set("updatedAt", Codecs.toBson(now()))
         ),
-        options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
+        options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+      )
       .head()
   }
 
   def markSent(email: SentEmail): Future[SentEmail] = {
     collection.withReadPreference(primaryPreferred)
-      .findOneAndUpdate(filter = equal("id", Codecs.toBson(email.id)),
+      .findOneAndUpdate(
+        filter = equal("id", Codecs.toBson(email.id)),
         update = combine(
           set("status", Codecs.toBson(EmailStatus.SENT)),
           set("updatedAt", Codecs.toBson(now()))
         ),
-        options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
+        options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+      )
       .head()
   }
 }

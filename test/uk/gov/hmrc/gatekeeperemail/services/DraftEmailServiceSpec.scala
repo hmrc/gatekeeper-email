@@ -44,32 +44,48 @@ import scala.concurrent.Future.successful
 class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with ArgumentMatchersSugar {
 
   trait Setup {
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-    val appConfigMock = mock[AppConfig]
-    val draftEmailRepositoryMock: DraftEmailRepository = mock[DraftEmailRepository]
-    val sentEmailRepositoryMock: SentEmailRepository = mock[SentEmailRepository]
-    val developerConnectorMock: DeveloperConnector = mock[DeveloperConnector]
-    val apmConnectorMock: ApmConnector = mock[ApmConnector]
+    implicit val hc: HeaderCarrier                                   = HeaderCarrier()
+    val appConfigMock                                                = mock[AppConfig]
+    val draftEmailRepositoryMock: DraftEmailRepository               = mock[DraftEmailRepository]
+    val sentEmailRepositoryMock: SentEmailRepository                 = mock[SentEmailRepository]
+    val developerConnectorMock: DeveloperConnector                   = mock[DeveloperConnector]
+    val apmConnectorMock: ApmConnector                               = mock[ApmConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
-    val underTest = new DraftEmailService(emailRendererConnectorMock, developerConnectorMock, apmConnectorMock,
-                                            draftEmailRepositoryMock,   sentEmailRepositoryMock, appConfigMock)
-    val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
-    val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
-      RegisteredUser("example2@example2.com", "first name2", "last name2", true))
+    val underTest                                                    = new DraftEmailService(emailRendererConnectorMock, developerConnectorMock, apmConnectorMock, draftEmailRepositoryMock, sentEmailRepositoryMock, appConfigMock)
+    val templateData                                                 = EmailTemplateData("templateId", Map(), false, Map(), None)
+    val users                                                        = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
     when(appConfigMock.additionalRecipientsEmail1).thenReturn("example@example.com;example2@example2.com")
     when(appConfigMock.additionalRecipientsFname1).thenReturn("first name;first name2")
     when(appConfigMock.additionalRecipientsLname1).thenReturn("last name;last name2")
     when(appConfigMock.sendToActualRecipients).thenReturn(true)
 
     val emailPreferences = DevelopersEmailQuery(allUsers = true)
-    val uuid = UUID.randomUUID()
-    val now = LocalDateTime.now()
-    val email = DraftEmail(uuid.toString(), templateData, "DL Team",
-      emailPreferences, None, "markdownEmailBody", "This is test email",
-      "test subject", SENT, "composedBy", Some("approvedBy"), now, 2)
+    val uuid             = UUID.randomUUID()
+    val now              = LocalDateTime.now()
+
+    val email            = DraftEmail(
+      uuid.toString(),
+      templateData,
+      "DL Team",
+      emailPreferences,
+      None,
+      "markdownEmailBody",
+      "This is test email",
+      "test subject",
+      SENT,
+      "composedBy",
+      Some("approvedBy"),
+      now,
+      2
+    )
     when(emailRendererConnectorMock.getTemplatedEmail(*))
-      .thenReturn(successful(Right(RenderResult("RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
-        "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
+      .thenReturn(successful(Right(RenderResult(
+        "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
+        "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==",
+        "from@digital.hmrc.gov.uk",
+        "subject",
+        ""
+      ))))
   }
 
   "persistEmail" should {
@@ -77,9 +93,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       when(developerConnectorMock.fetchAll()(*)).thenReturn(Future(users))
 
-
-      val emailRequest = EmailRequest(emailPreferences, "gatekeeper",
-        EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
+      val emailRequest               = EmailRequest(emailPreferences, "gatekeeper", EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
       emailFromMongo.subject shouldBe "Test subject"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
@@ -92,9 +106,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       when(draftEmailRepositoryMock.getEmailData(*)).thenReturn(Future(email.copy(userSelectionQuery = overriddenPref)))
       when(developerConnectorMock.fetchAll()(*)).thenReturn(Future(users))
 
-
-      val emailRequest = EmailRequest(overriddenPref, "gatekeeper",
-        EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
+      val emailRequest               = EmailRequest(overriddenPref, "gatekeeper", EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
       emailFromMongo.subject shouldBe "Test subject"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
@@ -107,8 +119,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
       val overriddenPref = DevelopersEmailQuery(emailsForSomeCases = Some(EmailOverride(users, false)))
 
-      val emailRequest = EmailRequest(overriddenPref, "gatekeeper",
-        EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
+      val emailRequest               = EmailRequest(overriddenPref, "gatekeeper", EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
       emailFromMongo.subject shouldBe "Test subject"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
@@ -121,8 +132,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
       val overriddenPref = DevelopersEmailQuery(topic = Some("TECHNICAL"))
 
-      val emailRequest = EmailRequest(overriddenPref, "gatekeeper",
-        EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
+      val emailRequest               = EmailRequest(overriddenPref, "gatekeeper", EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
       emailFromMongo.subject shouldBe "Test subject"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
@@ -135,13 +145,12 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
         CombinedApi("VAT", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PUBLIC)),
         CombinedApi("CORP", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
-        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))))
-      )
+        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))
+      )))
 
       val overriddenPref = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("VAT", "CORP")))
 
-      val emailRequest = EmailRequest(overriddenPref, "gatekeeper",
-        EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
+      val emailRequest               = EmailRequest(overriddenPref, "gatekeeper", EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
       emailFromMongo.subject shouldBe "Test subject"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
@@ -150,19 +159,17 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
     "save the email data when sending email to a specific API emails addresses into mongodb repo when privateapi selection is true" in new Setup {
       when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")),
-        Some(List(APICategory("TAX"))), true)(hc)).thenReturn(Future(users))
+      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")), Some(List(APICategory("TAX"))), true)(hc)).thenReturn(Future(users))
       when(developerConnectorMock.fetchByEmailPreferences(*, *, *, *)(*)).thenReturn(Future(users))
       when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
         CombinedApi("VAT", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PUBLIC)),
         CombinedApi("CORP", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
-        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))))
-      )
+        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))
+      )))
 
       val overriddenPref = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("VAT", "CORP")), privateapimatch = true)
 
-      val emailRequest = EmailRequest(overriddenPref, "gatekeeper",
-        EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
+      val emailRequest               = EmailRequest(overriddenPref, "gatekeeper", EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
       emailFromMongo.subject shouldBe "Test subject"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
@@ -171,25 +178,22 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
     "do not save the email data when sending email to a specific API which are empty stringed" in new Setup {
       when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")),
-        Some(List(APICategory("TAX"))), true)(hc)).thenReturn(Future(users))
+      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")), Some(List(APICategory("TAX"))), true)(hc)).thenReturn(Future(users))
       when(developerConnectorMock.fetchByEmailPreferences(*, *, *, *)(*)).thenReturn(Future(users))
       when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
         CombinedApi("VAT", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PUBLIC)),
         CombinedApi("CORP", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
-        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))))
-      )
+        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))
+      )))
 
       val overriddenPref = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("", "")), privateapimatch = true)
 
-      val emailRequest = EmailRequest(overriddenPref, "gatekeeper",
-        EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
+      val emailRequest               = EmailRequest(overriddenPref, "gatekeeper", EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
       emailFromMongo.subject shouldBe "Test subject"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
       emailFromMongo.templateData.templateId shouldBe "gatekeeper"
     }
-
 
     "save the email data  with zero recipients when sending email to a specific API  which are not in list of API dictionary into mongodb repo" in new Setup {
       when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
@@ -197,25 +201,22 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
         CombinedApi("VAT", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PUBLIC)),
         CombinedApi("CORP", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
-        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))))
-      )
+        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))
+      )))
 
       val overriddenPref = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("VAT1", "CORP1")))
 
-      val emailRequest = EmailRequest(overriddenPref, "gatekeeper",
-        EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
+      val emailRequest               = EmailRequest(overriddenPref, "gatekeeper", EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
       emailFromMongo.subject shouldBe "Test subject"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
       emailFromMongo.templateData.templateId shouldBe "gatekeeper"
     }
 
-
     "save the email data into mongodb repo even when fails to send" in new Setup {
       when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       when(developerConnectorMock.fetchAll()(*)).thenReturn(Future(users))
-      val emailRequest = EmailRequest(emailPreferences, "gatekeeper",
-        EmailData("Test subject2", "Dear Mr XYZ, This is test email"), false, Map())
+      val emailRequest               = EmailRequest(emailPreferences, "gatekeeper", EmailData("Test subject2", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
       emailFromMongo.subject shouldBe "Test subject2"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
@@ -226,8 +227,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       when(emailRendererConnectorMock.getTemplatedEmail(*)).thenReturn(successful(Left(UpstreamErrorResponse("error", Status.NOT_FOUND))))
       when(developerConnectorMock.fetchAll()(*)).thenReturn(Future(users))
       when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      val emailRequest = EmailRequest(emailPreferences, "gatekeeper",
-        EmailData("Test subject2", "Dear Mr XYZ, This is test email"), false, Map())
+      val emailRequest                        = EmailRequest(emailPreferences, "gatekeeper", EmailData("Test subject2", "Dear Mr XYZ, This is test email"), false, Map())
       val error: EmailRendererConnectionError = intercept[EmailRendererConnectionError] {
         await(underTest.persistEmail(emailRequest, "emailUUID"))
       }
@@ -238,8 +238,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
   "updateEmail" should {
     "update the email data into mongodb repo" in new Setup {
       when(draftEmailRepositoryMock.updateEmail(*)).thenReturn(Future(email))
-      val emailRequest = EmailRequest(emailPreferences, "gatekeeper",
-        EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
+      val emailRequest               = EmailRequest(emailPreferences, "gatekeeper", EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.updateEmail(emailRequest, "emailUUID"))
       emailFromMongo.subject shouldBe "Test subject"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
@@ -248,8 +247,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
     "update the email data into mongodb repo even when fails to send" in new Setup {
       when(draftEmailRepositoryMock.updateEmail(*)).thenReturn(Future(email))
-      val emailRequest = EmailRequest(emailPreferences, "gatekeeper",
-        EmailData("Test subject2", "Dear Mr XYZ, This is test email"), false, Map())
+      val emailRequest               = EmailRequest(emailPreferences, "gatekeeper", EmailData("Test subject2", "Dear Mr XYZ, This is test email"), false, Map())
       val emailFromMongo: DraftEmail = await(underTest.updateEmail(emailRequest, "emailUUID"))
       emailFromMongo.subject shouldBe "Test subject2"
       emailFromMongo.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
@@ -259,9 +257,9 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
   "sendEmail" should {
     "successfully send (into Mongo) an email with two recipients" in new Setup {
-     val sentEmailCaptor: ArgumentCaptor[List[SentEmail]] = ArgumentCaptor.forClass(classOf[List[SentEmail]])
+      val sentEmailCaptor: ArgumentCaptor[List[SentEmail]] = ArgumentCaptor.forClass(classOf[List[SentEmail]])
 
-      val insertIds = new util.HashMap[Integer, BsonValue]{new Integer(1)-> new BsonInt32(33)}
+      val insertIds = new util.HashMap[Integer, BsonValue] { new Integer(1) -> new BsonInt32(33) }
       when(draftEmailRepositoryMock.getEmailData(*)).thenReturn(Future(email))
       when(draftEmailRepositoryMock.updateEmailSentStatus(*, *)).thenReturn(Future(email))
       when(sentEmailRepositoryMock.persist(sentEmailCaptor.capture())).thenReturn(Future(InsertManyResult.acknowledged(insertIds)))
@@ -286,21 +284,19 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       listOfSentMailsInserted(1).status shouldBe PENDING
     }
 
-
     "successfully send (into Mongo) an email with two recipients for api subscriptions  email addresses" in new Setup {
       val sentEmailCaptor: ArgumentCaptor[List[SentEmail]] = ArgumentCaptor.forClass(classOf[List[SentEmail]])
 
-      val insertIds = new util.HashMap[Integer, BsonValue]{new Integer(1)-> new BsonInt32(33)}
+      val insertIds = new util.HashMap[Integer, BsonValue] { new Integer(1) -> new BsonInt32(33) }
       when(draftEmailRepositoryMock.getEmailData(*)).thenReturn(Future(
-        email.copy(userSelectionQuery = DevelopersEmailQuery(emailsForSomeCases =  Some(EmailOverride(users, false))))))
+        email.copy(userSelectionQuery = DevelopersEmailQuery(emailsForSomeCases = Some(EmailOverride(users, false))))
+      ))
       when(draftEmailRepositoryMock.updateEmailSentStatus(*, *)).thenReturn(Future(email))
       when(sentEmailRepositoryMock.persist(sentEmailCaptor.capture())).thenReturn(Future(InsertManyResult.acknowledged(insertIds)))
       when(developerConnectorMock.fetchAll()(*)).thenReturn(Future(users))
       when(developerConnectorMock.fetchByEmailPreferences(*, *, *, *)(*)).thenReturn(Future(users))
-      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")),
-        Some(List(APICategory("TAX"))), true)(hc)).thenReturn(Future(users))
-      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")),
-        Some(List(APICategory("TAX"))), false)(hc)).thenReturn(Future(users))
+      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")), Some(List(APICategory("TAX"))), true)(hc)).thenReturn(Future(users))
+      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")), Some(List(APICategory("TAX"))), false)(hc)).thenReturn(Future(users))
       await(underTest.sendEmail(email.emailUUID))
 
       verify(draftEmailRepositoryMock).getEmailData(email.emailUUID)
@@ -326,9 +322,10 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
       val sentEmailCaptor: ArgumentCaptor[List[SentEmail]] = ArgumentCaptor.forClass(classOf[List[SentEmail]])
 
-      val insertIds = new util.HashMap[Integer, BsonValue]{new Integer(1)-> new BsonInt32(33)}
+      val insertIds = new util.HashMap[Integer, BsonValue] { new Integer(1) -> new BsonInt32(33) }
       when(draftEmailRepositoryMock.getEmailData(email.emailUUID)).thenReturn(Future(
-        email.copy(userSelectionQuery = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("VAT", "CORP"))))))
+        email.copy(userSelectionQuery = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("VAT", "CORP"))))
+      ))
       when(draftEmailRepositoryMock.updateEmailSentStatus(*, *)).thenReturn(Future(email))
       when(sentEmailRepositoryMock.persist(sentEmailCaptor.capture())).thenReturn(Future(InsertManyResult.acknowledged(insertIds)))
       when(developerConnectorMock.fetchAll()(*)).thenReturn(Future(users))
@@ -336,8 +333,8 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
         CombinedApi("VAT", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PUBLIC)),
         CombinedApi("CORP", "CORP", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
-        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))))
-      )
+        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))
+      )))
       when(appConfigMock.additionalRecipientsEmail1).thenReturn("example@example.com")
       when(appConfigMock.additionalRecipientsFname1).thenReturn("first name")
       when(appConfigMock.additionalRecipientsLname1).thenReturn("last name")
@@ -367,9 +364,10 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
       val sentEmailCaptor: ArgumentCaptor[List[SentEmail]] = ArgumentCaptor.forClass(classOf[List[SentEmail]])
 
-      val insertIds = new util.HashMap[Integer, BsonValue]{new Integer(1)-> new BsonInt32(33)}
+      val insertIds = new util.HashMap[Integer, BsonValue] { new Integer(1) -> new BsonInt32(33) }
       when(draftEmailRepositoryMock.getEmailData(email.emailUUID)).thenReturn(Future(
-        email.copy(userSelectionQuery = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("", ""))))))
+        email.copy(userSelectionQuery = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("", ""))))
+      ))
       when(draftEmailRepositoryMock.updateEmailSentStatus(*, *)).thenReturn(Future(email))
       when(sentEmailRepositoryMock.persist(sentEmailCaptor.capture())).thenReturn(Future(InsertManyResult.acknowledged(insertIds)))
       when(developerConnectorMock.fetchAll()(*)).thenReturn(Future(users))
@@ -377,8 +375,8 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
         CombinedApi("VAT", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PUBLIC)),
         CombinedApi("CORP", "CORP", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
-        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))))
-      )
+        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))
+      )))
       when(appConfigMock.additionalRecipientsEmail1).thenReturn("example@example.com")
       when(appConfigMock.additionalRecipientsFname1).thenReturn("first name")
       when(appConfigMock.additionalRecipientsLname1).thenReturn("last name")
@@ -402,9 +400,10 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
       val sentEmailCaptor: ArgumentCaptor[List[SentEmail]] = ArgumentCaptor.forClass(classOf[List[SentEmail]])
 
-      val insertIds = new util.HashMap[Integer, BsonValue]{new Integer(1)-> new BsonInt32(33)}
+      val insertIds = new util.HashMap[Integer, BsonValue] { new Integer(1) -> new BsonInt32(33) }
       when(draftEmailRepositoryMock.getEmailData(email.emailUUID)).thenReturn(Future(
-        email.copy(userSelectionQuery = DevelopersEmailQuery(topic = Some("TECHNICAL")))))
+        email.copy(userSelectionQuery = DevelopersEmailQuery(topic = Some("TECHNICAL")))
+      ))
       when(draftEmailRepositoryMock.updateEmailSentStatus(*, *)).thenReturn(Future(email))
       when(sentEmailRepositoryMock.persist(sentEmailCaptor.capture())).thenReturn(Future(InsertManyResult.acknowledged(insertIds)))
       when(developerConnectorMock.fetchAll()(*)).thenReturn(Future(users))
@@ -412,8 +411,8 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
         CombinedApi("VAT", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PUBLIC)),
         CombinedApi("CORP", "CORP", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
-        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))))
-      )
+        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))
+      )))
       when(appConfigMock.additionalRecipientsEmail1).thenReturn("example@example.com")
       when(appConfigMock.additionalRecipientsFname1).thenReturn("first name")
       when(appConfigMock.additionalRecipientsLname1).thenReturn("last name")
@@ -440,11 +439,10 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       listOfSentMailsInserted(1).status shouldBe PENDING
     }
 
-
     "not send (into Mongo) an email with zero recipients" in new Setup {
       val sentEmailCaptor: ArgumentCaptor[List[SentEmail]] = ArgumentCaptor.forClass(classOf[List[SentEmail]])
 
-      val insertIds = new util.HashMap[Integer, BsonValue]{new Integer(1)-> new BsonInt32(33)}
+      val insertIds = new util.HashMap[Integer, BsonValue] { new Integer(1) -> new BsonInt32(33) }
       when(draftEmailRepositoryMock.getEmailData(*)).thenReturn(Future(email))
       when(draftEmailRepositoryMock.updateEmailSentStatus(email.emailUUID, 0)).thenReturn(Future(email))
       when(sentEmailRepositoryMock.persist(sentEmailCaptor.capture())).thenReturn(Future(InsertManyResult.acknowledged(insertIds)))

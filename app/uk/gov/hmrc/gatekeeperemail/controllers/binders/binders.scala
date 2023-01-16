@@ -16,5 +16,4 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
-package object binders {
-}
+package object binders {}

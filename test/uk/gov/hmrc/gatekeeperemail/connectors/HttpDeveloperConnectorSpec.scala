@@ -37,17 +37,18 @@ import uk.gov.hmrc.http.HttpClient
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import uk.gov.hmrc.gatekeeperemail.utils.AsyncHmrcSpec
-class HttpDeveloperConnectorSpec  extends AsyncHmrcSpec
-  with WireMockSugar
-  with BeforeAndAfterEach
-  with GuiceOneAppPerSuite
-  with UrlEncoding {
+
+class HttpDeveloperConnectorSpec extends AsyncHmrcSpec
+    with WireMockSugar
+    with BeforeAndAfterEach
+    with GuiceOneAppPerSuite
+    with UrlEncoding {
 
   trait Setup {
     implicit val hc = HeaderCarrier()
 
     val mockAppConfig = mock[AppConfig]
-    val httpClient = app.injector.instanceOf[HttpClient]
+    val httpClient    = app.injector.instanceOf[HttpClient]
 
     when(mockAppConfig.developerBaseUrl).thenReturn(wireMockUrl)
 
@@ -55,24 +56,23 @@ class HttpDeveloperConnectorSpec  extends AsyncHmrcSpec
   }
   "Developer connector" should {
 
-    val developerEmail = "developer1@example.com"
+    val developerEmail                     = "developer1@example.com"
     val developerEmailWithSpecialCharacter = "developer2+test@example.com"
 
     def aUserResponse(email: String) = RegisteredUser(email, "first", "last", verified = false)
 
-    def verifyUserResponse(userResponse: User,
-                           expectedEmail: String,
-                           expectedFirstName: String, expectedLastName: String) = {
+    def verifyUserResponse(userResponse: User, expectedEmail: String, expectedFirstName: String, expectedLastName: String) = {
       userResponse.email shouldBe expectedEmail
       userResponse.firstName shouldBe expectedFirstName
       userResponse.lastName shouldBe expectedLastName
     }
-    
+
     "fetch all developers" in new Setup {
       stubFor(get(urlEqualTo("/developers/all")).willReturn(
         aResponse().withStatus(OK).withBody(
-          Json.toJson(Seq(aUserResponse(developerEmail), aUserResponse(developerEmailWithSpecialCharacter))).toString()))
-      )
+          Json.toJson(Seq(aUserResponse(developerEmail), aUserResponse(developerEmailWithSpecialCharacter))).toString()
+        )
+      ))
 
       val result = await(connector.fetchAll())
 
@@ -104,8 +104,8 @@ class HttpDeveloperConnectorSpec  extends AsyncHmrcSpec
       }
 
       "make a call with topic and api category passed into the service and return users from response" in new Setup {
-        val url = s"""/developers/email-preferences\\?topic=${TopicOptionChoice.BUSINESS_AND_POLICY.toString}&regime=VAT&regime=API1"""
-        val user = aUserResponse(developerEmail)
+        val url      = s"""/developers/email-preferences\\?topic=${TopicOptionChoice.BUSINESS_AND_POLICY.toString}&regime=VAT&regime=API1"""
+        val user     = aUserResponse(developerEmail)
         val matching = urlMatching(url)
 
         stubFor(
@@ -117,7 +117,8 @@ class HttpDeveloperConnectorSpec  extends AsyncHmrcSpec
             )
         )
 
-        val result = await(connector.fetchByEmailPreferences(TopicOptionChoice.BUSINESS_AND_POLICY, maybeApis = None, maybeApiCategories = Some(Seq(APICategory("VAT"), APICategory("API1")))))
+        val result =
+          await(connector.fetchByEmailPreferences(TopicOptionChoice.BUSINESS_AND_POLICY, maybeApis = None, maybeApiCategories = Some(Seq(APICategory("VAT"), APICategory("API1")))))
 
         wireMockVerify(getRequestedFor(matching))
 
@@ -126,8 +127,8 @@ class HttpDeveloperConnectorSpec  extends AsyncHmrcSpec
       }
 
       "make a call with topic, api categories and apis passed into the service and return users from response" in new Setup {
-        val url = s"""/developers/email-preferences\\?topic=${TopicOptionChoice.BUSINESS_AND_POLICY.toString}&regime=VAT&regime=API1&service=service1&service=service2"""
-        val user = aUserResponse(developerEmail)
+        val url      = s"""/developers/email-preferences\\?topic=${TopicOptionChoice.BUSINESS_AND_POLICY.toString}&regime=VAT&regime=API1&service=service1&service=service2"""
+        val user     = aUserResponse(developerEmail)
         val matching = urlMatching(url)
 
         stubFor(
@@ -139,7 +140,11 @@ class HttpDeveloperConnectorSpec  extends AsyncHmrcSpec
             )
         )
 
-        val result = await(connector.fetchByEmailPreferences(TopicOptionChoice.BUSINESS_AND_POLICY, maybeApis = Some(Seq("service1", "service2")), maybeApiCategories = Some(Seq(APICategory("VAT"), APICategory("API1")))))
+        val result = await(connector.fetchByEmailPreferences(
+          TopicOptionChoice.BUSINESS_AND_POLICY,
+          maybeApis = Some(Seq("service1", "service2")),
+          maybeApiCategories = Some(Seq(APICategory("VAT"), APICategory("API1")))
+        ))
 
         wireMockVerify(getRequestedFor(matching))
 
@@ -147,8 +152,9 @@ class HttpDeveloperConnectorSpec  extends AsyncHmrcSpec
       }
 
       "make a call with topic, api categories and apis passed and privateapimatch as true into the service and return users from response" in new Setup {
-        val url = s"""/developers/email-preferences\\?topic=${TopicOptionChoice.BUSINESS_AND_POLICY.toString}&regime=VAT&regime=API1&service=service1&service=service2&privateapimatch=true"""
-        val user = aUserResponse(developerEmail)
+        val url      =
+          s"""/developers/email-preferences\\?topic=${TopicOptionChoice.BUSINESS_AND_POLICY.toString}&regime=VAT&regime=API1&service=service1&service=service2&privateapimatch=true"""
+        val user     = aUserResponse(developerEmail)
         val matching = urlMatching(url)
 
         stubFor(
@@ -160,7 +166,12 @@ class HttpDeveloperConnectorSpec  extends AsyncHmrcSpec
             )
         )
 
-        val result = await(connector.fetchByEmailPreferences(TopicOptionChoice.BUSINESS_AND_POLICY, maybeApis = Some(Seq("service1", "service2")), maybeApiCategories = Some(Seq(APICategory("VAT"), APICategory("API1"))), privateapimatch = true))
+        val result = await(connector.fetchByEmailPreferences(
+          TopicOptionChoice.BUSINESS_AND_POLICY,
+          maybeApis = Some(Seq("service1", "service2")),
+          maybeApiCategories = Some(Seq(APICategory("VAT"), APICategory("API1"))),
+          privateapimatch = true
+        ))
 
         wireMockVerify(getRequestedFor(matching))
 
@@ -168,7 +179,5 @@ class HttpDeveloperConnectorSpec  extends AsyncHmrcSpec
       }
     }
   }
-
-
 
 }

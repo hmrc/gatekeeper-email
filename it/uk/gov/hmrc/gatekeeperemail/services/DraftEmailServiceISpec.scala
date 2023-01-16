@@ -38,8 +38,8 @@ import scala.concurrent.Future
 import scala.concurrent.Future.successful
 
 class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with MockitoSugar with ArgumentMatchersSugar
-  with GuiceOneAppPerSuite with PlayMongoRepositorySupport[DraftEmail] {
-  val emailRepository = repository.asInstanceOf[DraftEmailRepository]
+    with GuiceOneAppPerSuite with PlayMongoRepositorySupport[DraftEmail] {
+  val emailRepository     = repository.asInstanceOf[DraftEmailRepository]
   val sentEmailRepository = serepository.asInstanceOf[SentEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
@@ -55,22 +55,20 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
       )
 
   override protected def repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
-  protected def serepository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
+  protected def serepository: PlayMongoRepository[SentEmail]         = app.injector.instanceOf[SentEmailRepository]
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   trait Setup {
-    val emailPreferences = DevelopersEmailQuery()
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-    val appConfigMock = mock[AppConfig]
-    val developerConnectorMock: DeveloperConnector = mock[DeveloperConnector]
-    val apmConnectorMock: ApmConnector = mock[ApmConnector]
-    val emailConnectorMock: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
+    val emailPreferences                                             = DevelopersEmailQuery()
+    implicit val hc: HeaderCarrier                                   = HeaderCarrier()
+    val appConfigMock                                                = mock[AppConfig]
+    val developerConnectorMock: DeveloperConnector                   = mock[DeveloperConnector]
+    val apmConnectorMock: ApmConnector                               = mock[ApmConnector]
+    val emailConnectorMock: GatekeeperEmailConnector                 = mock[GatekeeperEmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
-    val underTest = new DraftEmailService(emailRendererConnectorMock, developerConnectorMock, apmConnectorMock,
-                                            emailRepository, sentEmailRepository, appConfigMock)
-    val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
-      RegisteredUser("example2@example2.com", "first name2", "last name2", true))
+    val underTest                                                    = new DraftEmailService(emailRendererConnectorMock, developerConnectorMock, apmConnectorMock, emailRepository, sentEmailRepository, appConfigMock)
+    val users                                                        = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
   }
 
   "saveEmail" should {
@@ -79,13 +77,17 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(200))
       when(developerConnectorMock.fetchAll()(*)).thenReturn(Future(users))
       when(emailRendererConnectorMock.getTemplatedEmail(*))
-        .thenReturn(successful(Right(RenderResult("RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
-          "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
-      val emailRequest = EmailRequest(emailPreferences, "gatekeeper",
-        EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
-      val email: DraftEmail = await(underTest.persistEmail(emailRequest,"emailUUID"))
+        .thenReturn(successful(Right(RenderResult(
+          "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
+          "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==",
+          "from@digital.hmrc.gov.uk",
+          "subject",
+          ""
+        ))))
+      val emailRequest      = EmailRequest(emailPreferences, "gatekeeper", EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
+      val email: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
       email.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
-      val fetchedRecords = await(emailRepository.collection.withReadPreference(primaryPreferred).find().toFuture())
+      val fetchedRecords    = await(emailRepository.collection.withReadPreference(primaryPreferred).find().toFuture())
 
       fetchedRecords.size shouldBe 1
       fetchedRecords.head.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="

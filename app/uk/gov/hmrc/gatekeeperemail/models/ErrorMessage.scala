@@ -21,6 +21,7 @@ import play.api.libs.json.{Json, OWrites}
 case class ErrorMessage(reason: String)
 
 object ErrorMessage {
+
   implicit val writes: OWrites[ErrorMessage] =
     Json.writes[ErrorMessage]
 }

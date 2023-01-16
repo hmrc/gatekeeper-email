@@ -20,67 +20,75 @@ import play.api.libs.json.{Json, OFormat}
 
 case class EmailData(emailSubject: String, emailBody: String)
 
-case class SendEmailRequest(to: String,
-                            templateId: String,
-                            parameters: Map[String, String],
-                            force: Boolean = false,
-                            auditData: Map[String, String] = Map.empty,
-                            eventUrl: Option[String] = None,
-                            tags: Map[String, String] = Map.empty)
+case class SendEmailRequest(
+    to: String,
+    templateId: String,
+    parameters: Map[String, String],
+    force: Boolean = false,
+    auditData: Map[String, String] = Map.empty,
+    eventUrl: Option[String] = None,
+    tags: Map[String, String] = Map.empty
+  )
 
-case class DraftEmailRequest(userSelectionQuery: DevelopersEmailQuery,
-                             templateId: String,
-                             parameters: Map[String, String],
-                             force: Boolean = false,
-                             auditData: Map[String, String] = Map.empty,
-                             eventUrl: Option[String] = None)
+case class DraftEmailRequest(
+    userSelectionQuery: DevelopersEmailQuery,
+    templateId: String,
+    parameters: Map[String, String],
+    force: Boolean = false,
+    auditData: Map[String, String] = Map.empty,
+    eventUrl: Option[String] = None
+  )
 
-case class OneEmailRequest(to: List[String],
-                            templateId: String,
-                            parameters: Map[String, String],
-                            force: Boolean = false,
-                            auditData: Map[String, String] = Map.empty,
-                            eventUrl: Option[String] = None,
-                           tags: Map[String, String] = Map.empty)
+case class OneEmailRequest(
+    to: List[String],
+    templateId: String,
+    parameters: Map[String, String],
+    force: Boolean = false,
+    auditData: Map[String, String] = Map.empty,
+    eventUrl: Option[String] = None,
+    tags: Map[String, String] = Map.empty
+  )
 
-case class EmailRequest(userSelectionQuery: DevelopersEmailQuery,
-                        templateId: String,
-                        emailData: EmailData,
-                        force: Boolean = false,
-                        auditData: Map[String, String] = Map.empty,
-                        eventUrl: Option[String] = None,
-                        attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None)
+case class EmailRequest(
+    userSelectionQuery: DevelopersEmailQuery,
+    templateId: String,
+    emailData: EmailData,
+    force: Boolean = false,
+    auditData: Map[String, String] = Map.empty,
+    eventUrl: Option[String] = None,
+    attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None
+  )
 
 case class EmailSaved(emailUUID: String)
 
 object SendEmailRequest {
-  implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
-  implicit val emailOverrideFormatter = Json.format[EmailOverride]
-  implicit val developersEmailQueryFormatter: OFormat[DevelopersEmailQuery] = Json.format[DevelopersEmailQuery]
-  implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
+  implicit val format: OFormat[UploadCargo]                                                 = Json.format[UploadCargo]
+  implicit val emailOverrideFormatter                                                       = Json.format[EmailOverride]
+  implicit val developersEmailQueryFormatter: OFormat[DevelopersEmailQuery]                 = Json.format[DevelopersEmailQuery]
+  implicit val attachmentDetailsFormat: OFormat[UploadedFile]                               = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
-  implicit val sendEmailRequestFmt: OFormat[SendEmailRequest] = Json.format[SendEmailRequest]
+  implicit val sendEmailRequestFmt: OFormat[SendEmailRequest]                               = Json.format[SendEmailRequest]
 }
 
 object OneEmailRequest {
-  implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
-  implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
+  implicit val format: OFormat[UploadCargo]                                                 = Json.format[UploadCargo]
+  implicit val attachmentDetailsFormat: OFormat[UploadedFile]                               = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
-  implicit val sendEmailRequestFmt: OFormat[OneEmailRequest] = Json.format[OneEmailRequest]
+  implicit val sendEmailRequestFmt: OFormat[OneEmailRequest]                                = Json.format[OneEmailRequest]
 }
 
 object EmailRequest {
-  implicit val emailOverrideFormatter = Json.format[EmailOverride]
-  implicit val developersEmailQueryFormatter: OFormat[DevelopersEmailQuery] = Json.format[DevelopersEmailQuery]
-  implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
-  implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
+  implicit val emailOverrideFormatter                                                       = Json.format[EmailOverride]
+  implicit val developersEmailQueryFormatter: OFormat[DevelopersEmailQuery]                 = Json.format[DevelopersEmailQuery]
+  implicit val format: OFormat[UploadCargo]                                                 = Json.format[UploadCargo]
+  implicit val attachmentDetailsFormat: OFormat[UploadedFile]                               = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
-  implicit val receiveEmailRequestFmt: OFormat[EmailRequest] = Json.format[EmailRequest]
+  implicit val receiveEmailRequestFmt: OFormat[EmailRequest]                                = Json.format[EmailRequest]
 }
 
 object EmailData {
-  implicit val format: OFormat[UploadCargo] = Json.format[UploadCargo]
-  implicit val attachmentDetailsFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
+  implicit val format: OFormat[UploadCargo]                                                 = Json.format[UploadCargo]
+  implicit val attachmentDetailsFormat: OFormat[UploadedFile]                               = Json.format[UploadedFile]
   implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
-  implicit val emailDataFmt: OFormat[EmailData] = Json.format[EmailData]
+  implicit val emailDataFmt: OFormat[EmailData]                                             = Json.format[EmailData]
 }

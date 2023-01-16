@@ -24,20 +24,30 @@ import play.api.libs.json.{JsObject, JsString}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
 import uk.gov.hmrc.gatekeeperemail.models.{DevelopersEmailQuery, DraftEmail, EmailTemplateData, RegisteredUser, User}
 
-
 class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSugar with ArgumentMatchersSugar {
 
   "format" should {
     val formatter = EmailMongoFormatter.emailFormatter
     "correctly write a Email message" in {
-      val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
-        RegisteredUser("example2@example2.com", "first name2", "last name2", true))
+      val users                   = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
       val data: EmailTemplateData = EmailTemplateData("gatekeeper", Map(), false, Map(), None)
-      val emailPreferences = DevelopersEmailQuery()
+      val emailPreferences        = DevelopersEmailQuery()
 
-      val email = DraftEmail("61e00e08ed2f2471ce3126db", data, "DL Team",
-        emailPreferences, None, "markdownEmailBody", "This is test email",
-        "test subject", SENT, "composedBy", Some("approvedBy"), LocalDateTime.now(), 2)
+      val email             = DraftEmail(
+        "61e00e08ed2f2471ce3126db",
+        data,
+        "DL Team",
+        emailPreferences,
+        None,
+        "markdownEmailBody",
+        "This is test email",
+        "test subject",
+        SENT,
+        "composedBy",
+        Some("approvedBy"),
+        LocalDateTime.now(),
+        2
+      )
       val msgJson: JsObject = formatter.writes(email)
       msgJson.values.size shouldBe 12
       msgJson.value.get("recipientTitle") shouldBe Some(JsString("DL Team"))

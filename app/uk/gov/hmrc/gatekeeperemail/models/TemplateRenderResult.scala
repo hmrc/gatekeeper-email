@@ -21,11 +21,12 @@ import play.api.libs.json.{Json, Reads}
 case class RenderResult(plain: String, html: String, fromAddress: String, subject: String, templateRegime: String)
 
 case class TemplateRenderResult(
-                             plain: String,
-                             html: String,
-                             fromAddress: String,
-                             subject: String,
-                             service: String)
+    plain: String,
+    html: String,
+    fromAddress: String,
+    subject: String,
+    service: String
+  )
 
 object TemplateRenderResult {
 

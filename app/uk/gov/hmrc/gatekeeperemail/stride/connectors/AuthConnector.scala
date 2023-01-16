@@ -22,7 +22,6 @@ import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig
 import uk.gov.hmrc.http.HttpClient
 
 @Singleton
-class AuthConnector @Inject()(val http: HttpClient, strideAuthConfig: StrideAuthConfig) extends PlayAuthConnector {
+class AuthConnector @Inject() (val http: HttpClient, strideAuthConfig: StrideAuthConfig) extends PlayAuthConnector {
   lazy val serviceUrl = strideAuthConfig.authBaseUrl
 }
-

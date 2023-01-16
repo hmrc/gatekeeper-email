@@ -33,22 +33,22 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import scala.concurrent.duration.{Deadline, DurationInt, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
 
-
 class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFutures with GuiceOneAppPerTest with MockitoSugar
     with BeforeAndAfterEach {
 
   override def fakeApplication() =
     new GuiceApplicationBuilder().configure(
-      "metrics.jvm" -> false,
+      "metrics.jvm"     -> false,
       "metrics.enabled" -> false
     )
       .build()
 
   trait Setup extends TestCase {
-      val subject = new RunningOfScheduledJobs {
-      override implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
-      override val application: Application = fakeApplication
-      override val scheduledJobs: Seq[ScheduledJob] = Seq(new TestScheduledJob)
+
+    val subject = new RunningOfScheduledJobs {
+      override implicit val ec: ExecutionContext              = ExecutionContext.Implicits.global
+      override val application: Application                   = fakeApplication
+      override val scheduledJobs: Seq[ScheduledJob]           = Seq(new TestScheduledJob)
       override val applicationLifecycle: ApplicationLifecycle = fakeApplication.injector.instanceOf[ApplicationLifecycle]
     }
   }
@@ -56,29 +56,29 @@ class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFut
   "When stopping the app, the scheduled job runner" should {
     "cancel all of the scheduled jobs" in new TestCase {
       private val testApp = fakeApplication()
-      private val runner = new RunningOfScheduledJobs {
-        override lazy val ec: ExecutionContext = ExecutionContext.Implicits.global
+      private val runner  = new RunningOfScheduledJobs {
+        override lazy val ec: ExecutionContext                       = ExecutionContext.Implicits.global
         override lazy val applicationLifecycle: ApplicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
-        override lazy val scheduledJobs: Seq[LockedScheduledJob] = Seq.empty
-        override lazy val application: Application = testApp
+        override lazy val scheduledJobs: Seq[LockedScheduledJob]     = Seq.empty
+        override lazy val application: Application                   = testApp
       }
       runner.cancellables = Seq(new StubCancellable, new StubCancellable)
 
       every(runner.cancellables) should not be 'cancelled
       await(testApp.stop())
-      every(runner.cancellables) should be ('cancelled)
+      every(runner.cancellables) should be('cancelled)
     }
 
     "block while scheduled jobs are still running" in new TestCase {
       private val testApp = fakeApplication()
-      val stoppableJob = new TestScheduledJob() {
+      val stoppableJob    = new TestScheduledJob() {
         override def name: String = "StoppableJob"
       }
-      private val runner = new RunningOfScheduledJobs {
-        override lazy val ec: ExecutionContext = ExecutionContext.Implicits.global
+      private val runner  = new RunningOfScheduledJobs {
+        override lazy val ec: ExecutionContext                       = ExecutionContext.Implicits.global
         override lazy val applicationLifecycle: ApplicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
-        override lazy val scheduledJobs: Seq[ScheduledJob] = Seq(stoppableJob)
-        override lazy val application: Application = testApp
+        override lazy val scheduledJobs: Seq[ScheduledJob]           = Seq(stoppableJob)
+        override lazy val application: Application                   = testApp
       }
 
       stoppableJob.isRunning = Future.successful(true)
@@ -89,23 +89,31 @@ class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFut
       }
 
       val stopFuture = testApp.stop()
-      stopFuture should not be'completed
+      stopFuture should not be 'completed
 
       stoppableJob.isRunning = Future.successful(false)
-      eventually (timeout(Span(1, Minute))) { stopFuture should be('completed) }
+      eventually(timeout(Span(1, Minute))) { stopFuture should be('completed) }
     }
   }
 
   trait TestCase {
+
     class StubbedScheduler extends akka.actor.Scheduler {
-      override def scheduleWithFixedDelay(initialDelay: FiniteDuration, delay: FiniteDuration)(runnable: Runnable)(
-        implicit executor: ExecutionContext): Cancellable = new Cancellable {
-        override def cancel(): Boolean = true
+
+      override def scheduleWithFixedDelay(
+          initialDelay: FiniteDuration,
+          delay: FiniteDuration
+        )(
+          runnable: Runnable
+        )(implicit executor: ExecutionContext
+        ): Cancellable = new Cancellable {
+        override def cancel(): Boolean    = true
         override def isCancelled: Boolean = false
       }
-      def maxFrequency: Double  = 1
+      def maxFrequency: Double                                                                                      = 1
+
       def scheduleOnce(delay: FiniteDuration, runnable: Runnable)(implicit executor: ExecutionContext): Cancellable = new Cancellable {
-        override def cancel(): Boolean = true
+        override def cancel(): Boolean    = true
         override def isCancelled: Boolean = false
       }
 
@@ -114,16 +122,18 @@ class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFut
 
     class TestScheduledJob extends ScheduledJob {
       override lazy val initialDelay: FiniteDuration = 2.seconds
-      override lazy val interval: FiniteDuration = 3.seconds
-      def name: String = "TestScheduledJob"
-      def isExecuted: Boolean = true
+      override lazy val interval: FiniteDuration     = 3.seconds
+      def name: String                               = "TestScheduledJob"
+      def isExecuted: Boolean                        = true
 
       override def execute(implicit ec: ExecutionContext): Future[Result] = Future.successful(Result("done"))
-      var isRunning: Future[Boolean] = Future.successful(false)
+      var isRunning: Future[Boolean]                                      = Future.successful(false)
     }
     val testScheduledJob = new TestScheduledJob
-    class StubCancellable extends Cancellable {
-      var isCancelled = false
+
+    class StubCancellable  extends Cancellable  {
+      var isCancelled       = false
+
       def cancel(): Boolean = {
         isCancelled = true
         isCancelled

@@ -16,39 +16,37 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-
 import play.api.libs.json.{Json, OFormat}
 
 case class UploadedFile(
-                         upscanReference: String,
-                         downloadUrl: String,
-                         uploadTimestamp: String,
-                         checksum: String,
-                         fileName: String,
-                         fileMimeType: String,
-                         fileSize: Int,
-                         cargo: Option[UploadCargo],
-                         description: Option[String],
-                         previewUrl: Option[String]
-                       )
+    upscanReference: String,
+    downloadUrl: String,
+    uploadTimestamp: String,
+    checksum: String,
+    fileName: String,
+    fileMimeType: String,
+    fileSize: Int,
+    cargo: Option[UploadCargo],
+    description: Option[String],
+    previewUrl: Option[String]
+  )
 
 case class UploadedFileWithObjectStore(
-                                        upscanReference: String,
-                                        downloadUrl: String,
-                                        uploadTimestamp: String,
-                                        checksum: String,
-                                        fileName: String,
-                                        fileMimeType: String,
-                                        fileSize: Int,
-                                        cargo: Option[UploadCargo],
-                                        description: Option[String],
-                                        previewUrl: Option[String],
-                                        objectStoreUrl: Option[String],
-                                        devHubUrl: Option[String]
-                                      )
-
+    upscanReference: String,
+    downloadUrl: String,
+    uploadTimestamp: String,
+    checksum: String,
+    fileName: String,
+    fileMimeType: String,
+    fileSize: Int,
+    cargo: Option[UploadCargo],
+    description: Option[String],
+    previewUrl: Option[String],
+    objectStoreUrl: Option[String],
+    devHubUrl: Option[String]
+  )
 
 object UploadedFile {
-  implicit val uploadFileFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
+  implicit val uploadFileFormat: OFormat[UploadedFile]                               = Json.format[UploadedFile]
   implicit val uploadFileWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
 }

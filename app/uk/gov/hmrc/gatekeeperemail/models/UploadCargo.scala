@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-
 import play.api.libs.json.{Json, OFormat}
 
 case class UploadCargo(emailUUID: String)

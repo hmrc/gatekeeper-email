@@ -33,9 +33,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class GatekeeperEmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite {
 
-  val stubPort = sys.env.getOrElse("WIREMOCK", "22222").toInt
-  val stubHost = "localhost"
-  val wireMockUrl = s"http://$stubHost:$stubPort"
+  val stubPort       = sys.env.getOrElse("WIREMOCK", "22222").toInt
+  val stubHost       = "localhost"
+  val wireMockUrl    = s"http://$stubHost:$stubPort"
   val wireMockServer = new WireMockServer(wireMockConfig().port(stubPort))
 
   override def beforeAll() {
@@ -54,18 +54,17 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfter
     super.afterAll()
   }
 
-  val gatekeeperLink = "http://some.url"
-  val emailId = "email@example.com"
-  val subject = "Email subject"
-  val fromAddress = "gateKeeper"
-  val emailBody = "Body to be used in the email template"
+  val gatekeeperLink   = "http://some.url"
+  val emailId          = "email@example.com"
+  val subject          = "Email subject"
+  val fromAddress      = "gateKeeper"
+  val emailBody        = "Body to be used in the email template"
   val emailServicePath = "/developer/email"
-  val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
-    RegisteredUser("example2@example2.com", "first name2", "last name2", true))
-   
+  val users            = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
+
   trait Setup {
     val httpClient = app.injector.instanceOf[HttpClient]
-    
+
     val fakeEmailConnectorConfig = new EmailConnectorConfig {
       val emailBaseUrl = wireMockUrl
     }
@@ -76,47 +75,57 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfter
   }
 
   trait WorkingHttp {
-      self: Setup =>
+    self: Setup =>
     stubFor(post(urlEqualTo(emailServicePath)).willReturn(aResponse().withStatus(OK)))
   }
 
   trait FailWithConnectionResetHttp {
-      self: Setup =>
+    self: Setup =>
     stubFor(post(urlEqualTo(emailServicePath)).willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)))
   }
 
   "emailConnector" should {
-    val parameters: Map[String, String] = Map( "showFooter" -> "true",
-      "showHmrcBanner" -> "true", "subject" -> s"$subject", "fromAddress" -> s"$fromAddress",
-      "body" -> s"$emailBody", "service" -> s"gatekeeper", "lastName" -> "last name2",
-      "firstName" -> "first name2")
+    val parameters: Map[String, String] = Map(
+      "showFooter"     -> "true",
+      "showHmrcBanner" -> "true",
+      "subject"        -> s"$subject",
+      "fromAddress"    -> s"$fromAddress",
+      "body"           -> s"$emailBody",
+      "service"        -> s"gatekeeper",
+      "lastName"       -> "last name2",
+      "firstName"      -> "first name2"
+    )
 
     val emailRequest = SendEmailRequest("example2@example2.com", "gatekeeper", parameters)
 
     "send gatekeeper email" in new Setup with WorkingHttp {
       await(underTest.sendEmail(emailRequest))
 
-      wireMockVerify(1, postRequestedFor(
-        urlEqualTo(emailServicePath))
-        .withRequestBody(equalToJson(
-          s"""
-              |{
-              |  "to" : [ "example2@example2.com" ],
-              |  "templateId": "gatekeeper",
-              |  "parameters": {
-              |  "showFooter" : "true",
-              |  "showHmrcBanner" : "true",
-              |  "subject": "$subject",
-              |  "fromAddress": "gateKeeper",
-              |  "body": "$emailBody",
-              |  "service": "gatekeeper",
-              |  "lastName" : "last name2",
-              |  "firstName" : "first name2"
-              |  },
-              |  "force": false,
-              |  "auditData": {},
-              |  "tags" : { }
-              |}""".stripMargin))
+      wireMockVerify(
+        1,
+        postRequestedFor(
+          urlEqualTo(emailServicePath)
+        )
+          .withRequestBody(equalToJson(
+            s"""
+               |{
+               |  "to" : [ "example2@example2.com" ],
+               |  "templateId": "gatekeeper",
+               |  "parameters": {
+               |  "showFooter" : "true",
+               |  "showHmrcBanner" : "true",
+               |  "subject": "$subject",
+               |  "fromAddress": "gateKeeper",
+               |  "body": "$emailBody",
+               |  "service": "gatekeeper",
+               |  "lastName" : "last name2",
+               |  "firstName" : "first name2"
+               |  },
+               |  "force": false,
+               |  "auditData": {},
+               |  "tags" : { }
+               |}""".stripMargin
+          ))
       )
     }
 

@@ -37,27 +37,51 @@ import scala.concurrent.Future.successful
 class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with ArgumentMatchersSugar {
 
   trait Setup {
-    val draftEmailRepositoryMock: DraftEmailRepository = mock[DraftEmailRepository]
-    val draftEmailServiceMock: DraftEmailService = mock[DraftEmailService]
-    val sentEmailRepositoryMock: SentEmailRepository = mock[SentEmailRepository]
-    val emailConnectorMock: GatekeeperEmailConnector = mock[GatekeeperEmailConnector]
+    val draftEmailRepositoryMock: DraftEmailRepository               = mock[DraftEmailRepository]
+    val draftEmailServiceMock: DraftEmailService                     = mock[DraftEmailService]
+    val sentEmailRepositoryMock: SentEmailRepository                 = mock[SentEmailRepository]
+    val emailConnectorMock: GatekeeperEmailConnector                 = mock[GatekeeperEmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
-    val underTest = new SentEmailService(emailConnectorMock, draftEmailServiceMock, sentEmailRepositoryMock)
-    val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
-    val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
-      RegisteredUser("example2@example2.com", "first name2", "last name2", true))
-    val emailPreferences = DevelopersEmailQuery()
+    val underTest                                                    = new SentEmailService(emailConnectorMock, draftEmailServiceMock, sentEmailRepositoryMock)
+    val templateData                                                 = EmailTemplateData("templateId", Map(), false, Map(), None)
+    val users                                                        = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
+    val emailPreferences                                             = DevelopersEmailQuery()
 
-    val draftEmail = DraftEmail("emailId-123", templateData, "DL Team",
-      emailPreferences, None, "markdownEmailBody", "Test email",
-      "test subject", SENT, "composedBy", Some("approvedBy"), LocalDateTime.now(), 1)
-    val sentEmail = SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), emailUuid = UUID.randomUUID(),
-      firstName = "first", lastName = "last", recipient = "first.last@digital.hmrc.gov.uk", status = PENDING,
-      failedCount = 0)
+    val draftEmail = DraftEmail(
+      "emailId-123",
+      templateData,
+      "DL Team",
+      emailPreferences,
+      None,
+      "markdownEmailBody",
+      "Test email",
+      "test subject",
+      SENT,
+      "composedBy",
+      Some("approvedBy"),
+      LocalDateTime.now(),
+      1
+    )
+
+    val sentEmail  = SentEmail(
+      createdAt = LocalDateTime.now(),
+      updatedAt = LocalDateTime.now(),
+      emailUuid = UUID.randomUUID(),
+      firstName = "first",
+      lastName = "last",
+      recipient = "first.last@digital.hmrc.gov.uk",
+      status = PENDING,
+      failedCount = 0
+    )
 
     when(emailRendererConnectorMock.getTemplatedEmail(*))
-      .thenReturn(successful(Right(RenderResult("RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
-        "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "from@digital.hmrc.gov.uk", "subject", ""))))
+      .thenReturn(successful(Right(RenderResult(
+        "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
+        "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==",
+        "from@digital.hmrc.gov.uk",
+        "subject",
+        ""
+      ))))
   }
 
   "sendEmails" should {
@@ -75,7 +99,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       result shouldBe 1
     }
 
-   "handle there being no emails to send" in new Setup {
+    "handle there being no emails to send" in new Setup {
       when(sentEmailRepositoryMock.findNextEmailToSend).thenReturn(Future.successful(None))
       /*when(draftEmailServiceMock.fetchEmail(sentEmail.emailUuid.toString)).thenReturn(Future(draftEmail))
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(ACCEPTED))*/
@@ -99,7 +123,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
     }
 
     "mark as failed when maximum fail count reached" in new Setup {
-      val emailToSend   = sentEmail.copy(failedCount = 4)
+      val emailToSend = sentEmail.copy(failedCount = 4)
       when(sentEmailRepositoryMock.markFailed(emailToSend)).thenReturn(Future(emailToSend))
       when(sentEmailRepositoryMock.findNextEmailToSend).thenReturn(Future(Some(emailToSend)))
       when(draftEmailServiceMock.fetchEmail(emailToSend.emailUuid.toString)).thenReturn(Future(draftEmail))

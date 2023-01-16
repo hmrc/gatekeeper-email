@@ -19,6 +19,6 @@ package uk.gov.hmrc.gatekeeperemail.utils
 import java.net.URLEncoder
 
 trait UrlEncoding {
-  
+
   def encode(str: String) = URLEncoder.encode(str, "UTF-8")
 }

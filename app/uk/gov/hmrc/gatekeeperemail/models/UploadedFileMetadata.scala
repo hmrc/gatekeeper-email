@@ -22,5 +22,5 @@ case class UploadedFileMetadata(nonce: Nonce, uploadedFiles: Seq[UploadedFileWit
 
 object UploadedFileMetadata {
   implicit val formatWithObjectStore: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
-  implicit val format: OFormat[UploadedFileMetadata] = Json.format[UploadedFileMetadata]
+  implicit val format: OFormat[UploadedFileMetadata]                       = Json.format[UploadedFileMetadata]
 }

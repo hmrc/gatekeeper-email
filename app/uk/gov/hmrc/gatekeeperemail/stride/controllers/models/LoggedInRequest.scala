@@ -20,4 +20,4 @@ import play.api.mvc.MessagesRequest
 import uk.gov.hmrc.auth.core.Enrolments
 
 class LoggedInRequest[A](val name: Option[String], val authorisedEnrolments: Enrolments, val msgRequest: MessagesRequest[A])
-  extends MessagesRequest[A](msgRequest, msgRequest.messagesApi)
+    extends MessagesRequest[A](msgRequest, msgRequest.messagesApi)

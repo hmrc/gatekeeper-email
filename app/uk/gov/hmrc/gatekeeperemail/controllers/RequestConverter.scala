@@ -23,7 +23,7 @@ import play.api.mvc.{MessagesRequest, Request}
 @Singleton
 class RequestConverter @Inject() (messagesApi: MessagesApi) {
 
- def convert[A] (request:Request[A]): MessagesRequest[A] = {
-  new MessagesRequest[A](request, messagesApi)
- }
+  def convert[A](request: Request[A]): MessagesRequest[A] = {
+    new MessagesRequest[A](request, messagesApi)
+  }
 }

@@ -31,8 +31,7 @@ import uk.gov.hmrc.gatekeeperemail.models.{DevelopersEmailQuery, DraftEmail, Ema
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
-class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[DraftEmail] with
-  Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
+class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[DraftEmail] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
   val serviceRepo = repository.asInstanceOf[DraftEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
@@ -50,18 +49,30 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
   override protected def repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
 
   trait Setup {
-    val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
-    val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
-      RegisteredUser("example2@example2.com", "first name2", "last name2", true))
+    val templateData     = EmailTemplateData("templateId", Map(), false, Map(), None)
+    val users            = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
     val emailPreferences = DevelopersEmailQuery()
 
-    val email = DraftEmail(UUID.randomUUID.toString(), templateData, "DL Team", emailPreferences, None, "markdownEmailBody", "This is test email",
-      "test subject", EmailStatus.FAILED, "composedBy", Some("approvedBy"), now(), 1)
+    val email = DraftEmail(
+      UUID.randomUUID.toString(),
+      templateData,
+      "DL Team",
+      emailPreferences,
+      None,
+      "markdownEmailBody",
+      "This is test email",
+      "test subject",
+      EmailStatus.FAILED,
+      "composedBy",
+      Some("approvedBy"),
+      now(),
+      1
+    )
 
   }
   "persist" should {
 
-    "insert an Email message when it does not exist" in new Setup{
+    "insert an Email message when it does not exist" in new Setup {
       await(serviceRepo.persist(email))
 
       val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred).find().toFuture())
@@ -74,7 +85,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
       await(serviceRepo.persist(email))
 
       val Some(globalIdIndex) = await(serviceRepo.collection.listIndexes().toFuture()).find(i => i.get("name").get.asString().getValue == "emailUUIDIndex")
-      globalIdIndex.get("unique") shouldBe Some(BsonBoolean(value=true))
+      globalIdIndex.get("unique") shouldBe Some(BsonBoolean(value = true))
       globalIdIndex.get("background").get shouldBe BsonBoolean(true)
     }
 
@@ -97,7 +108,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
     }
 
     "throw exception when email data cannot be found" in new Setup {
-      val exception:Exception = intercept[Exception] {
+      val exception: Exception = intercept[Exception] {
         await(serviceRepo.getEmailData(email.emailUUID))
       }
       exception.getMessage shouldBe s"Email with id ${email.emailUUID} not found"
@@ -122,10 +133,23 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
   "updateEmail" should {
     "successfully update a previously persisted email" in new Setup {
       val templateDataForUpdate = EmailTemplateData("updatedTemplateId", Map(), true, Map(), Some("url"))
-      val objectStoreFile = UploadedFileWithObjectStore("upscanReference", "downloadUrl", "uploadTimestamp", "checksum",
-        "fileName", "fileMimeType", 1024, None, None, None, None, None)
-      val emailUpdate = DraftEmail(emailUUID = email.emailUUID, templateData = templateDataForUpdate, recipientTitle = "Mrs", emailPreferences, attachmentDetails = Some(List(objectStoreFile)), markdownEmailBody = "some markdown body",
-        htmlEmailBody = "some html body", subject = "what's it for", status = EmailStatus.PENDING, composedBy = "Ludwig van Beethoven", approvedBy = Some("John Doe"), createDateTime = now(), 1)
+      val objectStoreFile       =
+        UploadedFileWithObjectStore("upscanReference", "downloadUrl", "uploadTimestamp", "checksum", "fileName", "fileMimeType", 1024, None, None, None, None, None)
+      val emailUpdate           = DraftEmail(
+        emailUUID = email.emailUUID,
+        templateData = templateDataForUpdate,
+        recipientTitle = "Mrs",
+        emailPreferences,
+        attachmentDetails = Some(List(objectStoreFile)),
+        markdownEmailBody = "some markdown body",
+        htmlEmailBody = "some html body",
+        subject = "what's it for",
+        status = EmailStatus.PENDING,
+        composedBy = "Ludwig van Beethoven",
+        approvedBy = Some("John Doe"),
+        createDateTime = now(),
+        1
+      )
       await(serviceRepo.persist(email))
 
       val updatedEmail = await(serviceRepo.updateEmail(emailUpdate))
@@ -143,17 +167,30 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
     }
 
     "return null when email cannot be found" in new Setup {
-        val templateDataForUpdate = EmailTemplateData("updatedTemplateId", Map(), true, Map(), Some("url"))
-        val objectStoreFile = UploadedFileWithObjectStore("upscanReference", "downloadUrl", "uploadTimestamp", "checksum",
-          "fileName", "fileMimeType", 1024, None, None, None, None, None)
-        val emailUpdate = DraftEmail(emailUUID = UUID.randomUUID().toString, templateData = templateDataForUpdate, recipientTitle = "Mrs", emailPreferences, attachmentDetails = Some(List(objectStoreFile)), markdownEmailBody = "some markdown body",
-          htmlEmailBody = "some html body", subject = "what's it for", status = EmailStatus.PENDING, composedBy = "Ludwig van Beethoven", approvedBy = Some("John Doe"), createDateTime = now(), 1)
+      val templateDataForUpdate = EmailTemplateData("updatedTemplateId", Map(), true, Map(), Some("url"))
+      val objectStoreFile       =
+        UploadedFileWithObjectStore("upscanReference", "downloadUrl", "uploadTimestamp", "checksum", "fileName", "fileMimeType", 1024, None, None, None, None, None)
+      val emailUpdate           = DraftEmail(
+        emailUUID = UUID.randomUUID().toString,
+        templateData = templateDataForUpdate,
+        recipientTitle = "Mrs",
+        emailPreferences,
+        attachmentDetails = Some(List(objectStoreFile)),
+        markdownEmailBody = "some markdown body",
+        htmlEmailBody = "some html body",
+        subject = "what's it for",
+        status = EmailStatus.PENDING,
+        composedBy = "Ludwig van Beethoven",
+        approvedBy = Some("John Doe"),
+        createDateTime = now(),
+        1
+      )
 
-        val updatedEmail = await(serviceRepo.updateEmail(emailUpdate))
+      val updatedEmail = await(serviceRepo.updateEmail(emailUpdate))
 
-        updatedEmail shouldBe null
+      updatedEmail shouldBe null
 
-      }
+    }
   }
 
   "deleteByEmailUUID" should {

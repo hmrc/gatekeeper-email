@@ -33,23 +33,21 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoReposito
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class UploadInfo(reference : Reference, status : UploadStatus, createDateTime: LocalDateTime)
+case class UploadInfo(reference: Reference, status: UploadStatus, createDateTime: LocalDateTime)
 
 object UploadInfo {
-  val status = "status"
-  implicit val format: Format[UploadInfo] =  Json.format[UploadInfo]
+  val status                              = "status"
+  implicit val format: Format[UploadInfo] = Json.format[UploadInfo]
 }
 
 @Singleton
-class FileUploadStatusRepository @Inject()(mongoComponent: MongoComponent)
-                                          (implicit ec : ExecutionContext)
-  extends PlayMongoRepository[UploadInfo](
-    mongoComponent = mongoComponent,
-    collectionName = "gatekeeper-fileuploads",
-    domainFormat = uploadInfo,
-    indexes = Seq(IndexModel(ascending("reference"),
-      IndexOptions().name("referenceIndex").background(true).unique(true)))
-  ) {
+class FileUploadStatusRepository @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[UploadInfo](
+      mongoComponent = mongoComponent,
+      collectionName = "gatekeeper-fileuploads",
+      domainFormat = uploadInfo,
+      indexes = Seq(IndexModel(ascending("reference"), IndexOptions().name("referenceIndex").background(true).unique(true)))
+    ) {
 
   override lazy val collection: MongoCollection[UploadInfo] =
     CollectionFactory
@@ -72,14 +70,16 @@ class FileUploadStatusRepository @Inject()(mongoComponent: MongoComponent)
       )
 
   def findByUploadId(reference: Reference): Future[Option[UploadInfo]] =
-    collection.find(equal("reference" , Codecs.toBson(reference))).headOption()
+    collection.find(equal("reference", Codecs.toBson(reference))).headOption()
 
-  def updateStatus(reference : Reference, newStatus : UploadStatus): Future[UploadInfo] = {
-    collection.findOneAndUpdate(equal("reference", Codecs.toBson(reference)),
+  def updateStatus(reference: Reference, newStatus: UploadStatus): Future[UploadInfo] = {
+    collection.findOneAndUpdate(
+      equal("reference", Codecs.toBson(reference)),
       update = set("status", newStatus),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-      ).map(_.asInstanceOf[UploadInfo]).head()
+    ).map(_.asInstanceOf[UploadInfo]).head()
   }
-  def requestUpload(uploadInfo : UploadInfo): Future[UploadInfo] =
+
+  def requestUpload(uploadInfo: UploadInfo): Future[UploadInfo]                       =
     collection.insertOne(uploadInfo).toFuture().map(res => uploadInfo)
 }

@@ -33,7 +33,7 @@ trait LockedScheduledJob extends ScheduledJob {
   val lockService: LockService
 
   final def execute(implicit ec: ExecutionContext): Future[Result] =
-    lockService.withLock{
+    lockService.withLock {
       executeInLock
     } map {
       case Some(Result(msg)) => Result(s"Job named $name ran, and completed, with result $msg")
@@ -41,4 +41,3 @@ trait LockedScheduledJob extends ScheduledJob {
     }
 
 }
-

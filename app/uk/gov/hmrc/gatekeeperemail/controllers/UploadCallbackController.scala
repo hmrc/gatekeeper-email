@@ -29,25 +29,25 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait CallbackBody {
-  def reference : String
+  def reference: String
 }
 
 case class ReadyCallbackBody(
-                              reference: String,
-                              downloadUrl: String,
-                              uploadDetails: UploadDetails
-                            ) extends CallbackBody
+    reference: String,
+    downloadUrl: String,
+    uploadDetails: UploadDetails
+  ) extends CallbackBody
 
 case class FailedCallbackBody(
-                               reference: String,
-                               fileStatus: String,
-                               failureDetails: ErrorDetails
-                             ) extends CallbackBody
+    reference: String,
+    fileStatus: String,
+    failureDetails: ErrorDetails
+  ) extends CallbackBody
 
 object CallbackBody {
-  implicit val uploadDetailsReads = Json.reads[UploadDetails]
+  implicit val uploadDetailsReads  = Json.reads[UploadDetails]
   implicit val uploadDetailsWrites = Json.writes[UploadDetails]
-  implicit val uploadDetails = Format(uploadDetailsReads, uploadDetailsWrites)
+  implicit val uploadDetails       = Format(uploadDetailsReads, uploadDetailsWrites)
 
   implicit val errorDetailsReads = Json.reads[ErrorDetails]
 
@@ -56,30 +56,25 @@ object CallbackBody {
   implicit val failedCallbackBodyReads = Json.reads[FailedCallbackBody]
 
   implicit val reads = new Reads[CallbackBody] {
+
     override def reads(json: JsValue): JsResult[CallbackBody] = json \ "fileStatus" match {
-      case JsDefined(JsString("READY")) => implicitly[Reads[ReadyCallbackBody]].reads(json)
+      case JsDefined(JsString("READY"))  => implicitly[Reads[ReadyCallbackBody]].reads(json)
       case JsDefined(JsString("FAILED")) => implicitly[Reads[FailedCallbackBody]].reads(json)
-      case JsDefined(value) => JsError(s"Invalid file upload status type: $value")
-      case JsUndefined() => JsError("Missing file upload status type")
+      case JsDefined(value)              => JsError(s"Invalid file upload status type: $value")
+      case JsUndefined()                 => JsError("Missing file upload status type")
     }
   }
 }
 
-case class UploadDetails(uploadTimestamp: Instant,
-                         checksum: String,
-                         fileMimeType: String,
-                         fileName: String,
-                         size: Long)
+case class UploadDetails(uploadTimestamp: Instant, checksum: String, fileMimeType: String, fileName: String, size: Long)
 
 case class ErrorDetails(failureReason: String, message: String)
 
-
 @Singleton
-class UploadCallbackController @Inject()(upscanCallbackDispatcher : UpscanCallbackService,
-                                         cc: ControllerComponents)
-                                        (implicit ec : ExecutionContext) extends BackendController(cc) {
+class UploadCallbackController @Inject() (upscanCallbackDispatcher: UpscanCallbackService, cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) {
 
-  private val logger = Logger(this.getClass)
+  private val logger                                                                         = Logger(this.getClass)
+
   private def handleFuture[T](future: Future[T])(implicit writes: Writes[T]): Future[Result] = {
     future map { v =>
       Ok(toJson(v))

@@ -27,16 +27,15 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class ObjectStoreService @Inject()(objectStoreClient: PlayObjectStoreClient,
-                                    appConfig: AppConfig)
-                                  (implicit val ec: ExecutionContext) {
+class ObjectStoreService @Inject() (objectStoreClient: PlayObjectStoreClient, appConfig: AppConfig)(implicit val ec: ExecutionContext) {
 
   val logger: Logger = Logger(getClass.getName)
 
   def uploadToObjectStore(emailUUID: String, downloadUrl: String, fileName: String) = {
     implicit val hc = HeaderCarrier()
     logger.info(s"uploadToObjectStore upload to location: $emailUUID")
-    objectStoreClient.uploadFromUrl(from = new URL(downloadUrl),
+    objectStoreClient.uploadFromUrl(
+      from = new URL(downloadUrl),
       to = Path.File(Path.Directory(emailUUID), fileName),
       retentionPeriod = RetentionPeriod.parse(appConfig.defaultRetentionPeriod).getOrElse(RetentionPeriod.OneYear),
       contentType = None,

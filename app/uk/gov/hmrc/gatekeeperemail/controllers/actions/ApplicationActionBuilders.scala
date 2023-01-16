@@ -28,16 +28,16 @@ trait AuthorisationActions {
 
   private def strideRoleJsValue(minimumGatekeeperRole: GatekeeperRole.GatekeeperRole)(block: MessagesRequest[JsValue] => Future[Result]): Action[JsValue] =
     Action.async(parse.json) { implicit request =>
-       gatekeeperRoleActionRefiner(minimumGatekeeperRole)
-      .invokeBlock(requestConverter.convert(request), block)
+      gatekeeperRoleActionRefiner(minimumGatekeeperRole)
+        .invokeBlock(requestConverter.convert(request), block)
     }
 
   def loggedInJsValue()(block: Request[JsValue] => Future[Result]): Action[JsValue] = strideRoleJsValue(GatekeeperRole.USER)(block)
 
   private def strideRoleAnyContent(minimumGatekeeperRole: GatekeeperRole.GatekeeperRole)(block: MessagesRequest[AnyContent] => Future[Result]): Action[AnyContent] =
     Action.async { implicit request =>
-       gatekeeperRoleActionRefiner(minimumGatekeeperRole)
-      .invokeBlock(requestConverter.convert(request), block)
+      gatekeeperRoleActionRefiner(minimumGatekeeperRole)
+        .invokeBlock(requestConverter.convert(request), block)
     }
 
   def loggedInAnyContent()(block: Request[AnyContent] => Future[Result]): Action[AnyContent] = strideRoleAnyContent(GatekeeperRole.USER)(block)

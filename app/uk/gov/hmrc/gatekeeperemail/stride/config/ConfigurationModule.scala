@@ -19,6 +19,7 @@ package uk.gov.hmrc.gatekeeperemail.stride.config
 import com.google.inject.AbstractModule
 
 class ConfigurationModule extends AbstractModule {
+
   override def configure() = {
     bind(classOf[StrideAuthConfig]).toProvider(classOf[StrideAuthConfigProvider])
   }

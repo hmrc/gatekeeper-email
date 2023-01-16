@@ -33,8 +33,7 @@ import uk.gov.hmrc.gatekeeperemail.models.SentEmail
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
-class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[SentEmail] with
-  Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
+class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[SentEmail] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
   val serviceRepo = repository.asInstanceOf[SentEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
@@ -51,9 +50,16 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
 
   override protected def repository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
 
-  val sentEmail = List(SentEmail(createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), emailUuid = UUID.randomUUID(),
-    firstName = "first", lastName = "last", recipient = "first.last@digital.hmrc.gov.uk", status = PENDING,
-    failedCount = 0))
+  val sentEmail = List(SentEmail(
+    createdAt = LocalDateTime.now(),
+    updatedAt = LocalDateTime.now(),
+    emailUuid = UUID.randomUUID(),
+    firstName = "first",
+    lastName = "last",
+    recipient = "first.last@digital.hmrc.gov.uk",
+    status = PENDING,
+    failedCount = 0
+  ))
 
   "persist" should {
     "insert a sent email message when it does not exist" in {
@@ -89,7 +95,7 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
   "findNextEmailToSend" should {
     "find the oldest pending email" in {
       val expectedNextSendRecipient = "old.email@digital.hmrc.gov.uk"
-      val emailsToSend = List(sentEmail.head.copy(createdAt = LocalDateTime.now().minusMinutes(10), recipient = expectedNextSendRecipient))
+      val emailsToSend              = List(sentEmail.head.copy(createdAt = LocalDateTime.now().minusMinutes(10), recipient = expectedNextSendRecipient))
       await(serviceRepo.persist(emailsToSend))
       await(serviceRepo.persist(sentEmail))
 

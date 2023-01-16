@@ -33,15 +33,14 @@ import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
 
-class FileUploadStatusServiceSpec extends AnyWordSpec with PlayMongoRepositorySupport[UploadInfo] with
-  Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
+class FileUploadStatusServiceSpec extends AnyWordSpec with PlayMongoRepositorySupport[UploadInfo] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
 
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
 
   override implicit lazy val app: Application = appBuilder.build()
-  override protected def repository = app.injector.instanceOf[FileUploadStatusRepository]
-  val t = new FileUploadStatusService(repository)
+  override protected def repository           = app.injector.instanceOf[FileUploadStatusRepository]
+  val t                                       = new FileUploadStatusService(repository)
 
   override def beforeEach(): Unit = {
     prepareDatabase()
@@ -49,17 +48,17 @@ class FileUploadStatusServiceSpec extends AnyWordSpec with PlayMongoRepositorySu
 
   "MongoBackedUploadProgressTracker" should {
     "coordinate workflow" in {
-      val reference = randomUUID().toString
-      val expectedStatus = UploadedSuccessfully("name","mimeType","downloadUrl",Some(123), "http://aws.s3.object-store-url")
+      val reference      = randomUUID().toString
+      val expectedStatus = UploadedSuccessfully("name", "mimeType", "downloadUrl", Some(123), "http://aws.s3.object-store-url")
 
       implicit val timeout = Timeout(FiniteDuration(20, SECONDS))
       await(t.requestUpload(reference))
-      await(t.registerUploadResult(reference, UploadedSuccessfully("name","mimeType","downloadUrl",Some(123), "http://aws.s3.object-store-url")))
+      await(t.registerUploadResult(reference, UploadedSuccessfully("name", "mimeType", "downloadUrl", Some(123), "http://aws.s3.object-store-url")))
       await(t.getUploadResult(Reference(reference))).get.status shouldBe expectedStatus
     }
 
     "update status as failedWithErrors workflow" in {
-      val reference = randomUUID().toString
+      val reference      = randomUUID().toString
       val expectedStatus = UploadedFailedWithErrors("VIRUS", "found Virus", "1233", reference)
 
       implicit val timeout = Timeout(FiniteDuration(20, SECONDS))

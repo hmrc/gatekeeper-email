@@ -42,11 +42,10 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import scala.concurrent.ExecutionContext
 
 abstract class GatekeeperBaseController(
-   val strideAuthConfig: StrideAuthConfig,
-   val authConnector: AuthConnector,
-   val forbiddenHandler: ForbiddenHandler,
-   val requestConverter: RequestConverter,
-   mcc: MessagesControllerComponents
- )(implicit val ec: ExecutionContext) extends BackendController(mcc) with GatekeeperAuthorisationActions with Logging {
-}
-
+    val strideAuthConfig: StrideAuthConfig,
+    val authConnector: AuthConnector,
+    val forbiddenHandler: ForbiddenHandler,
+    val requestConverter: RequestConverter,
+    mcc: MessagesControllerComponents
+  )(implicit val ec: ExecutionContext
+  ) extends BackendController(mcc) with GatekeeperAuthorisationActions with Logging {}

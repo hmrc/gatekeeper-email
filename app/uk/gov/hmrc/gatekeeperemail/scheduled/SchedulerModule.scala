@@ -28,20 +28,25 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 
 class SchedulerModule extends AbstractModule {
+
   override def configure(): Unit = {
     bind(classOf[Scheduler]).asEagerSingleton()
   }
 }
 
 @Singleton
-class Scheduler @Inject()(override val applicationLifecycle: ApplicationLifecycle,
-                          override val application: Application,
-                          emailSendingJob: EmailSendingJob)
-                         (override implicit val ec: ExecutionContext) extends RunningOfScheduledJobs {
+class Scheduler @Inject() (
+    override val applicationLifecycle: ApplicationLifecycle,
+    override val application: Application,
+    emailSendingJob: EmailSendingJob
+  )(
+    override implicit val ec: ExecutionContext
+  ) extends RunningOfScheduledJobs {
   override lazy val scheduledJobs: Seq[ScheduledJob] = Seq(emailSendingJob)
 }
 
 class SchedulerPlayModule extends Module {
+
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     Seq(
       bind[LockService].toProvider[LockServiceProvider]
@@ -50,6 +55,6 @@ class SchedulerPlayModule extends Module {
 }
 
 @Singleton
-class LockServiceProvider @Inject()(mongoLockRepository: MongoLockRepository) extends Provider[LockService] {
+class LockServiceProvider @Inject() (mongoLockRepository: MongoLockRepository) extends Provider[LockService] {
   override def get(): LockService = LockService(mongoLockRepository, lockId = "send-email-lock", ttl = 1.hour)
 }

@@ -30,17 +30,15 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ApmConnector @Inject() (http: HttpClient, config: ApmConnector.Config)(implicit ec: ExecutionContext) {
 
-
   def fetchAllCombinedApis()(implicit hc: HeaderCarrier): Future[List[CombinedApi]] = {
     http.GET[List[CombinedApi]](s"${config.serviceBaseUrl}/combined-rest-xml-apis")
   }
-
 
 }
 
 object ApmConnector {
 
   case class Config(
-                     serviceBaseUrl: String
-                   )
+      serviceBaseUrl: String
+    )
 }

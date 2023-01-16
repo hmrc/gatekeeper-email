@@ -36,19 +36,13 @@ import play.api.inject.Binding
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.gatekeeperemail.config.{AppConfig, EmailConnectorConfig, EmailRendererConnectorConfig}
 
-/**
-  * This class is a Guice module that tells Guice how to bind several
-  * different types. This Guice module is created when the Play
-  * application starts.
-  * Play will automatically use any class called `Module` that is in
-  * the root package. You can create modules in other locations by
-  * adding `play.modules.enabled` settings to the `application.conf`
+/** This class is a Guice module that tells Guice how to bind several different types. This Guice module is created when the Play application starts. Play will automatically use
+  * any class called `Module` that is in the root package. You can create modules in other locations by adding `play.modules.enabled` settings to the `application.conf`
   * configuration file.
   */
 class MicroserviceModule(val environment: Environment, val configuration: Configuration) extends play.api.inject.Module {
 
-  override def bindings(environment: Environment,
-                        configuration: Configuration): Seq[Binding[_]] = {
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     Seq(
       bind[EmailConnectorConfig].to[AppConfig],
       bind[EmailRendererConnectorConfig].to[AppConfig]

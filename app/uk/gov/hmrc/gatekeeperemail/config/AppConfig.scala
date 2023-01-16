@@ -23,30 +23,29 @@ import uk.gov.hmrc.gatekeeperemail.models.RegisteredUser
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.duration.Duration
+
 @Singleton
-class AppConfig @Inject()(config: Configuration)
-  extends ServicesConfig(config)
+class AppConfig @Inject() (config: Configuration)
+    extends ServicesConfig(config)
     with EmailConnectorConfig
-    with EmailRendererConnectorConfig with Logging
-{
+    with EmailRendererConnectorConfig with Logging {
 
-  val authBaseUrl: String = baseUrl("auth")
-  val emailBaseUrl: String = baseUrl("email")
+  val authBaseUrl: String          = baseUrl("auth")
+  val emailBaseUrl: String         = baseUrl("email")
   val emailRendererBaseUrl: String = baseUrl("developer-email-renderer")
-  val additionalRecipientsEmail1 = config.getOptional[String]("additionalRecipients.email1").getOrElse("")
-  val additionalRecipientsFname1 = config.getOptional[String]("additionalRecipients.firstName1").getOrElse("")
-  val additionalRecipientsLname1 = config.getOptional[String]("additionalRecipients.lastName1").getOrElse("")
-  val additionalRecipientsEmail2 = config.getOptional[String]("additionalRecipients.email2").getOrElse("")
-  val additionalRecipientsFname2 = config.getOptional[String]("additionalRecipients.firstName2").getOrElse("")
-  val additionalRecipientsLname2 = config.getOptional[String]("additionalRecipients.lastName2").getOrElse("")
-  val sendToActualRecipients = config.get[Boolean]("sendToActualRecipients")
-
+  val additionalRecipientsEmail1   = config.getOptional[String]("additionalRecipients.email1").getOrElse("")
+  val additionalRecipientsFname1   = config.getOptional[String]("additionalRecipients.firstName1").getOrElse("")
+  val additionalRecipientsLname1   = config.getOptional[String]("additionalRecipients.lastName1").getOrElse("")
+  val additionalRecipientsEmail2   = config.getOptional[String]("additionalRecipients.email2").getOrElse("")
+  val additionalRecipientsFname2   = config.getOptional[String]("additionalRecipients.firstName2").getOrElse("")
+  val additionalRecipientsLname2   = config.getOptional[String]("additionalRecipients.lastName2").getOrElse("")
+  val sendToActualRecipients       = config.get[Boolean]("sendToActualRecipients")
 
   val emailRecordRetentionPeriod: Int = getConfInt("mongodb.ttlInYears", 7)
-  val defaultRetentionPeriod: String = getConfString("object-store.default-retention-period", "1-year")
-  val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
-  val initialDelay: Duration = Duration(config.getOptional[String]("scheduled.initDelay").getOrElse("30 sec"))
-  val interval: Duration = Duration(config.getOptional[String]("scheduled.interval").getOrElse("1 sec"))
+  val defaultRetentionPeriod: String  = getConfString("object-store.default-retention-period", "1-year")
+  val auditingEnabled: Boolean        = config.get[Boolean]("auditing.enabled")
+  val initialDelay: Duration          = Duration(config.getOptional[String]("scheduled.initDelay").getOrElse("30 sec"))
+  val interval: Duration              = Duration(config.getOptional[String]("scheduled.interval").getOrElse("1 sec"))
 
   val developerBaseUrl = baseUrl("third-party-developer")
 

@@ -22,18 +22,16 @@ import play.api.libs.json.Json
 import scala.util.Random
 import java.net.URLEncoder.encode
 
-
 sealed trait APIAccessType extends EnumEntry
 
 object APIAccessType extends Enum[APIAccessType] with PlayJsonEnum[APIAccessType] {
   val values = findValues
   case object PRIVATE extends APIAccessType
-  case object PUBLIC extends APIAccessType
+  case object PUBLIC  extends APIAccessType
 }
 
 case class APICategory(value: String) extends AnyVal
-object APICategory{
+
+object APICategory {
   implicit val formatApiCategory = Json.valueFormat[APICategory]
 }
-
-

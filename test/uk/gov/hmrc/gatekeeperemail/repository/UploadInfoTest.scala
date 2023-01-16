@@ -30,50 +30,46 @@ class UploadInfoTest extends AnyWordSpec with Matchers {
 
     "serialize and deserialize InProgress status" in {
 
-      val dateTime: LocalDateTime = LocalDateTime.parse("02/02/2022 20:27:05",
-        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-      val input = UploadInfo(Reference("ABC"), InProgress, dateTime)
+      val dateTime: LocalDateTime = LocalDateTime.parse("02/02/2022 20:27:05", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+      val input                   = UploadInfo(Reference("ABC"), InProgress, dateTime)
 
       val serialized = UploadInfo.format.writes(input)
-      val output = UploadInfo.format.reads(serialized)
+      val output     = UploadInfo.format.reads(serialized)
 
-      output.get.createDateTime should equal (input.createDateTime)
-      output.get.status should equal (input.status)
-      output.get.reference should equal (input.reference)
+      output.get.createDateTime should equal(input.createDateTime)
+      output.get.status should equal(input.status)
+      output.get.reference should equal(input.reference)
     }
 
     "serialize and deserialize Failed status" in {
-      val dateTime: LocalDateTime = LocalDateTime.parse("02/02/2022 20:27:05",
-        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-      val input = UploadInfo(Reference("ABC"), InProgress, dateTime)
+      val dateTime: LocalDateTime = LocalDateTime.parse("02/02/2022 20:27:05", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+      val input                   = UploadInfo(Reference("ABC"), InProgress, dateTime)
 
       val serialized = UploadInfo.format.writes(input)
-      val output = UploadInfo.format.reads(serialized)
-      output.get.createDateTime should equal (input.createDateTime)
-      output.get.status should equal (input.status)
-      output.get.reference should equal (input.reference)
+      val output     = UploadInfo.format.reads(serialized)
+      output.get.createDateTime should equal(input.createDateTime)
+      output.get.status should equal(input.status)
+      output.get.reference should equal(input.reference)
     }
 
     "serialize and deserialize UploadedSuccessfully status when size is unknown" in {
-      val dateTime: LocalDateTime = LocalDateTime.parse("02/02/2022 20:27:05",
-        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-      val input = UploadInfo(
+      val dateTime: LocalDateTime = LocalDateTime.parse("02/02/2022 20:27:05", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+      val input                   = UploadInfo(
         Reference("ABC"),
         UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = None, "http://aws.s3.object-store-url"),
         dateTime
       )
 
       val serialized = UploadInfo.format.writes(input)
-      val output = UploadInfo.format.reads(serialized)
+      val output     = UploadInfo.format.reads(serialized)
 
-      output.get.createDateTime should equal (input.createDateTime)
-      output.get.status should equal (input.status)
-      output.get.reference should equal (input.reference)
+      output.get.createDateTime should equal(input.createDateTime)
+      output.get.status should equal(input.status)
+      output.get.reference should equal(input.reference)
     }
 
     "serialize and deserialize UploadedSuccessfully status when size is known" in {
-      val dateTime: LocalDateTime = LocalDateTime.parse("02/02/2022 20:27:05",
-        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+      val dateTime: LocalDateTime = LocalDateTime.parse("02/02/2022 20:27:05", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
 
       val input = UploadInfo(
         Reference("ABC"),
@@ -82,11 +78,11 @@ class UploadInfoTest extends AnyWordSpec with Matchers {
       )
 
       val serialized = UploadInfo.format.writes(input)
-      val output = UploadInfo.format.reads(serialized)
+      val output     = UploadInfo.format.reads(serialized)
 
-      output.get.createDateTime should equal (input.createDateTime)
-      output.get.status should equal (input.status)
-      output.get.reference should equal (input.reference)
+      output.get.createDateTime should equal(input.createDateTime)
+      output.get.status should equal(input.status)
+      output.get.reference should equal(input.reference)
     }
   }
 }

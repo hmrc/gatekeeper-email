@@ -84,7 +84,8 @@ class CallbackBodyTest extends AnyWordSpec with Matchers {
               failureReason = "QUARANTINE",
               message = "e.g. This file has a virus"
             )
-          ))
+          )
+        )
 
     }
 
@@ -134,4 +135,3 @@ class CallbackBodyTest extends AnyWordSpec with Matchers {
     }
   }
 }
-

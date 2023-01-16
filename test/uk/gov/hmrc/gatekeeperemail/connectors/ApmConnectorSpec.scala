@@ -32,12 +32,12 @@ import uk.gov.hmrc.gatekeeperemail.utils._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 class ApmConnectorSpec
-  extends AsyncHmrcSpec
+    extends AsyncHmrcSpec
     with WireMockSugar
     with GuiceOneAppPerSuite
     with UrlEncoding {
 
-  trait Setup  {
+  trait Setup {
     implicit val hc = HeaderCarrier()
 
     val httpClient = app.injector.instanceOf[HttpClient]
@@ -45,16 +45,13 @@ class ApmConnectorSpec
     val mockApmConnectorConfig: ApmConnector.Config = mock[ApmConnector.Config]
     when(mockApmConnectorConfig.serviceBaseUrl).thenReturn(wireMockUrl)
 
-
-
     val underTest = new ApmConnector(httpClient, mockApmConnectorConfig)
 
     val combinedRestApi1 = CombinedApi("displayName1", "serviceName1", List(CombinedApiCategory("CUSTOMS")), ApiType.REST_API, Some(PUBLIC))
-    val combinedXmlApi2 = CombinedApi("displayName2", "serviceName2", List(CombinedApiCategory("VAT")), ApiType.XML_API, Some(PUBLIC))
-    val combinedList = List(combinedRestApi1, combinedXmlApi2)
+    val combinedXmlApi2  = CombinedApi("displayName2", "serviceName2", List(CombinedApiCategory("VAT")), ApiType.XML_API, Some(PUBLIC))
+    val combinedList     = List(combinedRestApi1, combinedXmlApi2)
 
   }
-
 
   "fetchAllCombinedApis" should {
     "returns combined xml and rest apis" in new Setup {
@@ -91,4 +88,3 @@ class ApmConnectorSpec
   }
 
 }
-

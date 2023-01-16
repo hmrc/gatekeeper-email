@@ -29,17 +29,15 @@ import java.net.URL
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class UpscanCallbackService @Inject()(sessionStorage: FileUploadStatusRepository,
-                                      objectStoreClient: PlayObjectStoreClient,
-                                      appConfig: AppConfig
-                                     )(implicit val ec: ExecutionContext) {
+class UpscanCallbackService @Inject() (sessionStorage: FileUploadStatusRepository, objectStoreClient: PlayObjectStoreClient, appConfig: AppConfig)(implicit val ec: ExecutionContext) {
 
   private val logger = Logger(this.getClass)
-  implicit val hc = HeaderCarrier()
+  implicit val hc    = HeaderCarrier()
 
   def uploadToObjectStore(readyCallback: ReadyCallbackBody) = {
     logger.info(s"uploadToObjectStore $readyCallback")
-    objectStoreClient.uploadFromUrl(from = new URL(readyCallback.downloadUrl),
+    objectStoreClient.uploadFromUrl(
+      from = new URL(readyCallback.downloadUrl),
       to = Path.File(Path.Directory("gatekeeper-email"), readyCallback.uploadDetails.fileName),
       retentionPeriod = RetentionPeriod.parse(appConfig.defaultRetentionPeriod).getOrElse(RetentionPeriod.OneYear),
       contentType = None,
@@ -48,24 +46,25 @@ class UpscanCallbackService @Inject()(sessionStorage: FileUploadStatusRepository
     )
   }
 
-  def handleCallback(callback : CallbackBody): Future[UploadInfo] = {
+  def handleCallback(callback: CallbackBody): Future[UploadInfo] = {
 
     callback match {
-      case s: ReadyCallbackBody =>
+      case s: ReadyCallbackBody  =>
         val objectSummary: Future[ObjectSummaryWithMd5] = uploadToObjectStore(s)
         objectSummary.flatMap { summary =>
           val status = UploadedSuccessfully(
-          s.uploadDetails.fileName,
-          s.uploadDetails.fileMimeType,
-          s.downloadUrl,
-          Some(s.uploadDetails.size),
-          summary.location.asUri)
+            s.uploadDetails.fileName,
+            s.uploadDetails.fileMimeType,
+            s.downloadUrl,
+            Some(s.uploadDetails.size),
+            summary.location.asUri
+          )
           sessionStorage.updateStatus(Reference(callback.reference), status)
         }
       case f: FailedCallbackBody =>
         val status = UploadedFailedWithErrors(f.fileStatus, f.failureDetails.failureReason, f.failureDetails.message, f.reference)
         sessionStorage.updateStatus(Reference(callback.reference), status)
-      case _ =>
+      case _                     =>
         val status = Failed
         sessionStorage.updateStatus(Reference(callback.reference), status)
     }

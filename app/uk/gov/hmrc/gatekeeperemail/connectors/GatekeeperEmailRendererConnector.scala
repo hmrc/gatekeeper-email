@@ -27,8 +27,8 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpErrorFunctions, Upstream
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class GatekeeperEmailRendererConnector @Inject()(httpClient: HttpClient, config: EmailRendererConnectorConfig)(implicit ec: ExecutionContext)
-  extends HttpErrorFunctions with Logging {
+class GatekeeperEmailRendererConnector @Inject() (httpClient: HttpClient, config: EmailRendererConnectorConfig)(implicit ec: ExecutionContext)
+    extends HttpErrorFunctions with Logging {
 
   private lazy val serviceUrl = config.emailRendererBaseUrl
 
@@ -37,14 +37,17 @@ class GatekeeperEmailRendererConnector @Inject()(httpClient: HttpClient, config:
 
     httpClient.POST[TemplateRenderRequest, TemplateRenderResult](
       s"$serviceUrl/templates/${emailRequest.templateId}",
-      TemplateRenderRequest(emailRequest.parameters, None)) map { result =>
+      TemplateRenderRequest(emailRequest.parameters, None)
+    ) map { result =>
       Right(
-          RenderResult(
+        RenderResult(
           result.plain,
           result.html,
           result.fromAddress,
           result.subject,
-          result.service))
+          result.service
+        )
+      )
     } recover {
       case errorResponse: UpstreamErrorResponse =>
         Left(errorResponse)

@@ -35,23 +35,28 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoReposito
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class DraftEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: AppConfig)
-                                    (implicit ec: ExecutionContext)
-  extends PlayMongoRepository[DraftEmail](
-    mongoComponent = mongoComponent,
-    collectionName = "draftemails",
-    domainFormat = emailFormatter,
-    indexes = Seq(IndexModel(ascending("emailUUID"),
-        IndexOptions()
-          .name("emailUUIDIndex")
-          .background(true)
-          .unique(true)),
-      IndexModel(ascending("createDateTime"),
-        IndexOptions()
-          .name("ttlIndex")
-          .expireAfter(appConfig.emailRecordRetentionPeriod * 365, TimeUnit.DAYS)
-          .background(true)))
-  ) {
+class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[DraftEmail](
+      mongoComponent = mongoComponent,
+      collectionName = "draftemails",
+      domainFormat = emailFormatter,
+      indexes = Seq(
+        IndexModel(
+          ascending("emailUUID"),
+          IndexOptions()
+            .name("emailUUIDIndex")
+            .background(true)
+            .unique(true)
+        ),
+        IndexModel(
+          ascending("createDateTime"),
+          IndexOptions()
+            .name("ttlIndex")
+            .expireAfter(appConfig.emailRecordRetentionPeriod * 365, TimeUnit.DAYS)
+            .background(true)
+        )
+      )
+    ) {
 
   override lazy val collection: MongoCollection[DraftEmail] =
     CollectionFactory
@@ -70,39 +75,43 @@ class DraftEmailRepository @Inject()(mongoComponent: MongoComponent, appConfig: 
         )
       )
 
-    def persist(entity: DraftEmail): Future[InsertOneResult] = {
-      collection.insertOne(entity).toFuture()
-    }
+  def persist(entity: DraftEmail): Future[InsertOneResult] = {
+    collection.insertOne(entity).toFuture()
+  }
 
-    def getEmailData(emailUUID: String): Future[DraftEmail] = {
-      def findByEmailUUID(emailUUID: UUID): Future[Option[DraftEmail]] = {
-        collection.find(equal("emailUUID", Codecs.toBson(emailUUID))).headOption()
-      }
-      for (emailData <- findByEmailUUID(UUID.fromString(emailUUID))) yield {
-        emailData match {
-          case Some(email) => email
-          case None        => throw new Exception(s"Email with id ${emailUUID} not found")
-        }
+  def getEmailData(emailUUID: String): Future[DraftEmail] = {
+    def findByEmailUUID(emailUUID: UUID): Future[Option[DraftEmail]] = {
+      collection.find(equal("emailUUID", Codecs.toBson(emailUUID))).headOption()
+    }
+    for (emailData <- findByEmailUUID(UUID.fromString(emailUUID))) yield {
+      emailData match {
+        case Some(email) => email
+        case None        => throw new Exception(s"Email with id ${emailUUID} not found")
       }
     }
+  }
 
   def updateEmailSentStatus(emailUUID: String, emailCount: Int): Future[DraftEmail] = {
-    collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(emailUUID)),
+    collection.findOneAndUpdate(
+      equal("emailUUID", Codecs.toBson(emailUUID)),
       update = combine(
         set("status", Codecs.toBson(EmailStatus.SENT)),
-        set("emailsCount", emailCount)),
+        set("emailsCount", emailCount)
+      ),
       options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
     ).map(_.asInstanceOf[DraftEmail]).head()
   }
 
   def updateEmail(email: DraftEmail): Future[DraftEmail] = {
-    collection.findOneAndUpdate(equal("emailUUID", Codecs.toBson(email.emailUUID)),
+    collection.findOneAndUpdate(
+      equal("emailUUID", Codecs.toBson(email.emailUUID)),
       update = combine(
         set("templateData", email.templateData),
         set("htmlEmailBody", email.htmlEmailBody),
         set("markdownEmailBody", email.markdownEmailBody),
         set("subject", email.subject),
-        set("attachmentDetails", email.attachmentDetails.getOrElse(Seq.empty))),
+        set("attachmentDetails", email.attachmentDetails.getOrElse(Seq.empty))
+      ),
       options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
     ).map(_.asInstanceOf[DraftEmail]).head()
   }

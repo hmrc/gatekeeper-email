@@ -29,18 +29,17 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class UploadFormController @Inject()(
-                                      uploadProgressTracker: FileUploadStatusService,
-                                      cc: ControllerComponents,
-                                      playBodyParsers: PlayBodyParsers)
-                                    ( implicit ec: ExecutionContext
-                                    ) extends BackendController(cc) with ApplicationLogger {
-
+class UploadFormController @Inject() (
+    uploadProgressTracker: FileUploadStatusService,
+    cc: ControllerComponents,
+    playBodyParsers: PlayBodyParsers
+  )(implicit ec: ExecutionContext
+  ) extends BackendController(cc) with ApplicationLogger {
 
   private def handleOption[T](future: Future[Option[T]])(implicit writes: Writes[T]): Future[Result] = {
     future.map {
       case Some(v) => Ok(toJson(v))
-      case None => BadRequest("No uploadInfo found")
+      case None    => BadRequest("No uploadInfo found")
     }
   }
 
@@ -50,21 +49,20 @@ class UploadFormController @Inject()(
     }
   }
 
-
-  def addUploadedFileStatus(key: String) : Action[AnyContent] = Action.async {
+  def addUploadedFileStatus(key: String): Action[AnyContent] = Action.async {
     logger.info(s"Got a insert request for key: $key")
     val result = uploadProgressTracker.requestUpload(key)
     handleFuture(result)
   }
 
-  def updateUploadedFileStatus(reference: String) : Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
+  def updateUploadedFileStatus(reference: String): Action[JsValue] = Action.async(playBodyParsers.json) { implicit request =>
     withJsonBody[UploadStatus] { uploadStatus =>
       val result = uploadProgressTracker.registerUploadResult(reference, uploadStatus)
       handleFuture(result)
     }
   }
 
-  def fetchUploadedFileStatus(key: String) : Action[AnyContent] = Action.async {
+  def fetchUploadedFileStatus(key: String): Action[AnyContent] = Action.async {
     logger.info(s"Got a fetch request for key: $key")
     val result = for (uploadResult <- uploadProgressTracker.getUploadResult(Reference(key))) yield uploadResult
     handleOption(result)

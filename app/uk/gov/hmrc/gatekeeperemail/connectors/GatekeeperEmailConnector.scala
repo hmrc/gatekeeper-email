@@ -30,19 +30,19 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
-class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnectorConfig)(implicit ec: ExecutionContext)
-  extends HttpErrorFunctions with Logging {
+class GatekeeperEmailConnector @Inject() (http: HttpClient, config: EmailConnectorConfig)(implicit ec: ExecutionContext)
+    extends HttpErrorFunctions with Logging {
 
   private lazy val serviceUrl = config.emailBaseUrl
 
- def sendEmail(emailRequest: SendEmailRequest): Future[Int] = {
+  def sendEmail(emailRequest: SendEmailRequest): Future[Int] = {
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(CONTENT_TYPE -> "application/json")
 
     postHttpRequest(emailRequest).map {
       case Left(UpstreamErrorResponse(_, statusCode, _, _)) =>
         logger.warn(s"Error $statusCode")
         statusCode
-      case Right(status: Int) =>
+      case Right(status: Int)                               =>
         status
     }
       .recoverWith {
@@ -52,15 +52,15 @@ class GatekeeperEmailConnector @Inject()(http: HttpClient, config: EmailConnecto
       }
   }
 
- private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, Int]] = {
-   val oneEmailRequest = OneEmailRequest(List(request.to), request.templateId, request.parameters, request.force,
-     request.auditData, request.eventUrl, request.tags)
-   http.POST[OneEmailRequest, HttpResponse](s"$serviceUrl/developer/email", oneEmailRequest).map {
-     res => Right(res.status)
-   }
-   .recover  {
-     case NonFatal(e) => logger.error(e.getMessage)
-       Left(e)
-   }
- }
+  private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, Int]] = {
+    val oneEmailRequest = OneEmailRequest(List(request.to), request.templateId, request.parameters, request.force, request.auditData, request.eventUrl, request.tags)
+    http.POST[OneEmailRequest, HttpResponse](s"$serviceUrl/developer/email", oneEmailRequest).map {
+      res => Right(res.status)
+    }
+      .recover {
+        case NonFatal(e) =>
+          logger.error(e.getMessage)
+          Left(e)
+      }
+  }
 }

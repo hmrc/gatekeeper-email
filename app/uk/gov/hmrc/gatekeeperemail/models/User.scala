@@ -18,22 +18,19 @@ package uk.gov.hmrc.gatekeeperemail.models
 
 import play.api.libs.json._
 
-
 trait User {
   def email: String
   def firstName: String
   def lastName: String
 }
 
-
 case class RegisteredUser(
-                           email: String,
-                           firstName: String,
-                           lastName: String,
-                           verified: Boolean) extends User {
-}
+    email: String,
+    firstName: String,
+    lastName: String,
+    verified: Boolean
+  ) extends User {}
 
 object RegisteredUser {
   implicit val registeredUserFormat = Json.format[RegisteredUser]
 }
-

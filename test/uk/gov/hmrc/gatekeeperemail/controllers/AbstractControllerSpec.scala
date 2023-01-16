@@ -24,19 +24,20 @@ import uk.gov.hmrc.apiplatform.modules.stride.connectors.mocks.AuthConnectorMock
 import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig
 
 class AbstractControllerSpec extends AsyncHmrcSpec with GuiceOneAppPerSuite with WithCSRFAddToken {
+
   override def fakeApplication() =
     new GuiceApplicationBuilder()
       .configure(
-        "metrics.jvm" -> false,
+        "metrics.jvm"     -> false,
         "metrics.enabled" -> false
       )
       .build()
 
   trait AbstractSetup extends AuthConnectorMockModule {
-    val strideAuthConfig = app.injector.instanceOf[StrideAuthConfig]
-    val fakeRequest = FakeRequest().withCSRFToken
-    val fakeSubmitCheckedRequest = fakeRequest.withFormUrlEncodedBody("submit-action" -> "checked")
+    val strideAuthConfig               = app.injector.instanceOf[StrideAuthConfig]
+    val fakeRequest                    = FakeRequest().withCSRFToken
+    val fakeSubmitCheckedRequest       = fakeRequest.withFormUrlEncodedBody("submit-action" -> "checked")
     val fakeSubmitComebackLaterRequest = fakeRequest.withFormUrlEncodedBody("submit-action" -> "come-back-later")
-    val brokenRequest = fakeRequest.withFormUrlEncodedBody("submit-action" -> "bobbins")
+    val brokenRequest                  = fakeRequest.withFormUrlEncodedBody("submit-action" -> "bobbins")
   }
 }

@@ -22,14 +22,13 @@ import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 
 import scala.concurrent.Future
 
-
 @ImplementedBy(classOf[FileUploadStatusService])
 trait UploadProgressTracker {
 
-  def requestUpload(fileReference : String) : Future[UploadInfo]
+  def requestUpload(fileReference: String): Future[UploadInfo]
 
-  def registerUploadResult(reference : String, uploadStatus : UploadStatus): Future[UploadInfo]
+  def registerUploadResult(reference: String, uploadStatus: UploadStatus): Future[UploadInfo]
 
-  def getUploadResult(id : Reference): Future[Option[UploadInfo]]
+  def getUploadResult(id: Reference): Future[Option[UploadInfo]]
 
 }
