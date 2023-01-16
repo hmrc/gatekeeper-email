@@ -16,20 +16,18 @@
 
 package uk.gov.hmrc.gatekeeperemail.connectors
 
-import uk.gov.hmrc.gatekeeperemail.utils.AsyncHmrcSpec
-import uk.gov.hmrc.http.HttpClient
-
 import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.models.CombinedApi
-import uk.gov.hmrc.gatekeeperemail.models.APIAccessType.PUBLIC
-import play.api.test.Helpers._
-import play.api.libs.json.Json
+
 import com.github.tomakehurst.wiremock.client.WireMock._
-import uk.gov.hmrc.http.UpstreamErrorResponse
-import uk.gov.hmrc.gatekeeperemail.utils._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
+import play.api.libs.json.Json
+import play.api.test.Helpers._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, UpstreamErrorResponse}
+
+import uk.gov.hmrc.gatekeeperemail.models.APIAccessType.PUBLIC
+import uk.gov.hmrc.gatekeeperemail.models.{CombinedApi, _}
+import uk.gov.hmrc.gatekeeperemail.utils.{AsyncHmrcSpec, _}
 
 class ApmConnectorSpec
     extends AsyncHmrcSpec

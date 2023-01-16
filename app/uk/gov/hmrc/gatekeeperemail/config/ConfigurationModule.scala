@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.gatekeeperemail.config
 
-import play.api.{Configuration, Environment}
 import play.api.inject.Module
+import play.api.{Configuration, Environment}
+
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, HttpDeveloperConnector}
 import uk.gov.hmrc.gatekeeperemail.controllers.HandleForbidden
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler

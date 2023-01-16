@@ -17,6 +17,7 @@
 package uk.gov.hmrc.gatekeeperemail.controllers
 
 import java.time.Instant
+
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

@@ -16,20 +16,22 @@
 
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
+
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.mongo.lock.LockService
+
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
-import uk.gov.hmrc.mongo.lock.LockService
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class LockedScheduledJobSpec extends AnyWordSpec with Matchers with ScalaFutures with GuiceOneAppPerTest with MockitoSugar
     with BeforeAndAfterEach {

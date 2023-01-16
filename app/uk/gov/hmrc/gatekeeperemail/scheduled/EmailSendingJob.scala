@@ -17,12 +17,13 @@
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
-import uk.gov.hmrc.mongo.lock.LockService
-
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
+
+import uk.gov.hmrc.mongo.lock.LockService
+
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
 
 @Singleton
 class EmailSendingJob @Inject() (appConfig: AppConfig, override val lockService: LockService, sentEmailService: SentEmailService)

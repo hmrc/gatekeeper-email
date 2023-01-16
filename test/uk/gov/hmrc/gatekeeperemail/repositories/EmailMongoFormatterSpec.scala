@@ -17,10 +17,13 @@
 package uk.gov.hmrc.gatekeeperemail.repositories
 
 import java.time.LocalDateTime
+
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+
 import play.api.libs.json.{JsObject, JsString}
+
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
 import uk.gov.hmrc.gatekeeperemail.models.{DevelopersEmailQuery, DraftEmail, EmailTemplateData, RegisteredUser, User}
 

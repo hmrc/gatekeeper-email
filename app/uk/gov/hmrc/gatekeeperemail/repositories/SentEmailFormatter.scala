@@ -17,6 +17,7 @@
 package uk.gov.hmrc.gatekeeperemail.repositories
 
 import play.api.libs.json.{Json, OFormat}
+
 import uk.gov.hmrc.gatekeeperemail.models._
 
 private[repositories] object SentEmailFormatter {

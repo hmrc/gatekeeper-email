@@ -17,16 +17,17 @@
 package uk.gov.hmrc.gatekeeperemail.connectors
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.models.TopicOptionChoice.TopicOptionChoice
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.http.HttpClient
-
 import scala.concurrent.{ExecutionContext, Future}
+
 import com.google.inject.name.Named
+
 import play.api.Logging
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import uk.gov.hmrc.gatekeeperemail.models.TopicOptionChoice.TopicOptionChoice
+import uk.gov.hmrc.gatekeeperemail.models._
 
 trait DeveloperConnector {
 

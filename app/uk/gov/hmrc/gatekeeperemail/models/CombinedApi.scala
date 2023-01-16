@@ -17,10 +17,10 @@
 package uk.gov.hmrc.gatekeeperemail.models
 
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
-import uk.gov.hmrc.gatekeeperemail.models.APICategory
 
-import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
 import play.api.libs.json.{Format, Json}
+
+import uk.gov.hmrc.gatekeeperemail.models.APICategory
 
 sealed trait ApiType extends EnumEntry
 

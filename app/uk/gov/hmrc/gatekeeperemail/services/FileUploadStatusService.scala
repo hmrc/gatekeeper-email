@@ -17,12 +17,11 @@
 package uk.gov.hmrc.gatekeeperemail.services
 
 import java.time.LocalDateTime
+import javax.inject.Inject
+import scala.concurrent.{ExecutionContext, Future}
 
 import uk.gov.hmrc.gatekeeperemail.models.{InProgress, Reference, UploadStatus}
 import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
-import javax.inject.Inject
-
-import scala.concurrent.{ExecutionContext, Future}
 
 class FileUploadStatusService @Inject() (repository: FileUploadStatusRepository)(implicit ec: ExecutionContext) extends UploadProgressTracker {
 

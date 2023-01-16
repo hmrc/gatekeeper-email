@@ -16,18 +16,19 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
+import java.net.URL
+import javax.inject.Inject
+import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.Logger
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
+import uk.gov.hmrc.objectstore.client.{ObjectSummaryWithMd5, Path, RetentionPeriod}
+
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.controllers.{CallbackBody, FailedCallbackBody, ReadyCallbackBody}
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.objectstore.client.{ObjectSummaryWithMd5, Path, RetentionPeriod}
-import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
-
-import java.net.URL
-import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
 
 class UpscanCallbackService @Inject() (sessionStorage: FileUploadStatusRepository, objectStoreClient: PlayObjectStoreClient, appConfig: AppConfig)(implicit val ec: ExecutionContext) {
 

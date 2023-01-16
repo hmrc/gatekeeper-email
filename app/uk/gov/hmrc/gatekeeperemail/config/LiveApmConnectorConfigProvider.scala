@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.gatekeeperemail.config
 
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.gatekeeperemail.connectors.ApmConnector
 import com.google.inject.{Inject, Provider, Singleton}
+
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import uk.gov.hmrc.gatekeeperemail.connectors.ApmConnector
 
 @Singleton
 class LiveApmConnectorConfigProvider @Inject() (config: ServicesConfig) extends Provider[ApmConnector.Config] {

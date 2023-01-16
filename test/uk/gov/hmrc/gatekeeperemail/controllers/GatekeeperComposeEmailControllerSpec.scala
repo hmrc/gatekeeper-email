@@ -20,16 +20,25 @@ import java.io.IOException
 import java.time.Instant
 import java.time.LocalDateTime.now
 import java.util.UUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.Future.{failed, successful}
+
 import akka.stream.Materializer
 import com.mongodb.client.result.{InsertManyResult, InsertOneResult}
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.{ArgumentCaptor, ArgumentMatchersSugar, MockitoSugar}
 import org.mongodb.scala.bson.BsonNumber
 import org.scalatest.matchers.should.Matchers
+
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{stubMessagesControllerComponents, _}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
+import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
+
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
@@ -38,13 +47,6 @@ import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmail
 import uk.gov.hmrc.gatekeeperemail.services.{DraftEmailService, ObjectStoreService}
 import uk.gov.hmrc.gatekeeperemail.stride.connectors.AuthConnector
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
-import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.concurrent.Future.{failed, successful}
 
 class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with Matchers with MockitoSugar with ArgumentMatchersSugar {
 

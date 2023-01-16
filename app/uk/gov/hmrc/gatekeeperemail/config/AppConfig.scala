@@ -17,12 +17,13 @@
 package uk.gov.hmrc.gatekeeperemail.config
 
 import javax.inject.{Inject, Singleton}
-import play.api.{Configuration, Logging}
+import scala.concurrent.duration.Duration
+
 import play.api.libs.json.{JsError, JsSuccess, Json}
-import uk.gov.hmrc.gatekeeperemail.models.RegisteredUser
+import play.api.{Configuration, Logging}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import scala.concurrent.duration.Duration
+import uk.gov.hmrc.gatekeeperemail.models.RegisteredUser
 
 @Singleton
 class AppConfig @Inject() (config: Configuration)

@@ -19,18 +19,19 @@ package uk.gov.hmrc.gatekeeperemail.services
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.Future.successful
+import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.Logger
 import play.api.libs.json.{JsError, JsSuccess, Json}
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.APIAccessType.{PRIVATE, PUBLIC}
 import uk.gov.hmrc.gatekeeperemail.models.CombinedApiCategory.toAPICategory
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
-import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
-
-import scala.concurrent.Future.successful
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DraftEmailService @Inject() (

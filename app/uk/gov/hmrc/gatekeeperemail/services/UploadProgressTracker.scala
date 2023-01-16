@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
+import scala.concurrent.Future
+
 import com.google.inject.ImplementedBy
+
 import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadStatus}
 import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
-
-import scala.concurrent.Future
 
 @ImplementedBy(classOf[FileUploadStatusService])
 trait UploadProgressTracker {

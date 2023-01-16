@@ -19,6 +19,9 @@ package uk.gov.hmrc.gatekeeperemail.services
 import java.time.Instant
 import java.time.LocalDateTime.now
 import java.util.UUID.randomUUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future.successful
+import scala.concurrent.duration.{FiniteDuration, SECONDS}
 
 import akka.util.Timeout
 import org.mockito.MockitoSugar.{mock, when}
@@ -26,21 +29,19 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.await
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.controllers._
-import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future.successful
-import scala.concurrent.duration.{FiniteDuration, SECONDS}
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import uk.gov.hmrc.gatekeeperemail.controllers._
+import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 
 class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupport[UploadInfo] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
 

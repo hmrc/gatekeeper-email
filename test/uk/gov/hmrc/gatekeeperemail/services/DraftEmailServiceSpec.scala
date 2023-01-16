@@ -19,15 +19,22 @@ package uk.gov.hmrc.gatekeeperemail.services
 import java.time.LocalDateTime
 import java.util
 import java.util.UUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.Future.successful
+
 import com.mongodb.client.result.{InsertManyResult, InsertOneResult}
 import org.mockito.{ArgumentCaptor, ArgumentMatchersSugar, MockitoSugar}
 import org.mongodb.scala.bson.{BsonInt32, BsonNumber, BsonValue}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.APIAccessType.{PRIVATE, PUBLIC}
@@ -35,11 +42,6 @@ import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
 import uk.gov.hmrc.gatekeeperemail.models.TopicOptionChoice.BUSINESS_AND_POLICY
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
-import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.concurrent.Future.successful
 
 class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with ArgumentMatchersSugar {
 

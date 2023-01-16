@@ -16,27 +16,22 @@
 
 package uk.gov.hmrc.gatekeeperemail.connectors
 
-import com.github.tomakehurst.wiremock.client.WireMock._
-import com.github.tomakehurst.wiremock.client.WireMock.{verify => wireMockVerify}
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, stubFor, urlEqualTo}
-import play.api.libs.json.Json
-import play.api.test.Helpers.OK
-import com.github.tomakehurst.wiremock.client.WireMock._
+import scala.concurrent.ExecutionContext.Implicits.global
+
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, stubFor, urlEqualTo, _}
 import com.github.tomakehurst.wiremock.client.WireMock.{verify => wireMockVerify}
 import org.mockito.MockitoSugar.mock
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.utils._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
 import play.api.libs.json.Json
 import play.api.test.Helpers.{INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import uk.gov.hmrc.gatekeeperemail.utils.AsyncHmrcSpec
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.utils.{AsyncHmrcSpec, _}
 
 class HttpDeveloperConnectorSpec extends AsyncHmrcSpec
     with WireMockSugar

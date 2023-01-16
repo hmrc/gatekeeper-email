@@ -21,6 +21,7 @@ import java.time.format.DateTimeFormatter
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+
 import uk.gov.hmrc.gatekeeperemail.models.{InProgress, Reference, UploadedSuccessfully}
 import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 

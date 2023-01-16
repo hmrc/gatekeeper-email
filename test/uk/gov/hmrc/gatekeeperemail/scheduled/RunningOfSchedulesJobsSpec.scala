@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
+import scala.concurrent.duration.{Deadline, DurationInt, FiniteDuration}
+import scala.concurrent.{ExecutionContext, Future}
+
 import akka.actor.Cancellable
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
@@ -25,13 +28,11 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Minute, Span}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
+
 import play.api.Application
 import play.api.inject.ApplicationLifecycle
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-
-import scala.concurrent.duration.{Deadline, DurationInt, FiniteDuration}
-import scala.concurrent.{ExecutionContext, Future}
 
 class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFutures with GuiceOneAppPerTest with MockitoSugar
     with BeforeAndAfterEach {

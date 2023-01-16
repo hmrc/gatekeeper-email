@@ -16,16 +16,16 @@
 
 package uk.gov.hmrc.gatekeeperemail.connectors
 
-import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
-import play.api.http.Status.{CONFLICT, NOT_FOUND}
-import play.api.libs.json.Json
-import uk.gov.hmrc.gatekeeperemail.models.CombinedApi
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, UpstreamErrorResponse}
-import uk.gov.hmrc.http.HttpClient
-import uk.gov.hmrc.http.HeaderCarrier
-
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+
+import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
+
+import play.api.http.Status.{CONFLICT, NOT_FOUND}
+import play.api.libs.json.Json
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, UpstreamErrorResponse}
+
+import uk.gov.hmrc.gatekeeperemail.models.CombinedApi
 
 @Singleton
 class ApmConnector @Inject() (http: HttpClient, config: ApmConnector.Config)(implicit ec: ExecutionContext) {

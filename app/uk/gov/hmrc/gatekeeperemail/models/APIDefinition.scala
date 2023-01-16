@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
-import play.api.libs.json.Json
-
-import scala.util.Random
 import java.net.URLEncoder.encode
+import scala.util.Random
+
+import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
+
+import play.api.libs.json.Json
 
 sealed trait APIAccessType extends EnumEntry
 

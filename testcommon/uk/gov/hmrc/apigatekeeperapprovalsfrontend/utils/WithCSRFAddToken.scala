@@ -17,6 +17,7 @@
 package uk.gov.hmrc.apigatekeeperapprovalsfrontend.utils
 
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
 import play.api.test.{CSRFTokenHelper, FakeRequest}
 import play.filters.csrf.CSRFAddToken
 

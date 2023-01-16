@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-import play.api.libs.json.Format
-
 import scala.util.Random
+
+import play.api.libs.json.Format
 
 case class Nonce(value: Int) {
 

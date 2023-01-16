@@ -17,16 +17,17 @@
 package uk.gov.hmrc.gatekeeperemail.controllers
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.{JsValue, Writes}
 import play.api.mvc._
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+
 import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
 import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadStatus}
 import uk.gov.hmrc.gatekeeperemail.services.FileUploadStatusService
 import uk.gov.hmrc.gatekeeperemail.util.ApplicationLogger
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UploadFormController @Inject() (

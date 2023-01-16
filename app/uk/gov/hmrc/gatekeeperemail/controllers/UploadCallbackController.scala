@@ -16,17 +16,19 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
+import java.time.Instant
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.Logger
 import play.api.libs.json.Json.toJson
 import play.api.libs.json._
 import play.api.mvc._
-import uk.gov.hmrc.gatekeeperemail.services.UpscanCallbackService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+
 import uk.gov.hmrc.gatekeeperemail.controllers.CallbackBody._
 import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
-import java.time.Instant
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.gatekeeperemail.services.UpscanCallbackService
 
 trait CallbackBody {
   def reference: String

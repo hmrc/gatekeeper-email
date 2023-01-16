@@ -18,22 +18,23 @@ package uk.gov.hmrc.gatekeeperemail.controllers
 
 import java.time.LocalDateTime
 import java.util.UUID.randomUUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future.successful
 
 import akka.stream.Materializer
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
 import play.api.http.Status.{BAD_REQUEST, OK}
 import play.api.libs.json.{JsResultException, Json}
 import play.api.mvc.ControllerComponents
 import play.api.test.Helpers.{contentAsJson, contentAsString, status}
 import play.api.test.{FakeRequest, StubControllerComponentsFactory, StubPlayBodyParsersFactory}
+
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 import uk.gov.hmrc.gatekeeperemail.services.FileUploadStatusService
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future.successful
 
 class UploadFormControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPerSuite
     with StubControllerComponentsFactory

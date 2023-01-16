@@ -17,13 +17,14 @@
 package uk.gov.hmrc.gatekeeperemail.services
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.Logging
 import play.api.http.Status.ACCEPTED
+
 import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailConnector
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.SentEmailRepository
-
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SentEmailService @Inject() (

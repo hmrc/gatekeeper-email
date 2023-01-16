@@ -19,12 +19,14 @@ package uk.gov.hmrc.gatekeeperemail.models
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 import java.util.UUID
+import scala.collection.immutable
+
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
+
 import play.api.libs.json.{Format, Json, OFormat}
-import uk.gov.hmrc.gatekeeperemail.models.TopicOptionChoice.TopicOptionChoice
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
-import scala.collection.immutable
+import uk.gov.hmrc.gatekeeperemail.models.TopicOptionChoice.TopicOptionChoice
 
 case class EmailTemplateData(
     templateId: String,

@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers.actions
 
+import scala.concurrent.Future
+
 import play.api.libs.json.JsValue
 import play.api.mvc._
+
 import uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperBaseController
 import uk.gov.hmrc.gatekeeperemail.stride.domain.models.GatekeeperRole
-
-import scala.concurrent.Future
 
 trait AuthorisationActions {
   self: GatekeeperBaseController =>

@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
-import uk.gov.hmrc.mongo.lock.LockService
-
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
+
+import uk.gov.hmrc.mongo.lock.LockService
 
 trait LockedScheduledJob extends ScheduledJob {
   def name: String

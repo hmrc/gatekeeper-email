@@ -16,16 +16,16 @@
 
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
+import javax.inject.{Inject, Provider, Singleton}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.DurationInt
+
 import com.google.inject.AbstractModule
 
-import javax.inject.{Inject, Provider, Singleton}
 import play.api.inject.{ApplicationLifecycle, Binding, Module}
 import play.api.{Application, Configuration, Environment}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.lock.{LockService, MongoLockRepository}
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.DurationInt
 
 class SchedulerModule extends AbstractModule {
 

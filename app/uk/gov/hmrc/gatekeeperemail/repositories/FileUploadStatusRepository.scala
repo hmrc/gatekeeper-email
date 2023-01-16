@@ -17,21 +17,22 @@
 package uk.gov.hmrc.gatekeeperemail.repositories
 
 import java.time.LocalDateTime
-
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.set
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
 import org.mongodb.scala.{MongoClient, MongoCollection}
+
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadStatus}
-import uk.gov.hmrc.gatekeeperemail.repositories.FileUploadMongoFormatter._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
-import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadStatus}
+import uk.gov.hmrc.gatekeeperemail.repositories.FileUploadMongoFormatter._
 
 case class UploadInfo(reference: Reference, status: UploadStatus, createDateTime: LocalDateTime)
 

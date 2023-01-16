@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import play.api.Logger
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.objectstore.client.{Path, RetentionPeriod}
-import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
-
 import java.net.URL
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
+
+import play.api.Logger
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
+import uk.gov.hmrc.objectstore.client.{Path, RetentionPeriod}
+
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 
 @Singleton
 class ObjectStoreService @Inject() (objectStoreClient: PlayObjectStoreClient, appConfig: AppConfig)(implicit val ec: ExecutionContext) {

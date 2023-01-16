@@ -19,6 +19,8 @@ package uk.gov.hmrc.gatekeeperemail.repositories
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.Indexes.ascending
@@ -26,13 +28,13 @@ import org.mongodb.scala.model.Updates.{combine, set}
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
 import org.mongodb.scala.result.InsertOneResult
 import org.mongodb.scala.{MongoClient, MongoCollection}
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, RegisteredUser}
-import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.emailFormatter
+
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
-import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, RegisteredUser}
+import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.emailFormatter
 
 @Singleton
 class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)

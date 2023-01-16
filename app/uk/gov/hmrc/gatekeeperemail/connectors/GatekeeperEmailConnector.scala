@@ -17,17 +17,18 @@
 package uk.gov.hmrc.gatekeeperemail.connectors
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
+
 import play.api.Logging
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status
 import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
-import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.{OneEmailRequest, SendEmailRequest}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HttpClient, _}
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
+import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
+import uk.gov.hmrc.gatekeeperemail.models.{OneEmailRequest, SendEmailRequest}
 
 @Singleton
 class GatekeeperEmailConnector @Inject() (http: HttpClient, config: EmailConnectorConfig)(implicit ec: ExecutionContext)

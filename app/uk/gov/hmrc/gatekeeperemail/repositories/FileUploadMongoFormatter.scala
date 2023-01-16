@@ -19,8 +19,9 @@ package uk.gov.hmrc.gatekeeperemail.repositories
 import java.time.LocalDateTime
 
 import play.api.libs.json._
-import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
+
+import uk.gov.hmrc.gatekeeperemail.models._
 
 object FileUploadMongoFormatter {
   implicit val bsonFormat: OFormat[UploadId] = Json.format[UploadId]

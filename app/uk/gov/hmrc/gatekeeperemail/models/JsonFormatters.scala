@@ -17,9 +17,11 @@
 package uk.gov.hmrc.gatekeeperemail.models
 
 import java.time.LocalDateTime
+
 import play.api.libs.json._
-import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
+
+import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 
 trait JsonFormatters {
 
