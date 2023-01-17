@@ -3,7 +3,7 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import sbt.Keys.baseDirectory
 import sbt.Test
 import sbt.Tests.{Group, SubProcess}
-import uk.gov.hmrc.{DefaultBuildSettings, SbtAutoBuildPlugin}
+import uk.gov.hmrc.{DefaultBuildSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 
 val appName = "gatekeeper-email"
@@ -24,7 +24,6 @@ inThisBuild(
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(
     play.sbt.PlayScala,
-    SbtAutoBuildPlugin,
     SbtDistributablesPlugin
   )
   .settings(playSettings: _*)
