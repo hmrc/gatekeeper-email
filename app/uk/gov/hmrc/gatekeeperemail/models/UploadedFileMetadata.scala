@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,5 +22,5 @@ case class UploadedFileMetadata(nonce: Nonce, uploadedFiles: Seq[UploadedFileWit
 
 object UploadedFileMetadata {
   implicit val formatWithObjectStore: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
-  implicit val format: OFormat[UploadedFileMetadata] = Json.format[UploadedFileMetadata]
+  implicit val format: OFormat[UploadedFileMetadata]                       = Json.format[UploadedFileMetadata]
 }

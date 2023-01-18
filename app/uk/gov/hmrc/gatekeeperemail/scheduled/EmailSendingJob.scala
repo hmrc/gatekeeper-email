@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,17 @@
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
-import uk.gov.hmrc.mongo.lock.LockService
-
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
+import uk.gov.hmrc.mongo.lock.LockService
+
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
+
 @Singleton
-class EmailSendingJob @Inject()(appConfig: AppConfig, override val lockService: LockService,
-                                sentEmailService: SentEmailService)
-  extends LockedScheduledJob {
+class EmailSendingJob @Inject() (appConfig: AppConfig, override val lockService: LockService, sentEmailService: SentEmailService)
+    extends LockedScheduledJob {
 
   override def name: String = "EmailSendingJob"
 

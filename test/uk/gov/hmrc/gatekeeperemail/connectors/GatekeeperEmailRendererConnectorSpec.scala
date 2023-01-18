@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 package uk.gov.hmrc.gatekeeperemail.connectors
 
 import java.io.IOException
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.{verify => wireMockVerify, _}
@@ -24,20 +26,20 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.http.Fault
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
 import play.api.http.Status.OK
 import play.mvc.Http.Status
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.models.{DevelopersEmailQuery, DraftEmailRequest, RegisteredUser, User}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite {
 
-  val stubPort = sys.env.getOrElse("WIREMOCK", "22222").toInt
-  val stubHost = "localhost"
-  val wireMockUrl = s"http://$stubHost:$stubPort"
+  val stubPort       = sys.env.getOrElse("WIREMOCK", "22222").toInt
+  val stubHost       = "localhost"
+  val wireMockUrl    = s"http://$stubHost:$stubPort"
   val wireMockServer = new WireMockServer(wireMockConfig().port(stubPort))
 
   override def beforeAll() {
@@ -56,16 +58,15 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with Before
     super.afterAll()
   }
 
-  val gatekeeperLink = "http://some.url"
-  val emailId = "email@example.com"
-  val subject = "Email subject"
-  val fromAddress = "gateKeeper"
-  val emailBody = "Body to be used in the email template"
-  val templateId = "gatekeeper"
+  val gatekeeperLink    = "http://some.url"
+  val emailId           = "email@example.com"
+  val subject           = "Email subject"
+  val fromAddress       = "gateKeeper"
+  val emailBody         = "Body to be used in the email template"
+  val templateId        = "gatekeeper"
   val emailRendererPath = s"/templates/$templateId"
-  val users = List(RegisteredUser("example@example.com", "first name", "last name", true),
-    RegisteredUser("example2@example2.com", "first name2", "last name2", true))
-  val emailPreferences = DevelopersEmailQuery()
+  val users             = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
+  val emailPreferences  = DevelopersEmailQuery()
 
   trait Setup {
     val httpClient = app.injector.instanceOf[HttpClient]
@@ -84,7 +85,8 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with Before
     stubFor(post(urlEqualTo(emailRendererPath)).willReturn(aResponse().withBody(
       s"""{"plain": "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
          |"html": "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "fromAddress": "fromAddress",
-         |"service": "service", "subject": "subject"}""".stripMargin).withStatus(OK)))
+         |"service": "service", "subject": "subject"}""".stripMargin
+    ).withStatus(OK)))
   }
 
   trait FailingHttp {
@@ -92,31 +94,34 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with Before
     stubFor(post(urlEqualTo(emailRendererPath)).willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)))
   }
 
- trait NotFoundHttp {
+  trait NotFoundHttp {
     self: Setup =>
     stubFor(post(urlEqualTo(emailRendererPath)).willReturn(aResponse().withStatus(Status.NOT_FOUND)))
   }
 
   "emailRendererConnector" should {
-    val parameters: Map[String, String] = Map("subject" -> s"$subject", "fromAddress" -> s"$fromAddress",
-      "body" -> s"$emailBody", "service" -> s"gatekeeper")
-    val emailRequest = DraftEmailRequest(emailPreferences, templateId, parameters)
+    val parameters: Map[String, String] = Map("subject" -> s"$subject", "fromAddress" -> s"$fromAddress", "body" -> s"$emailBody", "service" -> s"gatekeeper")
+    val emailRequest                    = DraftEmailRequest(emailPreferences, templateId, parameters)
 
     "get gatekeeper email template renderer" in new Setup with WorkingHttp {
       await(underTest.getTemplatedEmail(emailRequest))
 
-      wireMockVerify(1, postRequestedFor(
-        urlEqualTo(emailRendererPath))
-        .withRequestBody(equalToJson(
-          s"""
-             |{
-             |  "parameters": {
-             |    "subject": "$subject",
-             |    "fromAddress": "gateKeeper",
-             |    "body": "$emailBody",
-             |    "service": "gatekeeper"
-             |  }
-             |}""".stripMargin))
+      wireMockVerify(
+        1,
+        postRequestedFor(
+          urlEqualTo(emailRendererPath)
+        )
+          .withRequestBody(equalToJson(
+            s"""
+               |{
+               |  "parameters": {
+               |    "subject": "$subject",
+               |    "fromAddress": "gateKeeper",
+               |    "body": "$emailBody",
+               |    "service": "gatekeeper"
+               |  }
+               |}""".stripMargin
+          ))
       )
     }
 
@@ -134,4 +139,3 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with Before
     }
   }
 }
-

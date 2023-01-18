@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,19 @@
 package uk.gov.hmrc.gatekeeperemail.connectors
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.Logging
 import play.api.http.HeaderNames.CONTENT_TYPE
-import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.{DraftEmailRequest, RenderResult, TemplateRenderRequest, TemplateRenderResult}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpErrorFunctions, UpstreamErrorResponse}
 
-import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
+import uk.gov.hmrc.gatekeeperemail.models.{DraftEmailRequest, RenderResult, TemplateRenderRequest, TemplateRenderResult}
 
 @Singleton
-class GatekeeperEmailRendererConnector @Inject()(httpClient: HttpClient, config: EmailRendererConnectorConfig)(implicit ec: ExecutionContext)
-  extends HttpErrorFunctions with Logging {
+class GatekeeperEmailRendererConnector @Inject() (httpClient: HttpClient, config: EmailRendererConnectorConfig)(implicit ec: ExecutionContext)
+    extends HttpErrorFunctions with Logging {
 
   private lazy val serviceUrl = config.emailRendererBaseUrl
 
@@ -37,14 +38,17 @@ class GatekeeperEmailRendererConnector @Inject()(httpClient: HttpClient, config:
 
     httpClient.POST[TemplateRenderRequest, TemplateRenderResult](
       s"$serviceUrl/templates/${emailRequest.templateId}",
-      TemplateRenderRequest(emailRequest.parameters, None)) map { result =>
+      TemplateRenderRequest(emailRequest.parameters, None)
+    ) map { result =>
       Right(
-          RenderResult(
+        RenderResult(
           result.plain,
           result.html,
           result.fromAddress,
           result.subject,
-          result.service))
+          result.service
+        )
+      )
     } recover {
       case errorResponse: UpstreamErrorResponse =>
         Left(errorResponse)

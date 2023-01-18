@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,39 +17,38 @@
 package uk.gov.hmrc.gatekeeperemail.repositories
 
 import java.time.LocalDateTime
-
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.set
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
 import org.mongodb.scala.{MongoClient, MongoCollection}
+
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadStatus}
-import uk.gov.hmrc.gatekeeperemail.repositories.FileUploadMongoFormatter._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
-import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadStatus}
+import uk.gov.hmrc.gatekeeperemail.repositories.FileUploadMongoFormatter._
 
-case class UploadInfo(reference : Reference, status : UploadStatus, createDateTime: LocalDateTime)
+case class UploadInfo(reference: Reference, status: UploadStatus, createDateTime: LocalDateTime)
 
 object UploadInfo {
-  val status = "status"
-  implicit val format: Format[UploadInfo] =  Json.format[UploadInfo]
+  val status                              = "status"
+  implicit val format: Format[UploadInfo] = Json.format[UploadInfo]
 }
 
 @Singleton
-class FileUploadStatusRepository @Inject()(mongoComponent: MongoComponent)
-                                          (implicit ec : ExecutionContext)
-  extends PlayMongoRepository[UploadInfo](
-    mongoComponent = mongoComponent,
-    collectionName = "gatekeeper-fileuploads",
-    domainFormat = uploadInfo,
-    indexes = Seq(IndexModel(ascending("reference"),
-      IndexOptions().name("referenceIndex").background(true).unique(true)))
-  ) {
+class FileUploadStatusRepository @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[UploadInfo](
+      mongoComponent = mongoComponent,
+      collectionName = "gatekeeper-fileuploads",
+      domainFormat = uploadInfo,
+      indexes = Seq(IndexModel(ascending("reference"), IndexOptions().name("referenceIndex").background(true).unique(true)))
+    ) {
 
   override lazy val collection: MongoCollection[UploadInfo] =
     CollectionFactory
@@ -72,14 +71,16 @@ class FileUploadStatusRepository @Inject()(mongoComponent: MongoComponent)
       )
 
   def findByUploadId(reference: Reference): Future[Option[UploadInfo]] =
-    collection.find(equal("reference" , Codecs.toBson(reference))).headOption()
+    collection.find(equal("reference", Codecs.toBson(reference))).headOption()
 
-  def updateStatus(reference : Reference, newStatus : UploadStatus): Future[UploadInfo] = {
-    collection.findOneAndUpdate(equal("reference", Codecs.toBson(reference)),
+  def updateStatus(reference: Reference, newStatus: UploadStatus): Future[UploadInfo] = {
+    collection.findOneAndUpdate(
+      equal("reference", Codecs.toBson(reference)),
       update = set("status", newStatus),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-      ).map(_.asInstanceOf[UploadInfo]).head()
+    ).map(_.asInstanceOf[UploadInfo]).head()
   }
-  def requestUpload(uploadInfo : UploadInfo): Future[UploadInfo] =
+
+  def requestUpload(uploadInfo: UploadInfo): Future[UploadInfo]                       =
     collection.insertOne(uploadInfo).toFuture().map(res => uploadInfo)
 }

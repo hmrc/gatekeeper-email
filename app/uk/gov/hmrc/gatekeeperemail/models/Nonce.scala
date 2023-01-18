@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,20 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-import play.api.libs.json.Format
-
 import scala.util.Random
 
+import play.api.libs.json.Format
+
 case class Nonce(value: Int) {
+
   override def equals(o: Any): Boolean =
     o match {
       case nonce: Nonce => nonce.value == value
-      case _ => false
+      case _            => false
     }
 }
 
 object Nonce {
-  final def random: Nonce = Nonce(Random.nextInt())
+  final def random: Nonce                   = Nonce(Random.nextInt())
   implicit final val formats: Format[Nonce] = SimpleDecimalFormat[Nonce](s => Nonce(s.toIntExact), n => BigDecimal(n.value))
 }

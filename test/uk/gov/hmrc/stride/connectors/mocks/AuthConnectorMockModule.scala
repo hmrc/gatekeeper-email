@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,31 +16,31 @@
 
 package uk.gov.hmrc.apiplatform.modules.stride.connectors.mocks
 
-import org.mockito.MockitoSugar
-import org.mockito.ArgumentMatchersSugar
-import uk.gov.hmrc.auth.core.{Enrolment, Enrolments}
-import uk.gov.hmrc.auth.core.retrieve.{Name, Retrieval, ~}
-
-import scala.concurrent.Future.{failed, successful}
 import java.util.UUID
+import scala.concurrent.Future.{failed, successful}
 
-import uk.gov.hmrc.auth.core.InsufficientEnrolments
-import uk.gov.hmrc.auth.core.SessionRecordNotFound
+import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
+
+import uk.gov.hmrc.auth.core.retrieve.{Name, Retrieval, ~}
+import uk.gov.hmrc.auth.core.{Enrolment, Enrolments, InsufficientEnrolments, SessionRecordNotFound}
+
 import uk.gov.hmrc.gatekeeperemail.stride.connectors.AuthConnector
 
 trait AuthConnectorMockModule extends MockitoSugar with ArgumentMatchersSugar {
+
   trait BaseAuthConnectorMock {
     def aMock: AuthConnector
 
-    val userName = "userName"
+    val userName      = "userName"
     val superUserName = "superUserName"
-    val adminName = "adminName"
+    val adminName     = "adminName"
 
-    val userRole = s"userRole${UUID.randomUUID}"
-    val adminRole = s"adminRole${UUID.randomUUID}"
+    val userRole      = s"userRole${UUID.randomUUID}"
+    val adminRole     = s"adminRole${UUID.randomUUID}"
     val superUserRole = s"superUserRole${UUID.randomUUID}"
 
     object Authorise {
+
       def thenReturn() = {
         val response = successful(new ~(Some(Name(Some(adminName), None)), Enrolments(Set(Enrolment(adminRole)))))
 
@@ -56,9 +56,9 @@ trait AuthConnectorMockModule extends MockitoSugar with ArgumentMatchersSugar {
       }
 
       def thenReturnNoName() = {
-      val response = successful(new ~(Option.empty[Name], Enrolments(Set(Enrolment(adminRole)))))
+        val response = successful(new ~(Option.empty[Name], Enrolments(Set(Enrolment(adminRole)))))
 
-      when(aMock.authorise(*, any[Retrieval[~[Option[Name], Enrolments]]])(*, *)).thenReturn(response)
+        when(aMock.authorise(*, any[Retrieval[~[Option[Name], Enrolments]]])(*, *)).thenReturn(response)
       }
     }
   }

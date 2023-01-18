@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,29 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers.actions
 
+import scala.concurrent.Future
+
 import play.api.libs.json.JsValue
 import play.api.mvc._
+
 import uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperBaseController
 import uk.gov.hmrc.gatekeeperemail.stride.domain.models.GatekeeperRole
-
-import scala.concurrent.Future
 
 trait AuthorisationActions {
   self: GatekeeperBaseController =>
 
   private def strideRoleJsValue(minimumGatekeeperRole: GatekeeperRole.GatekeeperRole)(block: MessagesRequest[JsValue] => Future[Result]): Action[JsValue] =
     Action.async(parse.json) { implicit request =>
-       gatekeeperRoleActionRefiner(minimumGatekeeperRole)
-      .invokeBlock(requestConverter.convert(request), block)
+      gatekeeperRoleActionRefiner(minimumGatekeeperRole)
+        .invokeBlock(requestConverter.convert(request), block)
     }
 
   def loggedInJsValue()(block: Request[JsValue] => Future[Result]): Action[JsValue] = strideRoleJsValue(GatekeeperRole.USER)(block)
 
   private def strideRoleAnyContent(minimumGatekeeperRole: GatekeeperRole.GatekeeperRole)(block: MessagesRequest[AnyContent] => Future[Result]): Action[AnyContent] =
     Action.async { implicit request =>
-       gatekeeperRoleActionRefiner(minimumGatekeeperRole)
-      .invokeBlock(requestConverter.convert(request), block)
+      gatekeeperRoleActionRefiner(minimumGatekeeperRole)
+        .invokeBlock(requestConverter.convert(request), block)
     }
 
   def loggedInAnyContent()(block: Request[AnyContent] => Future[Result]): Action[AnyContent] = strideRoleAnyContent(GatekeeperRole.USER)(block)

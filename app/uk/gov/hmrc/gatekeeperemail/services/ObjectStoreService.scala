@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,27 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import play.api.Logger
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.objectstore.client.{Path, RetentionPeriod}
-import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
-
 import java.net.URL
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
+import play.api.Logger
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
+import uk.gov.hmrc.objectstore.client.{Path, RetentionPeriod}
+
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+
 @Singleton
-class ObjectStoreService @Inject()(objectStoreClient: PlayObjectStoreClient,
-                                    appConfig: AppConfig)
-                                  (implicit val ec: ExecutionContext) {
+class ObjectStoreService @Inject() (objectStoreClient: PlayObjectStoreClient, appConfig: AppConfig)(implicit val ec: ExecutionContext) {
 
   val logger: Logger = Logger(getClass.getName)
 
   def uploadToObjectStore(emailUUID: String, downloadUrl: String, fileName: String) = {
     implicit val hc = HeaderCarrier()
     logger.info(s"uploadToObjectStore upload to location: $emailUUID")
-    objectStoreClient.uploadFromUrl(from = new URL(downloadUrl),
+    objectStoreClient.uploadFromUrl(
+      from = new URL(downloadUrl),
       to = Path.File(Path.Directory(emailUUID), fileName),
       retentionPeriod = RetentionPeriod.parse(appConfig.defaultRetentionPeriod).getOrElse(RetentionPeriod.OneYear),
       contentType = None,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,37 +16,38 @@
 
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
+
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.mongo.lock.LockService
+
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
-import uk.gov.hmrc.mongo.lock.LockService
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-
 
 class LockedScheduledJobSpec extends AnyWordSpec with Matchers with ScalaFutures with GuiceOneAppPerTest with MockitoSugar
     with BeforeAndAfterEach {
 
   override def fakeApplication() =
     new GuiceApplicationBuilder().configure(
-      "metrics.jvm" -> false,
+      "metrics.jvm"     -> false,
       "metrics.enabled" -> false
     )
       .build()
 
   trait Setup {
     val mockSentEmailSservice = mock[SentEmailService]
-    val mockLockService = mock[LockService]
-    val mockAppConfig = mock[AppConfig]
-    val subject = new EmailSendingJob(mockAppConfig, mockLockService, mockSentEmailSservice)
+    val mockLockService       = mock[LockService]
+    val mockAppConfig         = mock[AppConfig]
+    val subject               = new EmailSendingJob(mockAppConfig, mockLockService, mockSentEmailSservice)
   }
 
   "ExclusiveScheduledJob" should {
@@ -62,7 +63,7 @@ class LockedScheduledJobSpec extends AnyWordSpec with Matchers with ScalaFutures
       verify(mockSentEmailSservice).sendNextPendingEmail
     }
 
-  "execute in lock when Mongo lock can be obtained" in new Setup {
+    "execute in lock when Mongo lock can be obtained" in new Setup {
       when(mockLockService.withLock[subject.Result](*)(*)).thenReturn(Future.successful(Some(subject.Result("OK"))))
       when(mockSentEmailSservice.sendNextPendingEmail).thenReturn(Future(1))
 

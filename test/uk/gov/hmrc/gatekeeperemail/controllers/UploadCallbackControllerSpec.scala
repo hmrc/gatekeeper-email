@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,30 +18,32 @@ package uk.gov.hmrc.gatekeeperemail.controllers
 
 import java.time.{Instant, LocalDateTime}
 import java.util.UUID.randomUUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future.successful
 
 import akka.stream.Materializer
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
 import play.api.http.Status.OK
 import play.api.libs.json.Json
 import play.api.mvc.ControllerComponents
 import play.api.test.Helpers.{contentAsJson, status}
 import play.api.test.{FakeRequest, StubControllerComponentsFactory, StubPlayBodyParsersFactory}
+
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
 import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadId, UploadedFailedWithErrors, UploadedSuccessfully}
 import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 import uk.gov.hmrc.gatekeeperemail.services.UpscanCallbackService
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future.successful
+class UploadCallbackControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPerSuite
+    with StubControllerComponentsFactory
+    with StubPlayBodyParsersFactory {
 
-class UploadCallbackControllerSpec extends AsyncHmrcTestSpec  with GuiceOneAppPerSuite
-  with StubControllerComponentsFactory
-  with StubPlayBodyParsersFactory {
+  val uploadId                      = UploadId(randomUUID)
+  val reference                     = randomUUID.toString
 
-  val uploadId = UploadId(randomUUID)
-  val reference = randomUUID.toString
-  val readyCallbackJsonbody =
+  val readyCallbackJsonbody         =
     """{"reference" : "11370e18-6e24-453e-b45a-76d3e32ea33d", "fileStatus" : "READY",
           "downloadUrl" : "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
           "uploadDetails": {
@@ -52,7 +54,8 @@ class UploadCallbackControllerSpec extends AsyncHmrcTestSpec  with GuiceOneAppPe
               "size": 45678
           }
       }""".stripMargin
-  val readyCallbackBody = ReadyCallbackBody(
+
+  val readyCallbackBody             = ReadyCallbackBody(
     reference = "11370e18-6e24-453e-b45a-76d3e32ea33d",
     downloadUrl = "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
     uploadDetails = UploadDetails(
@@ -61,11 +64,12 @@ class UploadCallbackControllerSpec extends AsyncHmrcTestSpec  with GuiceOneAppPe
       fileMimeType = "application/pdf",
       fileName = "test.pdf",
       size = 45678L
-    ))
-  val uploadStatusSuccess = UploadedSuccessfully("test.pdf", "pdf", "https://bucketName.s3.eu-west-2.amazonaws.com?1235676", Some(45678L), "http://aws.s3.object-store-url")
+    )
+  )
+  val uploadStatusSuccess           = UploadedSuccessfully("test.pdf", "pdf", "https://bucketName.s3.eu-west-2.amazonaws.com?1235676", Some(45678L), "http://aws.s3.object-store-url")
   val uploadStatusSFailedWithErrors = UploadedFailedWithErrors("FAILED", "There is Virus", "1234567", reference)
 
-  val failedCallbackBody =         FailedCallbackBody(
+  val failedCallbackBody     = FailedCallbackBody(
     reference = "11370e18-6e24-453e-b45a-76d3e32ea33d",
     fileStatus = "FAILED",
     failureDetails = ErrorDetails(
@@ -73,6 +77,7 @@ class UploadCallbackControllerSpec extends AsyncHmrcTestSpec  with GuiceOneAppPe
       message = "e.g. This file has a virus"
     )
   )
+
   val failedCallbackBodyJson = """
                                  |{
                                  |    "reference" : "11370e18-6e24-453e-b45a-76d3e32ea33d",
@@ -85,15 +90,15 @@ class UploadCallbackControllerSpec extends AsyncHmrcTestSpec  with GuiceOneAppPe
         """.stripMargin
 
   val uploadInfoSuccess = UploadInfo(Reference(reference), uploadStatusSuccess, LocalDateTime.now())
-  val uploadInfoFailed = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors, LocalDateTime.now())
+  val uploadInfoFailed  = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors, LocalDateTime.now())
 
   implicit lazy val materializer: Materializer = mock[Materializer]
 
   trait Setup {
     val mockUpscanCallbackService: UpscanCallbackService = mock[UpscanCallbackService]
-    val controllerComponents: ControllerComponents = stubControllerComponents()
-    val underTest = new UploadCallbackController(mockUpscanCallbackService, controllerComponents)
-    implicit lazy val request = FakeRequest()
+    val controllerComponents: ControllerComponents       = stubControllerComponents()
+    val underTest                                        = new UploadCallbackController(mockUpscanCallbackService, controllerComponents)
+    implicit lazy val request                            = FakeRequest()
     when(mockUpscanCallbackService.handleCallback(readyCallbackBody)).thenReturn(successful(uploadInfoSuccess))
     when(mockUpscanCallbackService.handleCallback(failedCallbackBody)).thenReturn(successful(uploadInfoFailed))
   }

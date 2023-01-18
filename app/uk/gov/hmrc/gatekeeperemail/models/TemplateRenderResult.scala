@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,12 @@ import play.api.libs.json.{Json, Reads}
 case class RenderResult(plain: String, html: String, fromAddress: String, subject: String, templateRegime: String)
 
 case class TemplateRenderResult(
-                             plain: String,
-                             html: String,
-                             fromAddress: String,
-                             subject: String,
-                             service: String)
+    plain: String,
+    html: String,
+    fromAddress: String,
+    subject: String,
+    service: String
+  )
 
 object TemplateRenderResult {
 

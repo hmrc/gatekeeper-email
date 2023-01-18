@@ -3,7 +3,7 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import sbt.Keys.baseDirectory
 import sbt.Test
 import sbt.Tests.{Group, SubProcess}
-import uk.gov.hmrc.SbtAutoBuildPlugin
+import uk.gov.hmrc.{DefaultBuildSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 
 val appName = "gatekeeper-email"
@@ -11,10 +11,19 @@ val appName = "gatekeeper-email"
 lazy val playSettings: Seq[Setting[_]] = Seq.empty
 lazy val ComponentTest = config("component") extend Test
 
+ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
+
+inThisBuild(
+  List(
+    scalaVersion := "2.12.15",
+    semanticdbEnabled := true,
+    semanticdbVersion := scalafixSemanticdb.revision
+  )
+)
+
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(
     play.sbt.PlayScala,
-    SbtAutoBuildPlugin,
     SbtDistributablesPlugin
   )
   .settings(playSettings: _*)
@@ -42,7 +51,7 @@ lazy val microservice = Project(appName, file("."))
     Test / unmanagedSourceDirectories += baseDirectory.value / "testcommon"
   )
   .configs(IntegrationTest)
-  .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
+  .settings(DefaultBuildSettings.integrationTestSettings())
   .settings(
     IntegrationTest / fork := false,
     IntegrationTest / parallelExecution := false,

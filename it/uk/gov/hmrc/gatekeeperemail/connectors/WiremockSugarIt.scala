@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import org.scalatest.{BeforeAndAfterEach, Suite}
 
 trait WiremockSugarIt extends BeforeAndAfterEach {
   this: Suite =>
-  val stubPort = sys.env.getOrElse("WIREMOCK", "11111").toInt
-  val stubHost = "localhost"
+  val stubPort    = sys.env.getOrElse("WIREMOCK", "11111").toInt
+  val stubHost    = "localhost"
   val wireMockUrl = s"http://$stubHost:$stubPort"
 
   private val wireMockConfiguration: WireMockConfiguration =

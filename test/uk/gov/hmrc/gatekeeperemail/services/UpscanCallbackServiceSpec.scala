@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,9 @@ package uk.gov.hmrc.gatekeeperemail.services
 import java.time.Instant
 import java.time.LocalDateTime.now
 import java.util.UUID.randomUUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future.successful
+import scala.concurrent.duration.{FiniteDuration, SECONDS}
 
 import akka.util.Timeout
 import org.mockito.MockitoSugar.{mock, when}
@@ -26,30 +29,28 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.await
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.controllers._
-import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future.successful
-import scala.concurrent.duration.{FiniteDuration, SECONDS}
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import uk.gov.hmrc.gatekeeperemail.controllers._
+import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 
-class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupport[UploadInfo] with
-  Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
+class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupport[UploadInfo] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
 
   case class DummyCallBackBody(reference: String) extends CallbackBody
 
-  val uploadId = UploadId(randomUUID)
-  val reference = randomUUID.toString
-  val readyCallbackBody = ReadyCallbackBody(
+  val uploadId                      = UploadId(randomUUID)
+  val reference                     = randomUUID.toString
+
+  val readyCallbackBody             = ReadyCallbackBody(
     reference = reference,
     downloadUrl = "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
     uploadDetails = UploadDetails(
@@ -58,10 +59,10 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
       fileMimeType = "application/pdf",
       fileName = "test.pdf",
       size = 45678L
-    ))
-  val uploadStatusSuccess = UploadedSuccessfully("test.pdf", "application/pdf",
-    "https://bucketName.s3.eu-west-2.amazonaws.com?1235676", Some(45678L), "gatekeeper-email/test.pdf")
-  val uploadInfoSuccess = UploadInfo(Reference(reference), uploadStatusSuccess, now())
+    )
+  )
+  val uploadStatusSuccess           = UploadedSuccessfully("test.pdf", "application/pdf", "https://bucketName.s3.eu-west-2.amazonaws.com?1235676", Some(45678L), "gatekeeper-email/test.pdf")
+  val uploadInfoSuccess             = UploadInfo(Reference(reference), uploadStatusSuccess, now())
   val uploadStatusSFailedWithErrors = UploadedFailedWithErrors("FAILED", "QUARANTINE", "This file has a virus", reference)
 
   val failedCallbackBody = FailedCallbackBody(
@@ -72,9 +73,9 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
       message = "This file has a virus"
     )
   )
-  val dummyCallBackBody = DummyCallBackBody(reference)
-  val uploadInfoFailed = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors, now())
-  implicit val timeout = Timeout(FiniteDuration(20, SECONDS))
+  val dummyCallBackBody  = DummyCallBackBody(reference)
+  val uploadInfoFailed   = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors, now())
+  implicit val timeout   = Timeout(FiniteDuration(20, SECONDS))
 
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
@@ -84,11 +85,11 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
       )
 
   override implicit lazy val app: Application = appBuilder.build()
-  override protected def repository = app.injector.instanceOf[FileUploadStatusRepository]
-  val objectStoreClient = mock[PlayObjectStoreClient]
-  val mockAppConfig = mock[AppConfig]
-  val t = new UpscanCallbackService(repository, objectStoreClient, mockAppConfig)
-  val f = new FileUploadStatusService(repository)
+  override protected def repository           = app.injector.instanceOf[FileUploadStatusRepository]
+  val objectStoreClient                       = mock[PlayObjectStoreClient]
+  val mockAppConfig                           = mock[AppConfig]
+  val t                                       = new UpscanCallbackService(repository, objectStoreClient, mockAppConfig)
+  val f                                       = new FileUploadStatusService(repository)
 
   override def beforeEach(): Unit = {
     prepareDatabase()
@@ -97,11 +98,15 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
     when(mockAppConfig.defaultRetentionPeriod).thenReturn("1-year")
-    val toLocation = Path.File(Path.Directory("gatekeeper-email"), readyCallbackBody.uploadDetails.fileName)
+    val toLocation                 = Path.File(Path.Directory("gatekeeper-email"), readyCallbackBody.uploadDetails.fileName)
     when(
       t.uploadToObjectStore(readyCallbackBody)
-    ).thenReturn(successful(ObjectSummaryWithMd5(toLocation, readyCallbackBody.uploadDetails.size,
-      Md5Hash(readyCallbackBody.uploadDetails.checksum), readyCallbackBody.uploadDetails.uploadTimestamp)))
+    ).thenReturn(successful(ObjectSummaryWithMd5(
+      toLocation,
+      readyCallbackBody.uploadDetails.size,
+      Md5Hash(readyCallbackBody.uploadDetails.checksum),
+      readyCallbackBody.uploadDetails.uploadTimestamp
+    )))
   }
   "UpscanCallbackService" should {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,15 +19,12 @@ package uk.gov.hmrc.gatekeeperemail.models
 import java.util.UUID
 
 sealed trait UploadStatus
-case object InProgress extends UploadStatus
-case object Failed extends UploadStatus
-case object BadRequest extends UploadStatus
+case object InProgress                                                                                                           extends UploadStatus
+case object Failed                                                                                                               extends UploadStatus
+case object BadRequest                                                                                                           extends UploadStatus
 case class UploadedSuccessfully(name: String, mimeType: String, downloadUrl: String, size: Option[Long], objectStoreUrl: String) extends UploadStatus
-case class UploadedFailedWithErrors(errorCode: String, errorMessage: String, errorRequestId: String, key: String) extends UploadStatus
+case class UploadedFailedWithErrors(errorCode: String, errorMessage: String, errorRequestId: String, key: String)                extends UploadStatus
 
-case class UploadId(value : UUID) extends AnyVal
+case class UploadId(value: UUID) extends AnyVal
 
 case class Reference(value: String) extends AnyVal
-
-
-

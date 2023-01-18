@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.gatekeeperemail.config
 
-import play.api.{Configuration, Environment}
 import play.api.inject.Module
+import play.api.{Configuration, Environment}
+
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, HttpDeveloperConnector}
 import uk.gov.hmrc.gatekeeperemail.controllers.HandleForbidden
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,22 +18,19 @@ package uk.gov.hmrc.gatekeeperemail.models
 
 import play.api.libs.json._
 
-
 trait User {
   def email: String
   def firstName: String
   def lastName: String
 }
 
-
 case class RegisteredUser(
-                           email: String,
-                           firstName: String,
-                           lastName: String,
-                           verified: Boolean) extends User {
-}
+    email: String,
+    firstName: String,
+    lastName: String,
+    verified: Boolean
+  ) extends User {}
 
 object RegisteredUser {
   implicit val registeredUserFormat = Json.format[RegisteredUser]
 }
-

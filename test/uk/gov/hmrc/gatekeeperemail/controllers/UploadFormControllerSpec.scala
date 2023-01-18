@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,46 +18,47 @@ package uk.gov.hmrc.gatekeeperemail.controllers
 
 import java.time.LocalDateTime
 import java.util.UUID.randomUUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future.successful
 
 import akka.stream.Materializer
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
 import play.api.http.Status.{BAD_REQUEST, OK}
 import play.api.libs.json.{JsResultException, Json}
 import play.api.mvc.ControllerComponents
 import play.api.test.Helpers.{contentAsJson, contentAsString, status}
 import play.api.test.{FakeRequest, StubControllerComponentsFactory, StubPlayBodyParsersFactory}
+
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 import uk.gov.hmrc.gatekeeperemail.services.FileUploadStatusService
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future.successful
-
 class UploadFormControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPerSuite
-  with StubControllerComponentsFactory
-  with StubPlayBodyParsersFactory {
+    with StubControllerComponentsFactory
+    with StubPlayBodyParsersFactory {
 
-  val uploadId = UploadId(randomUUID)
-  val reference = randomUUID.toString
-  val uploadStatusSuccess = UploadedSuccessfully("abc.txt", "pdf", "http://abcs3",
-    Some(1234), "http://aws.s3.object-store-url")
-  val uploadSuccesfulBody =
+  val uploadId             = UploadId(randomUUID)
+  val reference            = randomUUID.toString
+  val uploadStatusSuccess  = UploadedSuccessfully("abc.txt", "pdf", "http://abcs3", Some(1234), "http://aws.s3.object-store-url")
+
+  val uploadSuccesfulBody  =
     """{"name" : "abc.txt", "mimeType" : "pdf", "downloadUrl" : "http://abcs3",
       |"size" : 1234, "_type" : "UploadedSuccessfully", "objectStoreUrl": "http://aws.s3.object-store-url"}""".stripMargin
-  val failedBody = """{"_type" : "Failed"}"""
-  val uploadInfo1 = UploadInfo(Reference(reference), uploadStatusSuccess, LocalDateTime.now())
+  val failedBody           = """{"_type" : "Failed"}"""
+  val uploadInfo1          = UploadInfo(Reference(reference), uploadStatusSuccess, LocalDateTime.now())
   val uploadInfoInProgress = UploadInfo(Reference(reference), InProgress, LocalDateTime.now())
-  val uploadInfoInFailed = UploadInfo(Reference(reference), Failed, LocalDateTime.now())
+  val uploadInfoInFailed   = UploadInfo(Reference(reference), Failed, LocalDateTime.now())
 
   implicit lazy val materializer: Materializer = mock[Materializer]
 
   trait Setup {
     val mockFileUploadStatusService: FileUploadStatusService = mock[FileUploadStatusService]
-    val controllerComponents: ControllerComponents = stubControllerComponents()
-    val underTest = new UploadFormController(mockFileUploadStatusService, controllerComponents, stubPlayBodyParsers(materializer))
-    implicit lazy val request = FakeRequest()
+    val controllerComponents: ControllerComponents           = stubControllerComponents()
+    val underTest                                            = new UploadFormController(mockFileUploadStatusService, controllerComponents, stubPlayBodyParsers(materializer))
+    implicit lazy val request                                = FakeRequest()
     when(mockFileUploadStatusService.requestUpload(reference)).thenReturn(successful(uploadInfoInProgress))
     when(mockFileUploadStatusService.registerUploadResult(reference, uploadStatusSuccess)).thenReturn(successful(uploadInfo1))
     when(mockFileUploadStatusService.registerUploadResult(reference, Failed)).thenReturn(successful(uploadInfoInFailed))
@@ -66,25 +67,25 @@ class UploadFormControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPerSuit
 
   "UploadFormController" should {
 
-    "be able to insert a FileUploadStatus Record" in  new Setup {
+    "be able to insert a FileUploadStatus Record" in new Setup {
       val result = underTest.addUploadedFileStatus(reference)(request)
       status(result) shouldBe OK
       contentAsJson(result) shouldEqual Json.toJson(uploadInfoInProgress)
     }
 
-    "be able to update a FileUploadStatus Record" in  new Setup {
+    "be able to update a FileUploadStatus Record" in new Setup {
       val result = underTest.updateUploadedFileStatus(reference)(request.withBody(Json.parse(uploadSuccesfulBody)))
       status(result) shouldBe OK
       contentAsJson(result) shouldEqual Json.toJson(uploadInfo1)
     }
 
-    "be able to update a FileUploadStatus Record as Failed" in  new Setup {
+    "be able to update a FileUploadStatus Record as Failed" in new Setup {
       val result = underTest.updateUploadedFileStatus(reference)(request.withBody(Json.parse(failedBody)))
       status(result) shouldBe OK
       contentAsJson(result) shouldEqual Json.toJson(uploadInfoInFailed)
     }
 
-    "be able to fetch a FileUploadStatus Record" in  new Setup {
+    "be able to fetch a FileUploadStatus Record" in new Setup {
       val result = underTest.fetchUploadedFileStatus(reference)(request)
       status(result) shouldBe OK
       contentAsJson(result) shouldEqual Json.toJson(uploadInfo1)
@@ -118,8 +119,7 @@ class UploadFormControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPerSuit
         """.stripMargin
 
       val result = Json.parse(body).as[UploadStatus]
-     result shouldBe UploadedSuccessfully("abc.txt", "pdf", "http://abcs3", Some(1234), "http://aws.s3.object-store-url")
-
+      result shouldBe UploadedSuccessfully("abc.txt", "pdf", "http://abcs3", Some(1234), "http://aws.s3.object-store-url")
 
     }
 
@@ -138,7 +138,6 @@ class UploadFormControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPerSuit
 
       val result = Json.parse(body).as[UploadStatus]
       result shouldBe UploadedFailedWithErrors("999", "Wrong Size", "fedf34r343", "1234")
-
 
     }
 
@@ -172,7 +171,7 @@ class UploadFormControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPerSuit
 
     "be not able to serialise unknown type" in {
 
-      val body =
+      val body                         =
         """
           |{
           |        "_type" : "UNKNOWN"
@@ -187,7 +186,7 @@ class UploadFormControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPerSuit
 
     "be able to not serialise when no type" in {
 
-      val body =
+      val body                         =
         """
           |{
           |        "typ" : "UNKNOWN"

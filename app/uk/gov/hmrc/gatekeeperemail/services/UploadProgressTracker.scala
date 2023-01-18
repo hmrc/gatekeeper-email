@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,20 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import com.google.inject.ImplementedBy
-import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadStatus}
-import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
-
 import scala.concurrent.Future
 
+import com.google.inject.ImplementedBy
+
+import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadStatus}
+import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 
 @ImplementedBy(classOf[FileUploadStatusService])
 trait UploadProgressTracker {
 
-  def requestUpload(fileReference : String) : Future[UploadInfo]
+  def requestUpload(fileReference: String): Future[UploadInfo]
 
-  def registerUploadResult(reference : String, uploadStatus : UploadStatus): Future[UploadInfo]
+  def registerUploadResult(reference: String, uploadStatus: UploadStatus): Future[UploadInfo]
 
-  def getUploadResult(id : Reference): Future[Option[UploadInfo]]
+  def getUploadResult(id: Reference): Future[Option[UploadInfo]]
 
 }

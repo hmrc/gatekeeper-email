@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,12 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
-import org.scalatest.{BeforeAndAfterEach, Suite}
-import org.scalatest.BeforeAndAfterAll
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
 trait WireMockSugar extends BeforeAndAfterEach with BeforeAndAfterAll with WireMockExtensions {
   this: Suite =>
-  val stubPort = sys.env.getOrElse("WIREMOCK", "22222").toInt
-  val stubHost = "localhost"
+  val stubPort    = sys.env.getOrElse("WIREMOCK", "22222").toInt
+  val stubHost    = "localhost"
   val wireMockUrl = s"http://$stubHost:$stubPort"
 
   private val wireMockConfiguration: WireMockConfiguration =
@@ -44,10 +43,9 @@ trait WireMockSugar extends BeforeAndAfterEach with BeforeAndAfterAll with WireM
     wireMockServer.stop()
     super.afterAll()
   }
-  
+
   override def afterEach() {
     wireMockServer.resetMappings()
     super.afterEach()
   }
 }
-

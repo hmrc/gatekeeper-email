@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,21 +32,21 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
+import scala.concurrent.ExecutionContext
+
 import play.api.Logging
 import play.api.mvc.MessagesControllerComponents
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+
 import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig
 import uk.gov.hmrc.gatekeeperemail.stride.connectors.AuthConnector
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.{ForbiddenHandler, GatekeeperAuthorisationActions}
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
-import scala.concurrent.ExecutionContext
 
 abstract class GatekeeperBaseController(
-   val strideAuthConfig: StrideAuthConfig,
-   val authConnector: AuthConnector,
-   val forbiddenHandler: ForbiddenHandler,
-   val requestConverter: RequestConverter,
-   mcc: MessagesControllerComponents
- )(implicit val ec: ExecutionContext) extends BackendController(mcc) with GatekeeperAuthorisationActions with Logging {
-}
-
+    val strideAuthConfig: StrideAuthConfig,
+    val authConnector: AuthConnector,
+    val forbiddenHandler: ForbiddenHandler,
+    val requestConverter: RequestConverter,
+    mcc: MessagesControllerComponents
+  )(implicit val ec: ExecutionContext
+  ) extends BackendController(mcc) with GatekeeperAuthorisationActions with Logging {}

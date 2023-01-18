@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,26 @@
 
 package uk.gov.hmrc.gatekeeperemail.connectors
 
-import uk.gov.hmrc.gatekeeperemail.utils.AsyncHmrcSpec
-import uk.gov.hmrc.http.HttpClient
-
 import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.models.CombinedApi
-import uk.gov.hmrc.gatekeeperemail.models.APIAccessType.PUBLIC
-import play.api.test.Helpers._
-import play.api.libs.json.Json
+
 import com.github.tomakehurst.wiremock.client.WireMock._
-import uk.gov.hmrc.http.UpstreamErrorResponse
-import uk.gov.hmrc.gatekeeperemail.utils._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
+import play.api.libs.json.Json
+import play.api.test.Helpers._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, UpstreamErrorResponse}
+
+import uk.gov.hmrc.gatekeeperemail.models.APIAccessType.PUBLIC
+import uk.gov.hmrc.gatekeeperemail.models.{CombinedApi, _}
+import uk.gov.hmrc.gatekeeperemail.utils.{AsyncHmrcSpec, _}
+
 class ApmConnectorSpec
-  extends AsyncHmrcSpec
+    extends AsyncHmrcSpec
     with WireMockSugar
     with GuiceOneAppPerSuite
     with UrlEncoding {
 
-  trait Setup  {
+  trait Setup {
     implicit val hc = HeaderCarrier()
 
     val httpClient = app.injector.instanceOf[HttpClient]
@@ -45,16 +43,13 @@ class ApmConnectorSpec
     val mockApmConnectorConfig: ApmConnector.Config = mock[ApmConnector.Config]
     when(mockApmConnectorConfig.serviceBaseUrl).thenReturn(wireMockUrl)
 
-
-
     val underTest = new ApmConnector(httpClient, mockApmConnectorConfig)
 
     val combinedRestApi1 = CombinedApi("displayName1", "serviceName1", List(CombinedApiCategory("CUSTOMS")), ApiType.REST_API, Some(PUBLIC))
-    val combinedXmlApi2 = CombinedApi("displayName2", "serviceName2", List(CombinedApiCategory("VAT")), ApiType.XML_API, Some(PUBLIC))
-    val combinedList = List(combinedRestApi1, combinedXmlApi2)
+    val combinedXmlApi2  = CombinedApi("displayName2", "serviceName2", List(CombinedApiCategory("VAT")), ApiType.XML_API, Some(PUBLIC))
+    val combinedList     = List(combinedRestApi1, combinedXmlApi2)
 
   }
-
 
   "fetchAllCombinedApis" should {
     "returns combined xml and rest apis" in new Setup {
@@ -91,4 +86,3 @@ class ApmConnectorSpec
   }
 
 }
-

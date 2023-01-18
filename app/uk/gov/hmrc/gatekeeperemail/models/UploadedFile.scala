@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,39 +16,37 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-
 import play.api.libs.json.{Json, OFormat}
 
 case class UploadedFile(
-                         upscanReference: String,
-                         downloadUrl: String,
-                         uploadTimestamp: String,
-                         checksum: String,
-                         fileName: String,
-                         fileMimeType: String,
-                         fileSize: Int,
-                         cargo: Option[UploadCargo],
-                         description: Option[String],
-                         previewUrl: Option[String]
-                       )
+    upscanReference: String,
+    downloadUrl: String,
+    uploadTimestamp: String,
+    checksum: String,
+    fileName: String,
+    fileMimeType: String,
+    fileSize: Int,
+    cargo: Option[UploadCargo],
+    description: Option[String],
+    previewUrl: Option[String]
+  )
 
 case class UploadedFileWithObjectStore(
-                                        upscanReference: String,
-                                        downloadUrl: String,
-                                        uploadTimestamp: String,
-                                        checksum: String,
-                                        fileName: String,
-                                        fileMimeType: String,
-                                        fileSize: Int,
-                                        cargo: Option[UploadCargo],
-                                        description: Option[String],
-                                        previewUrl: Option[String],
-                                        objectStoreUrl: Option[String],
-                                        devHubUrl: Option[String]
-                                      )
-
+    upscanReference: String,
+    downloadUrl: String,
+    uploadTimestamp: String,
+    checksum: String,
+    fileName: String,
+    fileMimeType: String,
+    fileSize: Int,
+    cargo: Option[UploadCargo],
+    description: Option[String],
+    previewUrl: Option[String],
+    objectStoreUrl: Option[String],
+    devHubUrl: Option[String]
+  )
 
 object UploadedFile {
-  implicit val uploadFileFormat: OFormat[UploadedFile] = Json.format[UploadedFile]
+  implicit val uploadFileFormat: OFormat[UploadedFile]                               = Json.format[UploadedFile]
   implicit val uploadFileWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
 }

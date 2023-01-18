@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,13 @@
 package uk.gov.hmrc.gatekeeperemail.stride.connectors
 
 import javax.inject.{Inject, Singleton}
+
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig
 import uk.gov.hmrc.http.HttpClient
 
+import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig
+
 @Singleton
-class AuthConnector @Inject()(val http: HttpClient, strideAuthConfig: StrideAuthConfig) extends PlayAuthConnector {
+class AuthConnector @Inject() (val http: HttpClient, strideAuthConfig: StrideAuthConfig) extends PlayAuthConnector {
   lazy val serviceUrl = strideAuthConfig.authBaseUrl
 }
-
