@@ -11,15 +11,11 @@ val appName = "gatekeeper-email"
 lazy val playSettings: Seq[Setting[_]] = Seq.empty
 lazy val ComponentTest = config("component") extend Test
 
-ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
+scalaVersion := "2.13.8"
 
-inThisBuild(
-  List(
-    scalaVersion := "2.12.15",
-    semanticdbEnabled := true,
-    semanticdbVersion := scalafixSemanticdb.revision
-  )
-)
+ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
+ThisBuild / semanticdbEnabled := true
+ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(
@@ -34,7 +30,6 @@ lazy val microservice = Project(appName, file("."))
   .settings(defaultSettings(): _*)
   .settings(
     name := appName,
-    scalaVersion := "2.12.15",
     libraryDependencies ++= AppDependencies(),
     majorVersion := 0,
     resolvers ++= Resolvers(),
