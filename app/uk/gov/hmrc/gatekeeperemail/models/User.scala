@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
+import scala.collection.JavaConverters.asScalaBufferConverter
+
 import play.api.ConfigLoader
 import play.api.libs.json._
-
-import scala.collection.JavaConverters.asScalaBufferConverter
 
 trait User {
   def email: String

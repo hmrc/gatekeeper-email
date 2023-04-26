@@ -16,28 +16,30 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import com.mongodb.client.result.{InsertManyResult, InsertOneResult}
-import org.mockito.{ArgumentCaptor, ArgumentMatchersSugar, MockitoSugar}
-import org.mongodb.scala.bson.{BsonInt32, BsonNumber, BsonValue}
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.http.Status
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models.APIAccessType.{PRIVATE, PUBLIC}
-import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
-import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
-import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
-
 import java.time.LocalDateTime
 import java.util
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.successful
+
+import com.mongodb.client.result.{InsertManyResult, InsertOneResult}
+import org.mockito.{ArgumentCaptor, ArgumentMatchersSugar, MockitoSugar}
+import org.mongodb.scala.bson.{BsonInt32, BsonNumber, BsonValue}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
+import play.api.http.Status
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailRendererConnector}
+import uk.gov.hmrc.gatekeeperemail.models.APIAccessType.{PRIVATE, PUBLIC}
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
+import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
 
 class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with ArgumentMatchersSugar {
 
@@ -255,7 +257,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
     "successfully send (into Mongo) an email with two recipients" in new Setup {
       val sentEmailCaptor: ArgumentCaptor[List[SentEmail]] = ArgumentCaptor.forClass(classOf[List[SentEmail]])
 
-      val insertIds = new util.HashMap[Integer, BsonValue] { new Integer(1) -> new BsonInt32(33) }
+      val insertIds = new util.HashMap[Integer, BsonValue] { Integer.valueOf(1) -> new BsonInt32(33) }
       when(draftEmailRepositoryMock.getEmailData(*)).thenReturn(Future(email))
       when(draftEmailRepositoryMock.updateEmailSentStatus(*, *)).thenReturn(Future(email))
       when(sentEmailRepositoryMock.persist(sentEmailCaptor.capture())).thenReturn(Future(InsertManyResult.acknowledged(insertIds)))
@@ -283,7 +285,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
     "successfully send (into Mongo) an email with two recipients for api subscriptions  email addresses" in new Setup {
       val sentEmailCaptor: ArgumentCaptor[List[SentEmail]] = ArgumentCaptor.forClass(classOf[List[SentEmail]])
 
-      val insertIds = new util.HashMap[Integer, BsonValue] { new Integer(1) -> new BsonInt32(33) }
+      val insertIds = new util.HashMap[Integer, BsonValue] { Integer.valueOf(1) -> new BsonInt32(33) }
       when(draftEmailRepositoryMock.getEmailData(*)).thenReturn(Future(
         email.copy(userSelectionQuery = DevelopersEmailQuery(emailsForSomeCases = Some(EmailOverride(users, false))))
       ))
@@ -318,7 +320,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
       val sentEmailCaptor: ArgumentCaptor[List[SentEmail]] = ArgumentCaptor.forClass(classOf[List[SentEmail]])
 
-      val insertIds = new util.HashMap[Integer, BsonValue] { new Integer(1) -> new BsonInt32(33) }
+      val insertIds = new util.HashMap[Integer, BsonValue] { Integer.valueOf(1) -> new BsonInt32(33) }
       when(draftEmailRepositoryMock.getEmailData(email.emailUUID)).thenReturn(Future(
         email.copy(userSelectionQuery = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("VAT", "CORP"))))
       ))
@@ -358,7 +360,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
       val sentEmailCaptor: ArgumentCaptor[List[SentEmail]] = ArgumentCaptor.forClass(classOf[List[SentEmail]])
 
-      val insertIds = new util.HashMap[Integer, BsonValue] { new Integer(1) -> new BsonInt32(33) }
+      val insertIds = new util.HashMap[Integer, BsonValue] { Integer.valueOf(1) -> new BsonInt32(33) }
       when(draftEmailRepositoryMock.getEmailData(email.emailUUID)).thenReturn(Future(
         email.copy(userSelectionQuery = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("", ""))))
       ))
@@ -392,7 +394,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
       val sentEmailCaptor: ArgumentCaptor[List[SentEmail]] = ArgumentCaptor.forClass(classOf[List[SentEmail]])
 
-      val insertIds = new util.HashMap[Integer, BsonValue] { new Integer(1) -> new BsonInt32(33) }
+      val insertIds = new util.HashMap[Integer, BsonValue] { Integer.valueOf(1) -> new BsonInt32(33) }
       when(draftEmailRepositoryMock.getEmailData(email.emailUUID)).thenReturn(Future(
         email.copy(userSelectionQuery = DevelopersEmailQuery(topic = Some("TECHNICAL")))
       ))
@@ -405,7 +407,10 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
         CombinedApi("CORP", "CORP", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
         CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))
       )))
-      when(appConfigMock.additionalRecipients).thenReturn(List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example@example2.com", "first name2", "last name2", true)))
+      when(appConfigMock.additionalRecipients).thenReturn(List(
+        RegisteredUser("example@example.com", "first name", "last name", true),
+        RegisteredUser("example@example2.com", "first name2", "last name2", true)
+      ))
       when(appConfigMock.sendToActualRecipients).thenReturn(true)
       await(underTest.sendEmail(email.emailUUID))
 
@@ -429,7 +434,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
     "not send (into Mongo) an email with zero recipients" in new Setup {
       val sentEmailCaptor: ArgumentCaptor[List[SentEmail]] = ArgumentCaptor.forClass(classOf[List[SentEmail]])
 
-      val insertIds = new util.HashMap[Integer, BsonValue] { new Integer(1) -> new BsonInt32(33) }
+      val insertIds = new util.HashMap[Integer, BsonValue] { Integer.valueOf(1) -> new BsonInt32(33) }
       when(draftEmailRepositoryMock.getEmailData(*)).thenReturn(Future(email))
       when(draftEmailRepositoryMock.updateEmailSentStatus(email.emailUUID, 0)).thenReturn(Future(email))
       when(sentEmailRepositoryMock.persist(sentEmailCaptor.capture())).thenReturn(Future(InsertManyResult.acknowledged(insertIds)))
