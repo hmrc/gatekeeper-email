@@ -139,22 +139,12 @@ class DraftEmailService @Inject() (
 
   private def persistInEmailQueue(email: DraftEmail, users: List[RegisteredUser]): Future[List[RegisteredUser]] = {
 
-    val additionalUsers1 =
-      if (!appConfig.additionalRecipientsEmail1.isEmpty) {
-        List(RegisteredUser(appConfig.additionalRecipientsEmail1, appConfig.additionalRecipientsFname1, appConfig.additionalRecipientsLname1, true))
-      } else List.empty
-
-    val additionalUsers2 =
-      if (!appConfig.additionalRecipientsEmail2.isEmpty) {
-        List(RegisteredUser(appConfig.additionalRecipientsEmail2, appConfig.additionalRecipientsFname2, appConfig.additionalRecipientsLname2, true))
-      } else List.empty
-
     // if sendToActualRecipients is true then actualUsers   + additional recipients
     // if sendToActualRecipients is false  then just  additional recipients
     val usersModified = if (appConfig.sendToActualRecipients) {
-      users ++ additionalUsers1 ++ additionalUsers2
+      users ++ appConfig.additionalRecipients
     } else {
-      additionalUsers1 ++ additionalUsers2
+      appConfig.additionalRecipients
     }
 
     val sentEmails = usersModified.map(elem =>

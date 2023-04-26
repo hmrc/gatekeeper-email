@@ -16,7 +16,10 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
+import play.api.ConfigLoader
 import play.api.libs.json._
+
+import scala.collection.JavaConverters.asScalaBufferConverter
 
 trait User {
   def email: String
@@ -33,4 +36,15 @@ case class RegisteredUser(
 
 object RegisteredUser {
   implicit val registeredUserFormat = Json.format[RegisteredUser]
+
+  implicit val configLoader: ConfigLoader[List[RegisteredUser]] = ConfigLoader(_.getConfigList).map(
+    _.asScala.toList.map(config =>
+      RegisteredUser(
+        config.getString("email"),
+        config.getString("firstName"),
+        config.getString("lastName"),
+        config.getBoolean("verified")
+      )
+    )
+  )
 }
