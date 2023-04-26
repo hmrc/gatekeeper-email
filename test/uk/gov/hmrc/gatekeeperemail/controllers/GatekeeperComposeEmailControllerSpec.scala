@@ -50,13 +50,13 @@ import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
 
 class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with Matchers with MockitoSugar with ArgumentMatchersSugar {
 
-  private val subject                                                      = "Email subject"
-  private val emailBody                                                    = "Body to be used in the email template"
-  private val templateData                                                 = EmailTemplateData("templateId", Map(), false, Map(), None)
-  private val users                                                        = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
-  val emailPreferences                                                     = DevelopersEmailQuery()
+  private val subject      = "Email subject"
+  private val emailBody    = "Body to be used in the email template"
+  private val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
+  private val users        = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
+  val emailPreferences     = DevelopersEmailQuery()
 
-  private val draftEmail                                                   = DraftEmail(
+  private val draftEmail            = DraftEmail(
     "emailId-123",
     templateData,
     "DL Team",
@@ -71,15 +71,15 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
     now(),
     1
   )
-  private val emailUUIDToAttachFile                                        = "emailUUID111"
-  private val cargo                                                        = Some(UploadCargo(emailUUIDToAttachFile))
+  private val emailUUIDToAttachFile = "emailUUID111"
+  private val cargo                 = Some(UploadCargo(emailUUIDToAttachFile))
 
-  private val uploadedFile123: UploadedFileWithObjectStore                 =
+  private val uploadedFile123: UploadedFileWithObjectStore =
     UploadedFileWithObjectStore("Ref123", "/gatekeeper/downloadUrl/123", "", "", "file123", "", 1024, cargo, None, None, Some(s"/gatekeeper/$emailUUIDToAttachFile"), None)
-  private val uploadedFileSeq                                              = Seq(uploadedFile123)
-  private val uploadedFileMetadata: UploadedFileMetadata                   = UploadedFileMetadata(Nonce.random, uploadedFileSeq, cargo)
-  private val emailRequest                                                 = EmailRequest(emailPreferences, "gatekeeper", EmailData(subject, emailBody))
-  private val wrongEmailRequest                                            = EmailRequest(emailPreferences, "gatekeeper", EmailData(subject, emailBody))
+  private val uploadedFileSeq                              = Seq(uploadedFile123)
+  private val uploadedFileMetadata: UploadedFileMetadata   = UploadedFileMetadata(Nonce.random, uploadedFileSeq, cargo)
+  private val emailRequest                                 = EmailRequest(emailPreferences, "gatekeeper", EmailData(subject, emailBody))
+  private val wrongEmailRequest                            = EmailRequest(emailPreferences, "gatekeeper", EmailData(subject, emailBody))
 
   private val fakeRequestToUpdateFiles                                     = FakeRequest("POST", "/gatekeeperemail/updatefiles")
     .withHeaders("Content-Type" -> "application/json")

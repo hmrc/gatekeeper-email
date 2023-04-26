@@ -111,7 +111,7 @@ class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFut
         override def cancel(): Boolean    = true
         override def isCancelled: Boolean = false
       }
-      def maxFrequency: Double                                                                                      = 1
+      def maxFrequency: Double = 1
 
       def scheduleOnce(delay: FiniteDuration, runnable: Runnable)(implicit executor: ExecutionContext): Cancellable = new Cancellable {
         override def cancel(): Boolean    = true
@@ -132,8 +132,8 @@ class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFut
     }
     val testScheduledJob = new TestScheduledJob
 
-    class StubCancellable  extends Cancellable  {
-      var isCancelled       = false
+    class StubCancellable extends Cancellable {
+      var isCancelled = false
 
       def cancel(): Boolean = {
         isCancelled = true

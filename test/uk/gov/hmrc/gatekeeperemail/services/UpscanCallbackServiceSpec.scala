@@ -47,8 +47,8 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
 
   case class DummyCallBackBody(reference: String) extends CallbackBody
 
-  val uploadId                      = UploadId(randomUUID)
-  val reference                     = randomUUID.toString
+  val uploadId  = UploadId(randomUUID)
+  val reference = randomUUID.toString
 
   val readyCallbackBody             = ReadyCallbackBody(
     reference = reference,

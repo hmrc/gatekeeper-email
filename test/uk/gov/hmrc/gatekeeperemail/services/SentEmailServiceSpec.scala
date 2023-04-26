@@ -64,7 +64,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       1
     )
 
-    val sentEmail  = SentEmail(
+    val sentEmail = SentEmail(
       createdAt = LocalDateTime.now(),
       updatedAt = LocalDateTime.now(),
       emailUuid = UUID.randomUUID(),

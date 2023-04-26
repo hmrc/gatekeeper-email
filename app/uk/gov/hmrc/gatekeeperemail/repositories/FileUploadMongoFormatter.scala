@@ -29,7 +29,7 @@ object FileUploadMongoFormatter {
   implicit val referenceFormat: OFormat[Reference]  = Json.format[Reference]
   implicit val dateFormatter: Format[LocalDateTime] = MongoJavatimeFormats.localDateTimeFormat
 
-  implicit val initiateReads: Reads[InProgress.type]    =
+  implicit val initiateReads: Reads[InProgress.type] =
     Json.reads[InProgress.type]
 
   implicit val initiateWrites: OWrites[InProgress.type] =
@@ -38,7 +38,7 @@ object FileUploadMongoFormatter {
   implicit val initiateFormat: OFormat[InProgress.type] =
     OFormat(initiateReads, initiateWrites)
 
-  implicit val failedReads: Reads[Failed.type]    =
+  implicit val failedReads: Reads[Failed.type] =
     Json.reads[Failed.type]
 
   implicit val failedWrites: OWrites[Failed.type] =
@@ -47,7 +47,7 @@ object FileUploadMongoFormatter {
   implicit val failedFormat: OFormat[Failed.type] =
     OFormat(failedReads, failedWrites)
 
-  implicit val uploadedSuccessfullyReads: Reads[UploadedSuccessfully]    =
+  implicit val uploadedSuccessfullyReads: Reads[UploadedSuccessfully] =
     Json.reads[UploadedSuccessfully]
 
   implicit val uploadedSuccessfullyWrites: OWrites[UploadedSuccessfully] =
@@ -56,13 +56,13 @@ object FileUploadMongoFormatter {
   implicit val uploadedSuccessfullyFormat: OFormat[UploadedSuccessfully] =
     OFormat(uploadedSuccessfullyReads, uploadedSuccessfullyWrites)
 
-  implicit val uploadedFailedReads: Reads[UploadedFailedWithErrors]      =
+  implicit val uploadedFailedReads: Reads[UploadedFailedWithErrors] =
     Json.reads[UploadedFailedWithErrors]
 
-  implicit val uploadedFailedWrites: OWrites[UploadedFailedWithErrors]   =
+  implicit val uploadedFailedWrites: OWrites[UploadedFailedWithErrors] =
     Json.writes[UploadedFailedWithErrors].transform(_ ++ Json.obj("_type" -> "UploadedFailedWithErrors"))
 
-  implicit val uploadedFailedFormat: OFormat[UploadedFailedWithErrors]   =
+  implicit val uploadedFailedFormat: OFormat[UploadedFailedWithErrors] =
     OFormat(uploadedFailedReads, uploadedFailedWrites)
 
   implicit val read: Reads[UploadStatus] = new Reads[UploadStatus] {

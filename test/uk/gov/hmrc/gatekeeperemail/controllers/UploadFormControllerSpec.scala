@@ -40,9 +40,9 @@ class UploadFormControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPerSuit
     with StubControllerComponentsFactory
     with StubPlayBodyParsersFactory {
 
-  val uploadId             = UploadId(randomUUID)
-  val reference            = randomUUID.toString
-  val uploadStatusSuccess  = UploadedSuccessfully("abc.txt", "pdf", "http://abcs3", Some(1234), "http://aws.s3.object-store-url")
+  val uploadId            = UploadId(randomUUID)
+  val reference           = randomUUID.toString
+  val uploadStatusSuccess = UploadedSuccessfully("abc.txt", "pdf", "http://abcs3", Some(1234), "http://aws.s3.object-store-url")
 
   val uploadSuccesfulBody  =
     """{"name" : "abc.txt", "mimeType" : "pdf", "downloadUrl" : "http://abcs3",

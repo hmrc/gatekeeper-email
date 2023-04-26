@@ -81,6 +81,6 @@ class FileUploadStatusRepository @Inject() (mongoComponent: MongoComponent)(impl
     ).map(_.asInstanceOf[UploadInfo]).head()
   }
 
-  def requestUpload(uploadInfo: UploadInfo): Future[UploadInfo]                       =
+  def requestUpload(uploadInfo: UploadInfo): Future[UploadInfo] =
     collection.insertOne(uploadInfo).toFuture().map(res => uploadInfo)
 }

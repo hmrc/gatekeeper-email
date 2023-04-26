@@ -75,7 +75,7 @@ case class ErrorDetails(failureReason: String, message: String)
 @Singleton
 class UploadCallbackController @Inject() (upscanCallbackDispatcher: UpscanCallbackService, cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) {
 
-  private val logger                                                                         = Logger(this.getClass)
+  private val logger = Logger(this.getClass)
 
   private def handleFuture[T](future: Future[T])(implicit writes: Writes[T]): Future[Result] = {
     future map { v =>

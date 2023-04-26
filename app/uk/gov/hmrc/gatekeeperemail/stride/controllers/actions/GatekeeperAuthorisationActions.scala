@@ -50,7 +50,7 @@ trait GatekeeperAuthorisationActions {
 
   def gatekeeperRoleActionRefiner(minimumRoleRequired: GatekeeperRole): ActionRefiner[MessagesRequest, LoggedInRequest] =
     new ActionRefiner[MessagesRequest, LoggedInRequest] {
-      def executionContext                                                                      = ec
+      def executionContext = ec
 
       def refine[A](msgRequest: MessagesRequest[A]): Future[Either[Result, LoggedInRequest[A]]] = {
         val successUrl = s"${strideAuthConfig.successUrlBase}${msgRequest.uri}"
