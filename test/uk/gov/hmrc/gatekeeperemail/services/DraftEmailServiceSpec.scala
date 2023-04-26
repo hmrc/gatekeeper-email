@@ -65,7 +65,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
     val uuid             = UUID.randomUUID()
     val now              = LocalDateTime.now()
 
-    val email            = DraftEmail(
+    val email = DraftEmail(
       uuid.toString(),
       templateData,
       "DL Team",

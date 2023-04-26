@@ -40,10 +40,10 @@ class UploadCallbackControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPer
     with StubControllerComponentsFactory
     with StubPlayBodyParsersFactory {
 
-  val uploadId                      = UploadId(randomUUID)
-  val reference                     = randomUUID.toString
+  val uploadId  = UploadId(randomUUID)
+  val reference = randomUUID.toString
 
-  val readyCallbackJsonbody         =
+  val readyCallbackJsonbody =
     """{"reference" : "11370e18-6e24-453e-b45a-76d3e32ea33d", "fileStatus" : "READY",
           "downloadUrl" : "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
           "uploadDetails": {
@@ -69,7 +69,7 @@ class UploadCallbackControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPer
   val uploadStatusSuccess           = UploadedSuccessfully("test.pdf", "pdf", "https://bucketName.s3.eu-west-2.amazonaws.com?1235676", Some(45678L), "http://aws.s3.object-store-url")
   val uploadStatusSFailedWithErrors = UploadedFailedWithErrors("FAILED", "There is Virus", "1234567", reference)
 
-  val failedCallbackBody     = FailedCallbackBody(
+  val failedCallbackBody = FailedCallbackBody(
     reference = "11370e18-6e24-453e-b45a-76d3e32ea33d",
     fileStatus = "FAILED",
     failureDetails = ErrorDetails(
