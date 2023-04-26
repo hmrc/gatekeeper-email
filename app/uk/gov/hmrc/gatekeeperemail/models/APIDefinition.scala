@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-import java.net.URLEncoder.encode
-import scala.util.Random
-
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
 
 import play.api.libs.json.Json

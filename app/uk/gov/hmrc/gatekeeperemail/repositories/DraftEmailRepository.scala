@@ -33,7 +33,7 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, RegisteredUser}
+import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus}
 import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.emailFormatter
 
 @Singleton

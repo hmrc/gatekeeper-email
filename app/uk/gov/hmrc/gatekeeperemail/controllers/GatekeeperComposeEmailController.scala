@@ -147,14 +147,14 @@ class GatekeeperComposeEmailController @Inject() (
     }
   }
 
-  def fetchEmail(emailUUID: String): Action[AnyContent] = loggedInAnyContent() { implicit request =>
+  def fetchEmail(emailUUID: String): Action[AnyContent] = loggedInAnyContent() { _ =>
     logger.info(s"In fetchEmail for $emailUUID")
     emailService.fetchEmail(emailUUID)
       .map(email => Ok(toJson(outgoingEmail(email))))
       .recover(recovery)
   }
 
-  def deleteEmail(emailUUID: String): Action[AnyContent] = loggedInAnyContent() { implicit request =>
+  def deleteEmail(emailUUID: String): Action[AnyContent] = loggedInAnyContent() { _ =>
     logger.info(s"In deleteEmail for $emailUUID")
     emailService.deleteEmail(emailUUID)
       .map(email =>
@@ -163,7 +163,7 @@ class GatekeeperComposeEmailController @Inject() (
       .recover(recovery)
   }
 
-  def sendEmail(emailUUID: String): Action[AnyContent] = loggedInAnyContent() { implicit request =>
+  def sendEmail(emailUUID: String): Action[AnyContent] = loggedInAnyContent() { _ =>
     emailService.sendEmail(emailUUID)
       .map(email => Ok(toJson(outgoingEmail(email))))
       .recover(recovery)
