@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.gatekeeperemail.models
+package uk.gov.hmrc.gatekeeperemail.config
 
-import play.api.libs.json._
+import scala.jdk.CollectionConverters.CollectionHasAsScala
 
-trait User {
-  def email: String
-  def firstName: String
-  def lastName: String
-}
+import play.api.ConfigLoader
 
-case class RegisteredUser(
-    email: String,
-    firstName: String,
-    lastName: String,
-    verified: Boolean
-  ) extends User {}
+import uk.gov.hmrc.gatekeeperemail.models.RegisteredUser
 
-object RegisteredUser {
-  implicit val registeredUserFormat = Json.format[RegisteredUser]
+object AdditionalRecipientsConfigProvider {
+
+  implicit val configLoader: ConfigLoader[List[RegisteredUser]] = ConfigLoader(_.getConfigList).map(
+    _.asScala.toList.map(config =>
+      RegisteredUser(
+        config.getString("email"),
+        config.getString("firstName"),
+        config.getString("lastName"),
+        if (config.hasPath("verified")) config.getBoolean("verified") else true
+      )
+    )
+  )
 }
