@@ -43,7 +43,7 @@ object RegisteredUser {
         config.getString("email"),
         config.getString("firstName"),
         config.getString("lastName"),
-        config.getBoolean("verified")
+        if (config.hasPath("verified")) config.getBoolean("verified") else true
       )
     )
   )
