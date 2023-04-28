@@ -18,9 +18,11 @@ package uk.gov.hmrc.gatekeeperemail.config
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.Duration
+
 import play.api.{Configuration, Logging}
-import uk.gov.hmrc.gatekeeperemail.config.AdditionalRecipientsConfigProvider.configLoader
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import uk.gov.hmrc.gatekeeperemail.config.AdditionalRecipientsConfigProvider.configLoader
 import uk.gov.hmrc.gatekeeperemail.models.RegisteredUser
 
 @Singleton

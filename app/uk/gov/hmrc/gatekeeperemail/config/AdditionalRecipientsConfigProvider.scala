@@ -24,14 +24,9 @@ import uk.gov.hmrc.gatekeeperemail.models.RegisteredUser
 
 object AdditionalRecipientsConfigProvider {
 
-  implicit val configLoader: ConfigLoader[List[RegisteredUser]] = ConfigLoader(_.getConfigList).map(
-    _.asScala.toList.map(config =>
-      RegisteredUser(
-        config.getString("email"),
-        config.getString("firstName"),
-        config.getString("lastName"),
-        if (config.hasPath("verified")) config.getBoolean("verified") else true
-      )
-    )
+  implicit val configLoader: ConfigLoader[List[RegisteredUser]] = ConfigLoader(_.getStringList).map(
+    _.asScala.toList.map(_.split(','))
+      .filter(_.length == 3)
+      .map(userDetails => RegisteredUser(userDetails(0), userDetails(1), userDetails(2), true))
   )
 }
