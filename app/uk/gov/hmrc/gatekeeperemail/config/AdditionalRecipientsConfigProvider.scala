@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.gatekeeperemail.models
+package uk.gov.hmrc.gatekeeperemail.config
 
-import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
+import scala.jdk.CollectionConverters.CollectionHasAsScala
 
-import play.api.libs.json.Json
+import play.api.ConfigLoader
 
-sealed trait APIAccessType extends EnumEntry
+import uk.gov.hmrc.gatekeeperemail.models.RegisteredUser
 
-object APIAccessType extends Enum[APIAccessType] with PlayJsonEnum[APIAccessType] {
-  val values = findValues
-  case object PRIVATE extends APIAccessType
-  case object PUBLIC  extends APIAccessType
-}
+object AdditionalRecipientsConfigProvider {
 
-case class APICategory(value: String) extends AnyVal
-
-object APICategory {
-  implicit val formatApiCategory = Json.valueFormat[APICategory]
+  implicit val configLoader: ConfigLoader[List[RegisteredUser]] = ConfigLoader(_.getStringList).map(
+    _.asScala.toList.map(_.split(','))
+      .filter(_.length == 3)
+      .map(userDetails => RegisteredUser(userDetails(0), userDetails(1), userDetails(2), true))
+  )
 }

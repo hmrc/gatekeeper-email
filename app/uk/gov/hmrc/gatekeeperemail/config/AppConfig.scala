@@ -19,10 +19,10 @@ package uk.gov.hmrc.gatekeeperemail.config
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.Duration
 
-import play.api.libs.json.{JsError, JsSuccess, Json}
 import play.api.{Configuration, Logging}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import uk.gov.hmrc.gatekeeperemail.config.AdditionalRecipientsConfigProvider.configLoader
 import uk.gov.hmrc.gatekeeperemail.models.RegisteredUser
 
 @Singleton
@@ -34,12 +34,7 @@ class AppConfig @Inject() (config: Configuration)
   val authBaseUrl: String          = baseUrl("auth")
   val emailBaseUrl: String         = baseUrl("email")
   val emailRendererBaseUrl: String = baseUrl("developer-email-renderer")
-  val additionalRecipientsEmail1   = config.getOptional[String]("additionalRecipients.email1").getOrElse("")
-  val additionalRecipientsFname1   = config.getOptional[String]("additionalRecipients.firstName1").getOrElse("")
-  val additionalRecipientsLname1   = config.getOptional[String]("additionalRecipients.lastName1").getOrElse("")
-  val additionalRecipientsEmail2   = config.getOptional[String]("additionalRecipients.email2").getOrElse("")
-  val additionalRecipientsFname2   = config.getOptional[String]("additionalRecipients.firstName2").getOrElse("")
-  val additionalRecipientsLname2   = config.getOptional[String]("additionalRecipients.lastName2").getOrElse("")
+  val additionalRecipients         = config.getOptional[List[RegisteredUser]]("additionalRecipients").getOrElse(List())
   val sendToActualRecipients       = config.get[Boolean]("sendToActualRecipients")
 
   val emailRecordRetentionPeriod: Int = getConfInt("mongodb.ttlInYears", 7)
