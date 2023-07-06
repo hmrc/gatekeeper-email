@@ -73,8 +73,15 @@ class DraftEmailService @Inject() (
 
   private def callThirdPartyDeveloper(emailPreferences: DevelopersEmailQuery): Future[List[RegisteredUser]] = {
     implicit val hc = HeaderCarrier()
-    logger.info(s"Email Preferences BEFORE CALLING TPD are $emailPreferences")
 
+    val emailPreferencesRedacted = emailPreferences.copy(
+      emailsForSomeCases = emailPreferences.emailsForSomeCases
+        .map(emailOverride => emailOverride.copy(email = List.empty))
+    )
+    val numberOfOverrides = emailPreferences.emailsForSomeCases.map(_.email.size).getOrElse(0)
+    val verifiedOverrides = emailPreferences.emailsForSomeCases.map(_.email.count(_.verified)).getOrElse(0)
+    logger.info(s"Email Preferences (with overrides redacted) before calling TPD: $emailPreferencesRedacted with $numberOfOverrides overrides of which $verifiedOverrides are verified")
+    
     val emails = emailPreferences match {
       case DevelopersEmailQuery(None, None, None, false, None, true, None)             =>
         logger.info(s"Emailing All Users scenario.. ")
