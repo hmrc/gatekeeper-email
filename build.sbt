@@ -1,9 +1,8 @@
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings, targetJvm}
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import sbt.Keys.baseDirectory
 import sbt.Test
 import sbt.Tests.{Group, SubProcess}
-import uk.gov.hmrc.{DefaultBuildSettings}
+import uk.gov.hmrc.DefaultBuildSettings
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 
 val appName = "gatekeeper-email"
@@ -24,7 +23,6 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(playSettings: _*)
   .settings(scalaSettings: _*)
-  .settings(publishingSettings: _*)
   .settings(playPublishingSettings: _*)
   .settings(ScoverageSettings())
   .settings(defaultSettings(): _*)
