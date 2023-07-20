@@ -78,10 +78,10 @@ class DraftEmailService @Inject() (
       emailsForSomeCases = emailPreferences.emailsForSomeCases
         .map(emailOverride => emailOverride.copy(email = List.empty))
     )
-    val numberOfOverrides = emailPreferences.emailsForSomeCases.map(_.email.size).getOrElse(0)
-    val verifiedOverrides = emailPreferences.emailsForSomeCases.map(_.email.count(_.verified)).getOrElse(0)
+    val numberOfOverrides        = emailPreferences.emailsForSomeCases.map(_.email.size).getOrElse(0)
+    val verifiedOverrides        = emailPreferences.emailsForSomeCases.map(_.email.count(_.verified)).getOrElse(0)
     logger.info(s"Email Preferences (with overrides redacted) before calling TPD: $emailPreferencesRedacted with $numberOfOverrides overrides of which $verifiedOverrides are verified")
-    
+
     val emails = emailPreferences match {
       case DevelopersEmailQuery(None, None, None, false, None, true, None)             =>
         logger.info(s"Emailing All Users scenario.. ")
@@ -148,7 +148,7 @@ class DraftEmailService @Inject() (
     // if sendToActualRecipients is true then actualUsers   + additional recipients
     // if sendToActualRecipients is false  then just  additional recipients
     val usersModified = if (appConfig.sendToActualRecipients) {
-      users ++ appConfig.additionalRecipients
+      (users ++ appConfig.additionalRecipients).distinct
     } else {
       appConfig.additionalRecipients
     }

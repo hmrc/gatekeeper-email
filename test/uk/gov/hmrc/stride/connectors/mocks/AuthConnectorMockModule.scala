@@ -21,7 +21,7 @@ import scala.concurrent.Future.{failed, successful}
 
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 
-import uk.gov.hmrc.auth.core.retrieve.{Name, Retrieval, ~}
+import uk.gov.hmrc.auth.core.retrieve.{~, Name, Retrieval}
 import uk.gov.hmrc.auth.core.{Enrolment, Enrolments, InsufficientEnrolments, SessionRecordNotFound}
 
 import uk.gov.hmrc.gatekeeperemail.stride.connectors.AuthConnector
