@@ -78,14 +78,8 @@ class SentEmailService @Inject() (
     def findNextEmail: Future[Option[SentEmail]] = {
       sentEmailRepository.findNextEmailToSend
     }
-    
-    def partialEmail(emailAddress: String): String = {
-      val positionOfAt = emailAddress.indexOf("@")
-      s"${emailAddress.take(2)}...${emailAddress.slice(positionOfAt, positionOfAt + 3)}..."
-    }
 
     def sendEmail(emailRequest: SendEmailRequest): Future[Int] = {
-      logger.info(s"Sending email with UUID ${emailRequest.tags("messageId")} to recipient ${partialEmail(emailRequest.to)}")
       emailConnector.sendEmail(emailRequest)
     }
 

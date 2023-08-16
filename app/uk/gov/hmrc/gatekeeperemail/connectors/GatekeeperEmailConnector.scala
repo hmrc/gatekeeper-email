@@ -53,8 +53,14 @@ class GatekeeperEmailConnector @Inject() (http: HttpClient, config: EmailConnect
       }
   }
 
+  private def partialEmail(emailAddress: String): String = {
+    val positionOfAt = emailAddress.indexOf("@")
+    s"${emailAddress.take(2)}...${emailAddress.slice(positionOfAt, positionOfAt + 3)}..."
+  }
+
   private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, Int]] = {
     val oneEmailRequest = OneEmailRequest(List(request.to), request.templateId, request.parameters, request.force, request.auditData, request.eventUrl, request.tags)
+    logger.info(s"Sending email with UUID ${request.tags("messageId")} to recipient ${partialEmail(request.to)}")
     http.POST[OneEmailRequest, HttpResponse](s"$serviceUrl/developer/email", oneEmailRequest).map {
       res => Right(res.status)
     }
