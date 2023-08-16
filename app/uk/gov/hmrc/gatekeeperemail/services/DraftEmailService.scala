@@ -166,7 +166,8 @@ class DraftEmailService @Inject() (
       )
     )
 
-    if (!sentEmails.isEmpty) {
+    if (sentEmails.nonEmpty) {
+      logger.info(s"For email UUID ${email.emailUUID}, add added ${sentEmails.size} emails to queue")
       sentEmailRepository.persist(sentEmails)
     } else {
       logger.warn(s"No Email Addresses selected for sending emails")
