@@ -98,7 +98,7 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfter
       "firstName"      -> "first name2"
     )
 
-    val emailRequest = SendEmailRequest("example2@example2.com", "gatekeeper", parameters)
+    val emailRequest = SendEmailRequest("example2@example2.com", "gatekeeper", parameters, tags = Map("messageId" -> "message-id"))
 
     "send gatekeeper email" in new Setup with WorkingHttp {
       await(underTest.sendEmail(emailRequest))
@@ -125,7 +125,7 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfter
                |  },
                |  "force": false,
                |  "auditData": {},
-               |  "tags" : { }
+               |  "tags" : { "messageId": "message-id" }
                |}""".stripMargin
           ))
       )
