@@ -34,7 +34,7 @@ import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.models.requests.SendEmailRequest
 
-class GatekeeperEmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite {
+class EmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite {
 
   val stubPort       = sys.env.getOrElse("WIREMOCK", "22222").toInt
   val stubHost       = "localhost"
@@ -74,7 +74,7 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfter
 
     implicit val hc = HeaderCarrier()
 
-    lazy val underTest = new GatekeeperEmailConnector(httpClient, fakeEmailConnectorConfig)
+    lazy val underTest = new EmailConnector(httpClient, fakeEmailConnectorConfig)
   }
 
   trait WorkingHttp {
@@ -134,9 +134,9 @@ class GatekeeperEmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfter
 
     "fail to send email due to connection reset" in new Setup with FailWithConnectionResetHttp {
 
-      val result: Int = await(underTest.sendEmail(emailRequest))
+      val result = await(underTest.sendEmail(emailRequest))
 
-      result shouldBe 500
+      result shouldBe false
     }
   }
 }

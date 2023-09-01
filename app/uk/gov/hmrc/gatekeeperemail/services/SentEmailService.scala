@@ -19,28 +19,30 @@ package uk.gov.hmrc.gatekeeperemail.services
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-import play.api.Logging
-import play.api.http.Status.ACCEPTED
+import cats.data.EitherT
 
-import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailConnector
+import play.api.Logging
+
+import uk.gov.hmrc.gatekeeperemail.connectors.EmailConnector
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.models.requests.SendEmailRequest
 import uk.gov.hmrc.gatekeeperemail.repositories.SentEmailRepository
 
 @Singleton
 class SentEmailService @Inject() (
-    emailConnector: GatekeeperEmailConnector,
+    emailConnector: EmailConnector,
     draftEmailService: DraftEmailService,
     sentEmailRepository: SentEmailRepository
   )(implicit val ec: ExecutionContext
   ) extends Logging {
 
-  def sendNextPendingEmail: Future[Int] = {
-    def updateEmailStatusToSent(email: SentEmail): Future[SentEmail] = {
+  def sendNextPendingEmail: Future[String] = {
+    def updateEmailStatusToSent(email: SentEmail): String = {
       sentEmailRepository.markSent(email)
+      "Sent successfully"
     }
 
-    def handleEmailSendingFailed(email: SentEmail): Future[SentEmail] = {
+    def handleEmailSendingFailed(email: SentEmail): String = {
       if (email.failedCount > 2) {
         logger.info(s"Marking email with id ${email.id} as failed as sending it has failed 3 times")
         sentEmailRepository.markFailed(email)
@@ -48,9 +50,10 @@ class SentEmailService @Inject() (
         logger.info(s"Email with id ${email.id} has now failed to send ${email.failedCount + 1} times")
         sentEmailRepository.incrementFailedCount(email)
       }
+      "Sending failed"
     }
 
-    def findAndSendNextEmail(sentEmail: SentEmail): Future[Int] = {
+    def findAndSendNextEmail(sentEmail: SentEmail): Future[Either[String, Boolean]] = {
       logger.debug(s"Fetching template with UUID ${sentEmail.emailUuid} to send email with UUID ${sentEmail.id}")
       val tags = Map[String, String]("regime" -> "API Platform", "template" -> "gatekeeper", "messageId" -> sentEmail.emailUuid.toString)
 
@@ -67,7 +70,7 @@ class SentEmailService @Inject() (
                                         tags
                                       )
         result                     <- sendEmail(emailRequestData)
-      } yield result
+      } yield Right(result)
     }
 
     def fetchDraftEmailData(emailUUID: String): Future[DraftEmail] = {
@@ -76,21 +79,29 @@ class SentEmailService @Inject() (
       } yield email
     }
 
-    def findNextEmail: Future[Option[SentEmail]] = {
-      sentEmailRepository.findNextEmailToSend
+    def findNextEmail: Future[Either[String, SentEmail]] = {
+      sentEmailRepository.findNextEmailToSend.map {
+        case Some(sentEmail) => Right(sentEmail)
+        case None            => Left("No emails to send")
+      }
     }
+//    def findNextEmail: Future[Option[SentEmail]] = {
+//      sentEmailRepository.findNextEmailToSend
+//    }
 
-    def sendEmail(emailRequest: SendEmailRequest): Future[Int] = {
+    def sendEmail(emailRequest: SendEmailRequest): Future[Boolean] = {
       emailConnector.sendEmail(emailRequest)
     }
 
-    findNextEmail.flatMap {
-      case None                       => Future.successful(0)
-      case Some(sentEmail: SentEmail) => findAndSendNextEmail(sentEmail).map {
-          case ACCEPTED => updateEmailStatusToSent(sentEmail)
-          case _        => handleEmailSendingFailed(sentEmail)
-        } map (_ => 1)
-    }
+    (for {
+      sentEmail <- EitherT(findNextEmail)
+      status    <- EitherT(findAndSendNextEmail(sentEmail))
+      message    = if (status) updateEmailStatusToSent(sentEmail) else handleEmailSendingFailed(sentEmail)
+    } yield message)
+      .value.map {
+        case Right(message) => message
+        case Left(message)  => message
+      }
   }
 
   private def buildEmailTemplateParameters(sentEmail: SentEmail, parameters: Map[String, String]): Map[String, String] = {
