@@ -31,32 +31,32 @@ import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.models.requests.{OneEmailRequest, SendEmailRequest}
 
 @Singleton
-class GatekeeperEmailConnector @Inject() (http: HttpClient, config: EmailConnectorConfig)(implicit ec: ExecutionContext)
+class EmailConnector @Inject()(http: HttpClient, config: EmailConnectorConfig)(implicit ec: ExecutionContext)
     extends HttpErrorFunctions with Logging {
 
   private lazy val serviceUrl = config.emailBaseUrl
 
-  def sendEmail(emailRequest: SendEmailRequest): Future[Int] = {
+  def sendEmail(emailRequest: SendEmailRequest): Future[Boolean] = {
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(CONTENT_TYPE -> "application/json")
 
     postHttpRequest(emailRequest).map {
       case Left(UpstreamErrorResponse(_, statusCode, _, _)) =>
-        logger.warn(s"Error $statusCode")
-        statusCode
-      case Right(status: Int)                               =>
-        status
+        logger.warn(s"Error while sending an email for templateId ${emailRequest.templateId}: $statusCode")
+        false
+      case Right(_)                                         =>
+        true
     }
       .recoverWith {
         case NonFatal(e) =>
-          logger.warn(s"NonFatal error ${e.getMessage} while sending message to email service", e)
-          Future.successful(Status.INTERNAL_SERVER_ERROR)
+          logger.warn(s"NonFatal error ${e.getMessage} while sending message for templateId ${emailRequest.templateId}", e)
+          Future.successful(false)
       }
   }
 
-  private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, Int]] = {
+  private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, Boolean]] = {
     val oneEmailRequest = OneEmailRequest(List(request.to), request.templateId, request.parameters, request.force, request.auditData, request.eventUrl, request.tags)
     http.POST[OneEmailRequest, HttpResponse](s"$serviceUrl/developer/email", oneEmailRequest).map {
-      res => Right(res.status)
+      res => Right(res.status == Status.ACCEPTED)
     }
       .recover {
         case NonFatal(e) =>
