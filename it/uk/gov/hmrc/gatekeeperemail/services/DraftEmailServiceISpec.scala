@@ -26,7 +26,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
+import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, EmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -65,7 +65,7 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
     val appConfigMock                                                = mock[AppConfig]
     val developerConnectorMock: DeveloperConnector                   = mock[DeveloperConnector]
     val apmConnectorMock: ApmConnector                               = mock[ApmConnector]
-    val emailConnectorMock: GatekeeperEmailConnector                 = mock[GatekeeperEmailConnector]
+    val emailConnectorMock: EmailConnector                 = mock[EmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
     val underTest                                                    = new DraftEmailService(emailRendererConnectorMock, developerConnectorMock, apmConnectorMock, emailRepository, sentEmailRepository, appConfigMock)
     val users                                                        = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
@@ -74,7 +74,7 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
   "saveEmail" should {
 
     "save the email data into mongodb repo" in new Setup {
-      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(200))
+      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(true))
       when(developerConnectorMock.fetchAll()(*)).thenReturn(Future(users))
       when(emailRendererConnectorMock.getTemplatedEmail(*))
         .thenReturn(successful(Right(RenderResult(

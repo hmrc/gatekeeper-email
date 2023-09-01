@@ -30,7 +30,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status._
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
-import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
+import uk.gov.hmrc.gatekeeperemail.connectors.{EmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
@@ -41,7 +41,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
     val draftEmailRepositoryMock: DraftEmailRepository               = mock[DraftEmailRepository]
     val draftEmailServiceMock: DraftEmailService                     = mock[DraftEmailService]
     val sentEmailRepositoryMock: SentEmailRepository                 = mock[SentEmailRepository]
-    val emailConnectorMock: GatekeeperEmailConnector                 = mock[GatekeeperEmailConnector]
+    val emailConnectorMock: EmailConnector                 = mock[EmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
     val underTest                                                    = new SentEmailService(emailConnectorMock, draftEmailServiceMock, sentEmailRepositoryMock)
     val templateData                                                 = EmailTemplateData("templateId", Map(), false, Map(), None)
@@ -89,7 +89,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
     "mark email as sent when email connector receives success response" in new Setup {
       when(sentEmailRepositoryMock.findNextEmailToSend).thenReturn(Future(Some(sentEmail)))
       when(draftEmailServiceMock.fetchEmail(sentEmail.emailUuid.toString)).thenReturn(Future(draftEmail))
-      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(ACCEPTED))
+      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(true))
 
       val result = await(underTest.sendNextPendingEmail)
 
@@ -97,7 +97,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       verify(draftEmailServiceMock).fetchEmail(sentEmail.emailUuid.toString)
       verify(sentEmailRepositoryMock).markSent(sentEmail)
       verify(emailConnectorMock).sendEmail(*)
-      result shouldBe 1
+      result shouldBe "Sent successfully"
     }
 
     "handle there being no emails to send" in new Setup {
@@ -108,14 +108,14 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       val result = await(underTest.sendNextPendingEmail)
 
       verify(sentEmailRepositoryMock).findNextEmailToSend
-      result shouldBe 0
+      result shouldBe "No emails to send"
     }
 
     "increment failed count when maximum fail count not reached" in new Setup {
       when(sentEmailRepositoryMock.incrementFailedCount(*)).thenReturn(Future(sentEmail))
       when(sentEmailRepositoryMock.findNextEmailToSend).thenReturn(Future(Some(sentEmail)))
       when(draftEmailServiceMock.fetchEmail(sentEmail.emailUuid.toString)).thenReturn(Future(draftEmail))
-      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(BAD_REQUEST))
+      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(false))
 
       await(underTest.sendNextPendingEmail)
 
@@ -128,7 +128,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       when(sentEmailRepositoryMock.markFailed(emailToSend)).thenReturn(Future(emailToSend))
       when(sentEmailRepositoryMock.findNextEmailToSend).thenReturn(Future(Some(emailToSend)))
       when(draftEmailServiceMock.fetchEmail(emailToSend.emailUuid.toString)).thenReturn(Future(draftEmail))
-      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(BAD_REQUEST))
+      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(false))
 
       await(underTest.sendNextPendingEmail)
 

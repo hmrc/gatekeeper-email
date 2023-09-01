@@ -36,6 +36,6 @@ class EmailSendingJob @Inject() (appConfig: AppConfig, override val lockService:
   override def interval: FiniteDuration = appConfig.interval.asInstanceOf[FiniteDuration]
 
   override def executeInLock(implicit ec: ExecutionContext): Future[Result] = {
-    sentEmailService.sendNextPendingEmail.map(done => Result(done.toString))
+    sentEmailService.sendNextPendingEmail.map(Result)
   }
 }

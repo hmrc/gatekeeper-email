@@ -54,7 +54,7 @@ class LockedScheduledJobSpec extends AnyWordSpec with Matchers with ScalaFutures
 
     "back off when Mongo lock cannot be obtained" in new Setup {
       when(mockLockService.withLock(*)(*)).thenReturn(Future.successful(None))
-      when(mockSentEmailSservice.sendNextPendingEmail).thenReturn(Future(0))
+      when(mockSentEmailSservice.sendNextPendingEmail).thenReturn(Future("No emails to send"))
 
       val result = await(subject.execute)
 
@@ -65,7 +65,7 @@ class LockedScheduledJobSpec extends AnyWordSpec with Matchers with ScalaFutures
 
     "execute in lock when Mongo lock can be obtained" in new Setup {
       when(mockLockService.withLock[subject.Result](*)(*)).thenReturn(Future.successful(Some(subject.Result("OK"))))
-      when(mockSentEmailSservice.sendNextPendingEmail).thenReturn(Future(1))
+      when(mockSentEmailSservice.sendNextPendingEmail).thenReturn(Future("Sent successfully"))
 
       val result = await(subject.execute)
 
