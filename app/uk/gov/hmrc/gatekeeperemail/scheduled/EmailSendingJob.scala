@@ -17,17 +17,19 @@
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
 
-import uk.gov.hmrc.mongo.lock.LockService
+import uk.gov.hmrc.mongo.lock.{LockService, MongoLockRepository}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
 
 @Singleton
-class EmailSendingJob @Inject() (appConfig: AppConfig, override val lockService: LockService, sentEmailService: SentEmailService)
+class EmailSendingJob @Inject() (appConfig: AppConfig, val lockRepository: MongoLockRepository, sentEmailService: SentEmailService)
     extends LockedScheduledJob {
+  
+  val lockService = LockService(lockRepository, lockId = s"$name-lock", ttl = 1.minute)
 
   override def name: String = "EmailSendingJob"
 

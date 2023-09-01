@@ -18,6 +18,7 @@ package uk.gov.hmrc.gatekeeperemail.scheduled
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration.Duration
 
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
@@ -28,7 +29,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerTest
 
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.mongo.lock.LockService
+import uk.gov.hmrc.mongo.lock.MongoLockRepository
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
@@ -45,32 +46,33 @@ class LockedScheduledJobSpec extends AnyWordSpec with Matchers with ScalaFutures
 
   trait Setup {
     val mockSentEmailSservice = mock[SentEmailService]
-    val mockLockService       = mock[LockService]
+    val mockLockRepository    = mock[MongoLockRepository]
     val mockAppConfig         = mock[AppConfig]
-    val subject               = new EmailSendingJob(mockAppConfig, mockLockService, mockSentEmailSservice)
+    val subject               = new EmailSendingJob(mockAppConfig, mockLockRepository, mockSentEmailSservice)
   }
 
   "ExclusiveScheduledJob" should {
 
     "back off when Mongo lock cannot be obtained" in new Setup {
-      when(mockLockService.withLock(*)(*)).thenReturn(Future.successful(None))
-      when(mockSentEmailSservice.sendNextPendingEmail).thenReturn(Future("No emails to send"))
+      when(mockLockRepository.takeLock(*, *, *)).thenReturn(Future.successful(false))
 
       val result = await(subject.execute)
 
       result.message shouldBe "Job named EmailSendingJob cannot acquire Mongo lock, not running"
-      verify(mockLockService).withLock(*)(*)
-      verify(mockSentEmailSservice).sendNextPendingEmail
+      verify(mockLockRepository).takeLock(eqTo("EmailSendingJob-lock"), *, *)
+      verify(mockSentEmailSservice, never).sendNextPendingEmail
     }
 
     "execute in lock when Mongo lock can be obtained" in new Setup {
-      when(mockLockService.withLock[subject.Result](*)(*)).thenReturn(Future.successful(Some(subject.Result("OK"))))
+      when(mockLockRepository.takeLock(*, *, *)).thenReturn(Future.successful(true))
+      when(mockLockRepository.releaseLock(*, *)).thenReturn(Future.successful(()))
       when(mockSentEmailSservice.sendNextPendingEmail).thenReturn(Future("Sent successfully"))
 
       val result = await(subject.execute)
 
-      result.message shouldBe "Job named EmailSendingJob ran, and completed, with result OK"
-      verify(mockLockService).withLock(*)(*)
+      result.message shouldBe "Job named EmailSendingJob ran, and completed, with result Sent successfully"
+      verify(mockLockRepository).takeLock(eqTo("EmailSendingJob-lock"), *, *)
+      verify(mockLockRepository).releaseLock(eqTo("EmailSendingJob-lock"), *)
       verify(mockSentEmailSservice).sendNextPendingEmail
     }
   }
