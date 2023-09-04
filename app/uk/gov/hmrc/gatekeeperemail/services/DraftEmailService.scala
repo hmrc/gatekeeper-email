@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import java.time.LocalDateTime
+import java.time.{Clock, Instant}
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future.successful
@@ -31,7 +31,7 @@ import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector,
 import uk.gov.hmrc.gatekeeperemail.models.APIAccessType.{PRIVATE, PUBLIC}
 import uk.gov.hmrc.gatekeeperemail.models.CombinedApiCategory.toAPICategory
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.models.requests.{DraftEmailRequest, EmailRequest}
+import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, DraftEmailRequest, EmailOverride, EmailRequest}
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
 
 @Singleton
@@ -41,7 +41,8 @@ class DraftEmailService @Inject() (
     apmConnector: ApmConnector,
     draftEmailRepository: DraftEmailRepository,
     sentEmailRepository: SentEmailRepository,
-    appConfig: AppConfig
+    appConfig: AppConfig,
+    clock: Clock
   )(implicit val ec: ExecutionContext
   ) {
 
@@ -157,8 +158,8 @@ class DraftEmailService @Inject() (
 
     val sentEmails = usersModified.map(elem =>
       SentEmail(
-        createdAt = LocalDateTime.now(),
-        updatedAt = LocalDateTime.now(),
+        createdAt = Instant.now(clock),
+        updatedAt = Instant.now(clock),
         emailUuid = UUID.fromString(email.emailUUID),
         firstName = elem.firstName,
         lastName = elem.lastName,
@@ -228,7 +229,7 @@ class DraftEmailService @Inject() (
       EmailStatus.PENDING,
       "composedBy",
       Some("approvedBy"),
-      LocalDateTime.now(),
+      Instant.now(),
       0
     )
   }

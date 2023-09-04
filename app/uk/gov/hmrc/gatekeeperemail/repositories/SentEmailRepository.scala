@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import java.time.LocalDateTime.now
+import java.time.Clock
+import java.time.Instant.now
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -32,18 +33,19 @@ import org.mongodb.scala.result._
 import org.mongodb.scala.{MongoClient, MongoCollection}
 
 import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.models.{EmailStatus, SentEmail}
-import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.sentEmailFormatter
 
 @Singleton
-class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)
+class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig, val clock: Clock)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[SentEmail](
       mongoComponent = mongoComponent,
       collectionName = "sentemails",
-      domainFormat = sentEmailFormatter,
+      domainFormat = SentEmail.format,
+      replaceIndexes = true,
       indexes = Seq(
         IndexModel(
           ascending("status", "createdAt"),
@@ -53,7 +55,7 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
             .unique(false)
         ),
         IndexModel(
-          ascending("ttlIndex"),
+          ascending("createdAt"),
           IndexOptions()
             .name("ttlIndex")
             .expireAfter(appConfig.emailRecordRetentionPeriod * 365, TimeUnit.DAYS)
@@ -61,7 +63,7 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
             .unique(false)
         )
       )
-    ) {
+    ) with MongoJavatimeFormats.Implicits {
 
   override lazy val collection: MongoCollection[SentEmail] =
     CollectionFactory
@@ -91,7 +93,7 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
         filter = equal("id", Codecs.toBson(email.id)),
         update = combine(
           set("failedCount", email.failedCount + 1),
-          set("updatedAt", Codecs.toBson(now()))
+          set("updatedAt", Codecs.toBson(now(clock)))
         ),
         options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
       )
@@ -108,7 +110,7 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
         filter = equal("id", Codecs.toBson(email.id)),
         update = combine(
           set("status", Codecs.toBson(EmailStatus.FAILED)),
-          set("updatedAt", Codecs.toBson(now()))
+          set("updatedAt", Codecs.toBson(now(clock)))
         ),
         options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
       )
@@ -121,7 +123,7 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
         filter = equal("id", Codecs.toBson(email.id)),
         update = combine(
           set("status", Codecs.toBson(EmailStatus.SENT)),
-          set("updatedAt", Codecs.toBson(now()))
+          set("updatedAt", Codecs.toBson(now(clock)))
         ),
         options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
       )

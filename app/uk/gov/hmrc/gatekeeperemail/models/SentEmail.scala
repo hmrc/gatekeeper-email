@@ -16,10 +16,25 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-import play.api.libs.json.{Json, OFormat}
+import java.time.Instant
+import java.util.UUID
 
-case class UploadedFileMetadata(nonce: Nonce, uploadedFiles: Seq[UploadedFileWithObjectStore], cargo: Option[UploadCargo])
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
-object UploadedFileMetadata {
-  implicit val format: OFormat[UploadedFileMetadata] = Json.format[UploadedFileMetadata]
+case class SentEmail(
+    updatedAt: Instant,
+    emailUuid: UUID,
+    firstName: String,
+    lastName: String,
+    recipient: String,
+    status: EmailStatus,
+    failedCount: Int,
+    id: UUID = UUID.randomUUID(),
+    createdAt: Instant
+  )
+
+object SentEmail {
+  implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
+  implicit val format: OFormat[SentEmail]     = Json.format[SentEmail]
 }

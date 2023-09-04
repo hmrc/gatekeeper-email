@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apigatekeeperapprovalsfrontend.utils
+package uk.gov.hmrc.gatekeeperemail.utils
 
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{EitherValues, OptionValues}
-import org.scalatestplus.play.WsScalaTestClient
+import java.time.{Clock, LocalDateTime, ZoneOffset}
 
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
+trait FixedClock {
 
-abstract class HmrcSpec extends AnyWordSpec with Matchers with OptionValues with EitherValues with WsScalaTestClient with MockitoSugar with ArgumentMatchersSugar
+  val utc = ZoneOffset.UTC
 
-abstract class AsyncHmrcSpec extends HmrcSpec with DefaultAwaitTimeout with FutureAwaits
+  val now = LocalDateTime.of(2020, 1, 2, 3, 4, 5, 6_000_000).toInstant(utc)
+
+  val clock: Clock = Clock.fixed(now, utc)
+
+  val nowAsText: String = "2020-01-02T03:04:05.006Z"
+}

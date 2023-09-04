@@ -18,9 +18,13 @@ package uk.gov.hmrc.gatekeeperemail.models.requests
 
 import play.api.libs.json.{Json, OFormat}
 
-import uk.gov.hmrc.gatekeeperemail.models.{DevelopersEmailQuery, EmailOverride, UploadCargo, UploadedFile, UploadedFileWithObjectStore}
+import uk.gov.hmrc.gatekeeperemail.models.UploadedFileWithObjectStore
 
 case class EmailData(emailSubject: String, emailBody: String)
+
+object EmailData {
+  implicit val format: OFormat[EmailData] = Json.format[EmailData]
+}
 
 case class SendEmailRequest(
     to: String,
@@ -32,6 +36,10 @@ case class SendEmailRequest(
     tags: Map[String, String] = Map.empty
   )
 
+object SendEmailRequest {
+  implicit val format: OFormat[SendEmailRequest] = Json.format[SendEmailRequest]
+}
+
 case class DraftEmailRequest(
     userSelectionQuery: DevelopersEmailQuery,
     templateId: String,
@@ -40,6 +48,10 @@ case class DraftEmailRequest(
     auditData: Map[String, String] = Map.empty,
     eventUrl: Option[String] = None
   )
+
+object DraftEmailRequest {
+  implicit val format: OFormat[DraftEmailRequest] = Json.format[DraftEmailRequest]
+}
 
 case class OneEmailRequest(
     to: List[String],
@@ -51,6 +63,10 @@ case class OneEmailRequest(
     tags: Map[String, String] = Map.empty
   )
 
+object OneEmailRequest {
+  implicit val format: OFormat[OneEmailRequest] = Json.format[OneEmailRequest]
+}
+
 case class EmailRequest(
     userSelectionQuery: DevelopersEmailQuery,
     templateId: String,
@@ -61,36 +77,6 @@ case class EmailRequest(
     attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None
   )
 
-case class EmailSaved(emailUUID: String)
-
-object SendEmailRequest {
-  implicit val format: OFormat[UploadCargo]                                                 = Json.format[UploadCargo]
-  implicit val emailOverrideFormatter                                                       = Json.format[EmailOverride]
-  implicit val developersEmailQueryFormatter: OFormat[DevelopersEmailQuery]                 = Json.format[DevelopersEmailQuery]
-  implicit val attachmentDetailsFormat: OFormat[UploadedFile]                               = Json.format[UploadedFile]
-  implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
-  implicit val sendEmailRequestFmt: OFormat[SendEmailRequest]                               = Json.format[SendEmailRequest]
-}
-
-object OneEmailRequest {
-  implicit val format: OFormat[UploadCargo]                                                 = Json.format[UploadCargo]
-  implicit val attachmentDetailsFormat: OFormat[UploadedFile]                               = Json.format[UploadedFile]
-  implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
-  implicit val sendEmailRequestFmt: OFormat[OneEmailRequest]                                = Json.format[OneEmailRequest]
-}
-
 object EmailRequest {
-  implicit val emailOverrideFormatter                                                       = Json.format[EmailOverride]
-  implicit val developersEmailQueryFormatter: OFormat[DevelopersEmailQuery]                 = Json.format[DevelopersEmailQuery]
-  implicit val format: OFormat[UploadCargo]                                                 = Json.format[UploadCargo]
-  implicit val attachmentDetailsFormat: OFormat[UploadedFile]                               = Json.format[UploadedFile]
-  implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
-  implicit val receiveEmailRequestFmt: OFormat[EmailRequest]                                = Json.format[EmailRequest]
-}
-
-object EmailData {
-  implicit val format: OFormat[UploadCargo]                                                 = Json.format[UploadCargo]
-  implicit val attachmentDetailsFormat: OFormat[UploadedFile]                               = Json.format[UploadedFile]
-  implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
-  implicit val emailDataFmt: OFormat[EmailData]                                             = Json.format[EmailData]
+  implicit val format: OFormat[EmailRequest] = Json.format[EmailRequest]
 }

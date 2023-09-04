@@ -16,9 +16,12 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.Future.successful
+
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.mongodb.scala.ReadPreference.primaryPreferred
-
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -27,23 +30,20 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.concurrent.Future.successful
 
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
-import uk.gov.hmrc.gatekeeperemail.models.requests.{EmailData, EmailRequest}
+import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
+import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, EmailData, EmailRequest}
+import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
+import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
 
 class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with MockitoSugar with ArgumentMatchersSugar
-    with GuiceOneAppPerSuite with PlayMongoRepositorySupport[DraftEmail] {
+    with GuiceOneAppPerSuite with FixedClock with PlayMongoRepositorySupport[DraftEmail] {
   val emailRepository     = repository.asInstanceOf[DraftEmailRepository]
   val sentEmailRepository = serepository.asInstanceOf[SentEmailRepository]
 
@@ -72,7 +72,7 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
     val apmConnectorMock: ApmConnector                               = mock[ApmConnector]
     val emailConnectorMock: GatekeeperEmailConnector                 = mock[GatekeeperEmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
-    val underTest                                                    = new DraftEmailService(emailRendererConnectorMock, developerConnectorMock, apmConnectorMock, emailRepository, sentEmailRepository, appConfigMock)
+    val underTest                                                    = new DraftEmailService(emailRendererConnectorMock, developerConnectorMock, apmConnectorMock, emailRepository, sentEmailRepository, appConfigMock, clock)
     val users                                                        = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
   }
 

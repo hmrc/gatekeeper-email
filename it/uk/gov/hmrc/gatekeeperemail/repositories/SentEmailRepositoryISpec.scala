@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 import org.mongodb.scala.ReadPreference.primaryPreferred
@@ -25,15 +24,18 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
-import uk.gov.hmrc.gatekeeperemail.models.SentEmail
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
-class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[SentEmail] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
+import uk.gov.hmrc.gatekeeperemail.models.SentEmail
+import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
+
+class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[SentEmail] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite with FixedClock {
   val serviceRepo = repository.asInstanceOf[SentEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
@@ -51,8 +53,8 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
   override protected def repository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
 
   val sentEmail = List(SentEmail(
-    createdAt = LocalDateTime.now(),
-    updatedAt = LocalDateTime.now(),
+    createdAt = now,
+    updatedAt = now,
     emailUuid = UUID.randomUUID(),
     firstName = "first",
     lastName = "last",
@@ -95,7 +97,7 @@ class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySuppo
   "findNextEmailToSend" should {
     "find the oldest pending email" in {
       val expectedNextSendRecipient = "old.email@digital.hmrc.gov.uk"
-      val emailsToSend              = List(sentEmail.head.copy(createdAt = LocalDateTime.now().minusMinutes(10), recipient = expectedNextSendRecipient))
+      val emailsToSend              = List(sentEmail.head.copy(createdAt = now.minusSeconds(10 * 60), recipient = expectedNextSendRecipient))
       await(serviceRepo.persist(emailsToSend))
       await(serviceRepo.persist(sentEmail))
 

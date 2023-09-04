@@ -17,26 +17,29 @@
 package uk.gov.hmrc.gatekeeperemail.repositories
 
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.{FiniteDuration, SECONDS}
+
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.util.Timeout
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcSpec
-import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
-import java.time.temporal.ChronoUnit
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.{FiniteDuration, SECONDS}
+import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcSpec
+import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
 
-class FileUploadStatusRepositorySpec
+class FileUploadStatusRepositoryISpec
     extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll
-    with PlayMongoRepositorySupport[UploadInfo] with Matchers with GuiceOneAppPerSuite {
+    with PlayMongoRepositorySupport[UploadInfo] with Matchers with GuiceOneAppPerSuite with FixedClock {
 
   implicit var s: ActorSystem  = ActorSystem("test")
   implicit var m: Materializer = Materializer(s)
@@ -60,7 +63,7 @@ class FileUploadStatusRepositorySpec
   "save" should {
     "create a file upload status and retrieve it from database" in {
       val fileReference = Reference(UUID.randomUUID().toString)
-      val fileStatus    = UploadInfo(fileReference, InProgress, LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+      val fileStatus    = UploadInfo(fileReference, InProgress, LocalDateTime.now(clock).truncatedTo(ChronoUnit.MILLIS))
       await(repository.requestUpload(fileStatus))
 
       val retrieved = await(repository.findByUploadId(fileReference)).get
@@ -74,7 +77,7 @@ class FileUploadStatusRepositorySpec
 
   "update a fileStatus to success" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus    = UploadInfo(fileReference, InProgress, LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+    val fileStatus    = UploadInfo(fileReference, InProgress, LocalDateTime.now(clock).truncatedTo(ChronoUnit.MILLIS))
     await(repository.requestUpload(fileStatus))
 
     val retrieved = await(repository.findByUploadId(fileReference)).get
@@ -95,7 +98,7 @@ class FileUploadStatusRepositorySpec
 
   "update a fileStatus to failedwithErrors" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus    = UploadInfo(fileReference, InProgress, LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+    val fileStatus    = UploadInfo(fileReference, InProgress, LocalDateTime.now(clock).truncatedTo(ChronoUnit.MILLIS))
     await(repository.requestUpload(fileStatus))
 
     val retrieved = await(repository.findByUploadId(fileReference)).get
@@ -116,7 +119,7 @@ class FileUploadStatusRepositorySpec
 
   "update a fileStatus to failed" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus    = UploadInfo(fileReference, InProgress, LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+    val fileStatus    = UploadInfo(fileReference, InProgress, LocalDateTime.now(clock).truncatedTo(ChronoUnit.MILLIS))
     await(repository.requestUpload(fileStatus))
 
     val retrieved = await(repository.findByUploadId(fileReference)).get
@@ -138,7 +141,7 @@ class FileUploadStatusRepositorySpec
 
   "update a fileStatus to InProgress" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus    = UploadInfo(fileReference, InProgress, LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+    val fileStatus    = UploadInfo(fileReference, InProgress, LocalDateTime.now(clock).truncatedTo(ChronoUnit.MILLIS))
     await(repository.requestUpload(fileStatus))
 
     val retrieved = await(repository.findByUploadId(fileReference)).get

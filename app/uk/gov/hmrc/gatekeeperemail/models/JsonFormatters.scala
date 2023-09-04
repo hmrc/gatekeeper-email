@@ -31,8 +31,8 @@ trait JsonFormatters {
   implicit val dateFormatter: Format[LocalDateTime] = MongoJavatimeFormats.localDateTimeFormat
 
   // NOTE - these override the defaults in order to push dates in non-mongo format
-  implicit val uploadedSuccessfullyFormat: OFormat[UploadedSuccessfully] = Json.format[UploadedSuccessfully]
-  implicit val uploadedFailed: OFormat[UploadedFailedWithErrors]         = Json.format[UploadedFailedWithErrors]
+  implicit val uploadedSuccessfullyFormat: OFormat[UploadedSuccessfully]         = Json.format[UploadedSuccessfully]
+  implicit val uploadedFailedWithErrorsFormat: OFormat[UploadedFailedWithErrors] = Json.format[UploadedFailedWithErrors]
 
   implicit val read: Reads[UploadStatus] = new Reads[UploadStatus] {
 
@@ -42,7 +42,7 @@ trait JsonFormatters {
         case Some(JsString("InProgress"))               => JsSuccess(InProgress)
         case Some(JsString("Failed"))                   => JsSuccess(Failed)
         case Some(JsString("UploadedSuccessfully"))     => Json.fromJson[UploadedSuccessfully](jsObject)(uploadedSuccessfullyFormat)
-        case Some(JsString("UploadedFailedWithErrors")) => Json.fromJson[UploadedFailedWithErrors](jsObject)(uploadedFailed)
+        case Some(JsString("UploadedFailedWithErrors")) => Json.fromJson[UploadedFailedWithErrors](jsObject)(uploadedFailedWithErrorsFormat)
         case Some(value)                                => JsError(s"Unexpected value of _type: $value")
         case None                                       => JsError("Missing _type field")
       }
@@ -56,7 +56,7 @@ trait JsonFormatters {
         case InProgress                  => JsObject(Map("_type" -> JsString("InProgress")))
         case Failed                      => JsObject(Map("_type" -> JsString("Failed")))
         case s: UploadedSuccessfully     => uploadedSuccessfullyFormat.writes(s) ++ Json.obj("_type" -> "UploadedSuccessfully")
-        case f: UploadedFailedWithErrors => uploadedFailed.writes(f) ++ Json.obj("_type" -> "uploadedFailed")
+        case f: UploadedFailedWithErrors => uploadedFailedWithErrorsFormat.writes(f) ++ Json.obj("_type" -> "uploadedFailed")
       }
     }
   }

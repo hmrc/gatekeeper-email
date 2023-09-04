@@ -14,44 +14,27 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.gatekeeperemail.models
+package uk.gov.hmrc.gatekeeperemail.models.responses
 
-import java.time.Instant
-
-import play.api.libs.json.{Format, Json, OFormat}
-import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
+import play.api.libs.json.{Json, OFormat}
 
 import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
+import uk.gov.hmrc.gatekeeperemail.models.{EmailStatus, UploadedFileWithObjectStore}
 
-case class EmailTemplateData(
-    templateId: String,
-    parameters: Map[String, String],
-    force: Boolean = false,
-    auditData: Map[String, String] = Map.empty,
-    eventUrl: Option[String] = None
-  )
-
-object EmailTemplateData {
-  implicit val format: OFormat[EmailTemplateData] = Json.format[EmailTemplateData]
-}
-
-case class DraftEmail(
+case class OutgoingEmail(
     emailUUID: String,
-    templateData: EmailTemplateData,
     recipientTitle: String,
     userSelectionQuery: DevelopersEmailQuery,
-    attachmentDetails: Option[Seq[UploadedFileWithObjectStore]],
+    attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None,
     markdownEmailBody: String,
     htmlEmailBody: String,
     subject: String,
     status: EmailStatus,
     composedBy: String,
     approvedBy: Option[String],
-    createDateTime: Instant,
     emailsCount: Int
   )
 
-object DraftEmail {
-  implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
-  implicit val format: OFormat[DraftEmail]    = Json.format[DraftEmail]
+object OutgoingEmail {
+  implicit val format: OFormat[OutgoingEmail] = Json.format[OutgoingEmail]
 }

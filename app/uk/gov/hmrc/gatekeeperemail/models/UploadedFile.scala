@@ -31,6 +31,10 @@ case class UploadedFile(
     previewUrl: Option[String]
   )
 
+object UploadedFile {
+  implicit val format: OFormat[UploadedFile] = Json.format[UploadedFile]
+}
+
 case class UploadedFileWithObjectStore(
     upscanReference: String,
     downloadUrl: String,
@@ -46,7 +50,6 @@ case class UploadedFileWithObjectStore(
     devHubUrl: Option[String]
   )
 
-object UploadedFile {
-  implicit val uploadFileFormat: OFormat[UploadedFile]                               = Json.format[UploadedFile]
-  implicit val uploadFileWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
+object UploadedFileWithObjectStore {
+  implicit val format: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
 }

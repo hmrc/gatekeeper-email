@@ -34,8 +34,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
-import uk.gov.hmrc.gatekeeperemail.models.DevelopersEmailQuery
-import uk.gov.hmrc.gatekeeperemail.models.requests.DraftEmailRequest
+import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, DraftEmailRequest}
 
 class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite {
 

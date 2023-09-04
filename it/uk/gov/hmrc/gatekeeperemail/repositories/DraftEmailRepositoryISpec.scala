@@ -16,12 +16,10 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import java.time.LocalDateTime.now
 import java.util.UUID
 
 import org.mongodb.scala.ReadPreference.primaryPreferred
 import org.mongodb.scala.bson.BsonBoolean
-
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -30,14 +28,15 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-
-import uk.gov.hmrc.gatekeeperemail.models.{DevelopersEmailQuery, DraftEmail, EmailStatus, EmailTemplateData, UploadedFileWithObjectStore}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
+import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
+import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, EmailTemplateData, UploadedFileWithObjectStore}
+import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
 
-class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[DraftEmail] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
+class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[DraftEmail] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite with FixedClock {
   val serviceRepo = repository.asInstanceOf[DraftEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
@@ -60,7 +59,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
     val emailPreferences = DevelopersEmailQuery()
 
     val email = DraftEmail(
-      UUID.randomUUID.toString(),
+      UUID.randomUUID.toString,
       templateData,
       "DL Team",
       emailPreferences,
@@ -71,7 +70,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
       EmailStatus.FAILED,
       "composedBy",
       Some("approvedBy"),
-      now(),
+      now,
       1
     )
 
@@ -153,7 +152,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
         status = EmailStatus.PENDING,
         composedBy = "Ludwig van Beethoven",
         approvedBy = Some("John Doe"),
-        createDateTime = now(),
+        createDateTime = now,
         1
       )
       await(serviceRepo.persist(email))
@@ -188,7 +187,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
         status = EmailStatus.PENDING,
         composedBy = "Ludwig van Beethoven",
         approvedBy = Some("John Doe"),
-        createDateTime = now(),
+        createDateTime = now,
         1
       )
 

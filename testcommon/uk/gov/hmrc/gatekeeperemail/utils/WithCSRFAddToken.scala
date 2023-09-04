@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apigatekeeperapprovalsfrontend.utils
+package uk.gov.hmrc.gatekeeperemail.utils
 
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 

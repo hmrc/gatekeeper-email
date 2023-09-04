@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import java.time.LocalDateTime
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -34,9 +33,11 @@ import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.connectors.{GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
 import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
+import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
 
-class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with ArgumentMatchersSugar {
+class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with ArgumentMatchersSugar with FixedClock {
 
   trait Setup {
     val draftEmailRepositoryMock: DraftEmailRepository               = mock[DraftEmailRepository]
@@ -61,13 +62,13 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       SENT,
       "composedBy",
       Some("approvedBy"),
-      LocalDateTime.now(),
+      now,
       1
     )
 
     val sentEmail = SentEmail(
-      createdAt = LocalDateTime.now(),
-      updatedAt = LocalDateTime.now(),
+      createdAt = now,
+      updatedAt = now,
       emailUuid = UUID.randomUUID(),
       firstName = "first",
       lastName = "last",

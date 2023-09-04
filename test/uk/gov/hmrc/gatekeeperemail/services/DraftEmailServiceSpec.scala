@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import java.time.LocalDateTime
 import java.util
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,11 +38,12 @@ import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.APIAccessType.{PRIVATE, PUBLIC}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
-import uk.gov.hmrc.gatekeeperemail.models.requests.{EmailData, EmailRequest}
+import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, EmailData, EmailOverride, EmailRequest}
 import uk.gov.hmrc.gatekeeperemail.models.{requests, _}
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
+import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
 
-class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with ArgumentMatchersSugar {
+class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with ArgumentMatchersSugar with FixedClock {
 
   trait Setup {
     implicit val hc: HeaderCarrier                                   = HeaderCarrier()
@@ -53,22 +53,23 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
     val developerConnectorMock: DeveloperConnector                   = mock[DeveloperConnector]
     val apmConnectorMock: ApmConnector                               = mock[ApmConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
-    val underTest                                                    = new DraftEmailService(emailRendererConnectorMock, developerConnectorMock, apmConnectorMock, draftEmailRepositoryMock, sentEmailRepositoryMock, appConfigMock)
-    val templateData                                                 = EmailTemplateData("templateId", Map(), false, Map(), None)
-    val userOne: RegisteredUser                                      = RegisteredUser("example@example.com", "first name", "last name", true)
-    val userTwo: RegisteredUser                                      = RegisteredUser("example2@example2.com", "first name2", "last name2", true)
-    val additionalUser: AdditionalRecipient                          = AdditionalRecipient("additional@example.com", "additional", "user")
-    val users                                                        = List(userOne, userTwo)
-    val defaultAdditionalRecipients                                  = List(additionalUser)
+
+    val underTest                           =
+      new DraftEmailService(emailRendererConnectorMock, developerConnectorMock, apmConnectorMock, draftEmailRepositoryMock, sentEmailRepositoryMock, appConfigMock, clock)
+    val templateData                        = EmailTemplateData("templateId", Map(), false, Map(), None)
+    val userOne: RegisteredUser             = RegisteredUser("example@example.com", "first name", "last name", true)
+    val userTwo: RegisteredUser             = RegisteredUser("example2@example2.com", "first name2", "last name2", true)
+    val additionalUser: AdditionalRecipient = AdditionalRecipient("additional@example.com", "additional", "user")
+    val users                               = List(userOne, userTwo)
+    val defaultAdditionalRecipients         = List(additionalUser)
     when(appConfigMock.additionalRecipients).thenReturn(defaultAdditionalRecipients)
     when(appConfigMock.sendToActualRecipients).thenReturn(true)
 
     val emailPreferences = DevelopersEmailQuery(allUsers = true)
     val uuid             = UUID.randomUUID()
-    val now              = LocalDateTime.now()
 
     val email = DraftEmail(
-      uuid.toString(),
+      uuid.toString,
       templateData,
       "DL Team",
       emailPreferences,

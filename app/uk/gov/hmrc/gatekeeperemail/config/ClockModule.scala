@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.gatekeeperemail.models
+package uk.gov.hmrc.gatekeeperemail.config
 
-/** Used instead of Unit where a method has nothing to return because Unit prevents Scala's type checking from working on mappings of Future[Unit].
-  */
-trait HasSucceeded
-object HasSucceeded extends HasSucceeded
+import java.time.Clock
+
+import com.google.inject.AbstractModule
+
+class ClockModule extends AbstractModule {
+
+  override def configure(): Unit = {
+    bind(classOf[Clock]).toInstance(Clock.systemUTC())
+  }
+}

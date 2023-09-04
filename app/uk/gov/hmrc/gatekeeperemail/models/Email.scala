@@ -16,13 +16,29 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-import play.api.libs.json.Json
+import scala.collection.immutable
+
+import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
+
+import play.api.libs.json.{Format, Json}
+
+import uk.gov.hmrc.gatekeeperemail.models
+
+sealed abstract class EmailStatus(override val entryName: String) extends EnumEntry
+
+object EmailStatus extends Enum[EmailStatus] with PlayJsonEnum[EmailStatus] {
+  val values: immutable.IndexedSeq[EmailStatus] = findValues
+
+  case object FAILED  extends EmailStatus("FAILED")
+  case object PENDING extends EmailStatus("PENDING")
+  case object SENT    extends EmailStatus("SENT")
+}
 
 object TopicOptionChoice extends Enumeration {
   type TopicOptionChoice = Value
 
   val BUSINESS_AND_POLICY, TECHNICAL, RELEASE_SCHEDULES, EVENT_INVITES = Value
 
-  implicit val emailPreferencesChoiceFormat = Json.formatEnum(TopicOptionChoice)
+  implicit val format: Format[models.TopicOptionChoice.Value] = Json.formatEnum(TopicOptionChoice)
 
 }
