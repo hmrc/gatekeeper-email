@@ -14,23 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.gatekeeperemail.models
+package uk.gov.hmrc.gatekeeperemail.models.requests
 
-import play.api.libs.json._
+import play.api.libs.json.{Json, OWrites}
 
-trait User {
-  def email: String
-  def firstName: String
-  def lastName: String
-}
+case class TemplateRenderRequest(parameters: Map[String, String], email: Option[String])
 
-case class RegisteredUser(
-    email: String,
-    firstName: String,
-    lastName: String,
-    verified: Boolean
-  ) extends User {}
+object TemplateRenderRequest {
 
-object RegisteredUser {
-  implicit val registeredUserFormat = Json.format[RegisteredUser]
+  implicit val writes: OWrites[TemplateRenderRequest] =
+    Json.writes[TemplateRenderRequest]
 }

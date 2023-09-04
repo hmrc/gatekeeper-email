@@ -24,6 +24,7 @@ import play.api.http.Status.ACCEPTED
 
 import uk.gov.hmrc.gatekeeperemail.connectors.GatekeeperEmailConnector
 import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.models.requests.SendEmailRequest
 import uk.gov.hmrc.gatekeeperemail.repositories.SentEmailRepository
 
 @Singleton

@@ -25,7 +25,8 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpErrorFunctions, UpstreamErrorResponse}
 
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.{DraftEmailRequest, RenderResult, TemplateRenderRequest, TemplateRenderResult}
+import uk.gov.hmrc.gatekeeperemail.models.requests.{DraftEmailRequest, TemplateRenderRequest}
+import uk.gov.hmrc.gatekeeperemail.models.{RenderResult, TemplateRenderResult}
 
 @Singleton
 class GatekeeperEmailRendererConnector @Inject() (httpClient: HttpClient, config: EmailRendererConnectorConfig)(implicit ec: ExecutionContext)

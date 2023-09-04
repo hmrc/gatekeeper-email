@@ -24,13 +24,14 @@ import org.scalatest.wordspec.AnyWordSpec
 
 import play.api.libs.json.{JsObject, JsString}
 
+import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
-import uk.gov.hmrc.gatekeeperemail.models.{DevelopersEmailQuery, DraftEmail, EmailTemplateData, RegisteredUser, User}
+import uk.gov.hmrc.gatekeeperemail.models.{DevelopersEmailQuery, DraftEmail, EmailTemplateData}
 
 class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSugar with ArgumentMatchersSugar {
 
   "format" should {
-    val formatter = EmailMongoFormatter.emailFormatter
+    val formatter = EmailMongoFormatter.draftEmailFormatter
     "correctly write a Email message" in {
       val users                   = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
       val data: EmailTemplateData = EmailTemplateData("gatekeeper", Map(), false, Map(), None)

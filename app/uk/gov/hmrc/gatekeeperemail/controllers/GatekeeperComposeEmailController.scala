@@ -26,6 +26,8 @@ import play.api.mvc._
 import uk.gov.hmrc.objectstore.client.ObjectSummaryWithMd5
 
 import uk.gov.hmrc.gatekeeperemail.controllers.actions.AuthorisationActions
+import uk.gov.hmrc.gatekeeperemail.models.requests.{EmailData, EmailRequest}
+import uk.gov.hmrc.gatekeeperemail.models.responses.{ErrorCode, JsErrorResponse}
 import uk.gov.hmrc.gatekeeperemail.models.{UploadedFileWithObjectStore, _}
 import uk.gov.hmrc.gatekeeperemail.services.{DraftEmailService, ObjectStoreService}
 import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig

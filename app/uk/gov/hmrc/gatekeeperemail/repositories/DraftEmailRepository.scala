@@ -34,14 +34,14 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoReposito
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus}
-import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.emailFormatter
+import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.draftEmailFormatter
 
 @Singleton
 class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[DraftEmail](
       mongoComponent = mongoComponent,
       collectionName = "draftemails",
-      domainFormat = emailFormatter,
+      domainFormat = draftEmailFormatter,
       indexes = Seq(
         IndexModel(
           ascending("emailUUID"),
@@ -71,7 +71,7 @@ class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig:
             Codecs.playFormatCodec(EmailMongoFormatter.cargoFormat),
             Codecs.playFormatCodec(EmailMongoFormatter.attachmentDetailsFormat),
             Codecs.playFormatCodec(EmailMongoFormatter.attachmentDetailsWithObjectStoreFormat),
-            Codecs.playFormatCodec(EmailMongoFormatter.emailFormatter)
+            Codecs.playFormatCodec(EmailMongoFormatter.draftEmailFormatter)
           ),
           MongoClient.DEFAULT_CODEC_REGISTRY
         )

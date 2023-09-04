@@ -23,7 +23,6 @@ import play.api.{Configuration, Logging}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import uk.gov.hmrc.gatekeeperemail.config.AdditionalRecipientsConfigProvider.configLoader
-import uk.gov.hmrc.gatekeeperemail.models.RegisteredUser
 
 @Singleton
 class AppConfig @Inject() (config: Configuration)
@@ -34,7 +33,7 @@ class AppConfig @Inject() (config: Configuration)
   val authBaseUrl: String          = baseUrl("auth")
   val emailBaseUrl: String         = baseUrl("email")
   val emailRendererBaseUrl: String = baseUrl("developer-email-renderer")
-  val additionalRecipients         = config.getOptional[List[RegisteredUser]]("additionalRecipients").getOrElse(List())
+  val additionalRecipients         = config.getOptional[List[AdditionalRecipient]]("additionalRecipients").getOrElse(List())
   val sendToActualRecipients       = config.get[Boolean]("sendToActualRecipients")
 
   val emailRecordRetentionPeriod: Int = getConfInt("mongodb.ttlInYears", 7)

@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.gatekeeperemail.models
+package uk.gov.hmrc.gatekeeperemail.models.requests
 
 import play.api.libs.json.{Json, OFormat}
+
+import uk.gov.hmrc.gatekeeperemail.models.{DevelopersEmailQuery, EmailOverride, UploadCargo, UploadedFile, UploadedFileWithObjectStore}
 
 case class EmailData(emailSubject: String, emailBody: String)
 

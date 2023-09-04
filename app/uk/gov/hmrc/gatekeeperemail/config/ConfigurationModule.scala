@@ -19,18 +19,14 @@ package uk.gov.hmrc.gatekeeperemail.config
 import play.api.inject.Module
 import play.api.{Configuration, Environment}
 
-import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, HttpDeveloperConnector}
+import uk.gov.hmrc.gatekeeperemail.connectors.ApmConnector
 import uk.gov.hmrc.gatekeeperemail.controllers.HandleForbidden
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
 
 class ConfigurationModule extends Module {
 
   override def bindings(environment: Environment, configuration: Configuration) = {
-
-    val developerConnectorBinding = bind[DeveloperConnector].to[HttpDeveloperConnector]
-
     Seq(
-      developerConnectorBinding,
       bind[ApmConnector.Config].toProvider[LiveApmConnectorConfigProvider],
       bind[ForbiddenHandler].to[HandleForbidden]
     )

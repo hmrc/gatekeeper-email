@@ -20,29 +20,19 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.Logging
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.models.TopicOptionChoice.TopicOptionChoice
 import uk.gov.hmrc.gatekeeperemail.models._
 
-trait DeveloperConnector {
-
-  def fetchAll()(implicit hc: HeaderCarrier): Future[List[RegisteredUser]]
-
-  def fetchByEmailPreferences(
-      topic: TopicOptionChoice,
-      maybeApis: Option[Seq[String]] = None,
-      maybeApiCategory: Option[Seq[APICategory]] = None,
-      privateapimatch: Boolean = false
-    )(implicit hc: HeaderCarrier
-    ): Future[List[RegisteredUser]]
-}
-
 @Singleton
-class HttpDeveloperConnector @Inject() (appConfig: AppConfig, http: HttpClient)(implicit ec: ExecutionContext)
-    extends DeveloperConnector with Logging {
+class DeveloperConnector @Inject() (appConfig: AppConfig, http: HttpClient)(implicit ec: ExecutionContext) extends Logging {
+
+  import RegisteredUser.registeredUserFormat
 
   def fetchByEmailPreferences(
       topic: TopicOptionChoice,
@@ -60,11 +50,27 @@ class HttpDeveloperConnector @Inject() (appConfig: AppConfig, http: HttpClient)(
       Seq("topic" -> topic.toString) ++ regimes ++
         maybeApis.fold(Seq.empty[(String, String)])(apis => apis.map(("service" -> _))) ++ privateapimatchParams
 
+    // The third-party-developer service only returns verified registered users at this endpoint
     http.GET[List[RegisteredUser]](s"${appConfig.developerBaseUrl}/developers/email-preferences", queryParams)
+      .map(_.filter(_.verified)) // double-check
   }
 
-  def fetchAll()(implicit hc: HeaderCarrier): Future[List[RegisteredUser]] = {
-    http.GET[List[RegisteredUser]](s"${appConfig.developerBaseUrl}/developers/all")
+  def fetchVerified()(implicit hc: HeaderCarrier): Future[List[RegisteredUser]] = {
+    http.GET[List[RegisteredUser]](s"${appConfig.developerBaseUrl}/developers/all?status=VERIFIED")
   }
 
+}
+
+object DeveloperConnector {
+
+  case class RegisteredUser(
+      email: String,
+      firstName: String,
+      lastName: String,
+      verified: Boolean
+    ) extends EmailRecipient
+
+  object RegisteredUser {
+    implicit val registeredUserFormat: OFormat[RegisteredUser] = Json.format[RegisteredUser]
+  }
 }

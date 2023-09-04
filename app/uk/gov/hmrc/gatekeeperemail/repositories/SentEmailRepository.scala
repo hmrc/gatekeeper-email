@@ -36,7 +36,7 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoReposito
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.models.{EmailStatus, SentEmail}
-import uk.gov.hmrc.gatekeeperemail.repositories.SentEmailFormatter.sentEmailFormatter
+import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.sentEmailFormatter
 
 @Singleton
 class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)
