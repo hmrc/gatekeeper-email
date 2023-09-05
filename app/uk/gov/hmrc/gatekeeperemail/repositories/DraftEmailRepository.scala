@@ -58,7 +58,7 @@ class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig:
             .background(true)
         )
       )
-    ) with MongoJavatimeFormats.Implicits {
+    ) {
 
   override lazy val collection: MongoCollection[DraftEmail] =
     CollectionFactory

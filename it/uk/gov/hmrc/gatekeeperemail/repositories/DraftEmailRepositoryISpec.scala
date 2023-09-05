@@ -73,10 +73,9 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
       now,
       1
     )
-
   }
-  "persist" should {
 
+  "persist" should {
     "insert an Email message when it does not exist" in new Setup {
       await(serviceRepo.persist(email))
 
@@ -194,7 +193,6 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
       val updatedEmail = await(serviceRepo.updateEmail(emailUpdate))
 
       updatedEmail shouldBe null
-
     }
   }
 
