@@ -29,7 +29,6 @@ import uk.gov.hmrc.gatekeeperemail.controllers.RequestConverter
 import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.models.LoggedInRequest
 import uk.gov.hmrc.gatekeeperemail.stride.domain.models.GatekeeperRole
-import uk.gov.hmrc.gatekeeperemail.stride.domain.models.GatekeeperRole.GatekeeperRole
 
 trait ForbiddenHandler {
   def handle(msgResult: Request[_]): Result

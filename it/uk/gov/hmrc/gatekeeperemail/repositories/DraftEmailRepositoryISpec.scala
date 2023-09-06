@@ -18,8 +18,10 @@ package uk.gov.hmrc.gatekeeperemail.repositories
 
 import java.util.UUID
 
+import org.bson.BsonValue
 import org.mongodb.scala.ReadPreference.primaryPreferred
-import org.mongodb.scala.bson.BsonBoolean
+import org.mongodb.scala.bson.{BsonBoolean, BsonDocument}
+
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -28,7 +30,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
@@ -79,7 +81,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
     "insert an Email message when it does not exist" in new Setup {
       await(serviceRepo.persist(email))
 
-      val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred).find().toFuture())
+      val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred()).find().toFuture())
 
       fetchedRecords.size shouldBe 1
       fetchedRecords.head shouldEqual email
@@ -88,7 +90,9 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
     "create index on emailUUID" in new Setup {
       await(serviceRepo.persist(email))
 
-      val Some(globalIdIndex) = await(serviceRepo.collection.listIndexes().toFuture()).find(i => i.get("name").get.asString().getValue == "emailUUIDIndex")
+      val globalIdIndex = await(serviceRepo.collection.listIndexes().toFuture())
+        .find(i => i.get("name").get.asString().getValue == "emailUUIDIndex").get
+
       globalIdIndex.get("unique") shouldBe Some(BsonBoolean(value = true))
       globalIdIndex.get("background").get shouldBe BsonBoolean(true)
     }
@@ -96,7 +100,10 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
     "create TTL index on createDateTime" in new Setup {
       await(serviceRepo.persist(email))
 
-      val Some(globalIdIndex) = await(serviceRepo.collection.listIndexes().toFuture()).find(i => i.get("name").get.asString().getValue == "ttlIndex")
+      val globalIdIndex = await(serviceRepo.collection.listIndexes().toFuture())
+        .find(i => i.get("name").get.asString().getValue == "ttlIndex").get
+
+      globalIdIndex.get("key").get shouldBe BsonDocument("createDateTime" -> Codecs.toBson(1))
       globalIdIndex.get("unique") shouldBe None
       globalIdIndex.get("background").get shouldBe BsonBoolean(true)
     }

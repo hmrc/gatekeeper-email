@@ -49,8 +49,6 @@ class DraftEmailService @Inject() (
   val logger: Logger = Logger(getClass.getName)
 
   def persistEmail(emailRequest: EmailRequest, emailUUID: String): Future[DraftEmail] = {
-    implicit val hc = HeaderCarrier()
-
     val email: DraftEmail = emailData(emailRequest, emailUUID)
 
     val sendEmailRequest =
@@ -165,7 +163,8 @@ class DraftEmailService @Inject() (
         lastName = elem.lastName,
         recipient = elem.email,
         status = EmailStatus.PENDING,
-        failedCount = 0
+        failedCount = 0,
+        isUsingInstant = Some(true)
       )
     )
 
@@ -230,7 +229,8 @@ class DraftEmailService @Inject() (
       "composedBy",
       Some("approvedBy"),
       Instant.now(),
-      0
+      0,
+      isUsingInstant = Some(true)
     )
   }
 

@@ -129,4 +129,27 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
       )
       .head()
   }
+
+  def fetchBatchOfNastyOldSentEmails(): Future[Seq[SentEmail]] = {
+    collection
+      .withReadPreference(primaryPreferred)
+      .find(
+        filter = exists("isUsingInstant", false)
+      )
+      .limit(50)
+      .toFuture()
+  }
+
+  def persistBatchOfShinyConvertedSentEmails(sentEmails: Seq[SentEmail]): Future[Seq[SentEmail]] = {
+    val results = sentEmails.map(mail =>
+      collection
+        .findOneAndReplace(
+          filter = equal("id", Codecs.toBson(mail.id)),
+          replacement = mail,
+          options = FindOneAndReplaceOptions().returnDocument(ReturnDocument.AFTER)
+        ).head()
+    )
+
+    Future.sequence(results)
+  }
 }

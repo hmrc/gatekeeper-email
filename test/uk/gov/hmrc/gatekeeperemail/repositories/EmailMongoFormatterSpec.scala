@@ -38,7 +38,7 @@ class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSuga
       val data: EmailTemplateData = EmailTemplateData("gatekeeper", Map(), false, Map(), None)
       val emailPreferences        = DevelopersEmailQuery()
 
-      val email             = DraftEmail(
+      val email = DraftEmail(
         "61e00e08ed2f2471ce3126db",
         data,
         "DL Team",
@@ -53,7 +53,7 @@ class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSuga
         now,
         2
       )
-      
+
       val msgJson: JsObject = formatter.writes(email)
       msgJson.values.size shouldBe 12
       msgJson.value.get("recipientTitle") shouldBe Some(JsString("DL Team"))

@@ -52,11 +52,11 @@ class FileUploadStatusRepositoryISpec
 
   def repository = app.injector.instanceOf[FileUploadStatusRepository]
 
-  override def beforeEach() {
+  override def beforeEach(): Unit = {
     prepareDatabase()
   }
 
-  override protected def afterAll() {
+  override protected def afterAll(): Unit = {
     prepareDatabase()
   }
 

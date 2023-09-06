@@ -16,7 +16,10 @@
 
 package uk.gov.hmrc.gatekeeperemail.stride.domain.models
 
-object GatekeeperRole extends Enumeration {
-  type GatekeeperRole = Value
-  val USER, SUPERUSER, ADMIN = Value
+sealed trait GatekeeperRole
+
+object GatekeeperRole {
+  case object USER      extends GatekeeperRole
+  case object SUPERUSER extends GatekeeperRole
+  case object ADMIN     extends GatekeeperRole
 }

@@ -92,7 +92,7 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
       val emailRequest      = EmailRequest(emailPreferences, "gatekeeper", EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
       val email: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
       email.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
-      val fetchedRecords    = await(emailRepository.collection.withReadPreference(primaryPreferred).find().toFuture())
+      val fetchedRecords    = await(emailRepository.collection.withReadPreference(primaryPreferred()).find().toFuture())
 
       fetchedRecords.size shouldBe 1
       fetchedRecords.head.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="

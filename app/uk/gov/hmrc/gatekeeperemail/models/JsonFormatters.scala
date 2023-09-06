@@ -55,6 +55,7 @@ trait JsonFormatters {
       p match {
         case InProgress                  => JsObject(Map("_type" -> JsString("InProgress")))
         case Failed                      => JsObject(Map("_type" -> JsString("Failed")))
+        case BadRequest                  => JsObject(Map("_type" -> JsString("BadRequest")))
         case s: UploadedSuccessfully     => uploadedSuccessfullyFormat.writes(s) ++ Json.obj("_type" -> "UploadedSuccessfully")
         case f: UploadedFailedWithErrors => uploadedFailedWithErrorsFormat.writes(f) ++ Json.obj("_type" -> "uploadedFailed")
       }

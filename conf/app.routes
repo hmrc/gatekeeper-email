@@ -13,4 +13,4 @@ POST        /gatekeeperemail/updatefileuploadstatus          uk.gov.hmrc.gatekee
 GET         /gatekeeperemail/fetchfileuploadstatus           uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.fetchUploadedFileStatus(key)
 
 + nocsrf
-POST        /gatekeeperemail/updatefiles                     uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.updateFiles
+POST        /gatekeeperemail/updatefiles                     uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.updateFiles()

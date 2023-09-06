@@ -39,8 +39,8 @@ class AppConfig @Inject() (config: Configuration)
   val emailRecordRetentionPeriod: Int = getConfInt("mongodb.ttlInYears", 7)
   val defaultRetentionPeriod: String  = getConfString("object-store.default-retention-period", "1-year")
   val auditingEnabled: Boolean        = config.get[Boolean]("auditing.enabled")
-  val initialDelay: Duration          = Duration(config.getOptional[String]("scheduled.initDelay").getOrElse("30 sec"))
-  val interval: Duration              = Duration(config.getOptional[String]("scheduled.interval").getOrElse("1 sec"))
+  val initialDelay: Duration          = Duration(config.getOptional[String]("scheduled.initDelay").getOrElse("5 sec")) // TODO API-7356 - change back to 30 sec
+  val interval: Duration              = Duration(config.getOptional[String]("scheduled.interval").getOrElse("5 sec"))  // TODO API-7356 - change back to 1 sec
 
   val developerBaseUrl = baseUrl("third-party-developer")
 

@@ -21,16 +21,17 @@ import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+import com.mongodb.ReadPreference.primaryPreferred
+import com.mongodb.client.model.ReturnDocument
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
-import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.{combine, set}
-import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
-import org.mongodb.scala.result.InsertOneResult
+import org.mongodb.scala.model.{IndexModel, IndexOptions, _}
+import org.mongodb.scala.result._
 import org.mongodb.scala.{MongoClient, MongoCollection}
 
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
@@ -120,5 +121,28 @@ class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig:
 
   def deleteByEmailUUID(emailUUID: String): Future[Boolean] = {
     collection.deleteOne(equal("emailUUID", Codecs.toBson(emailUUID))).head().map(x => x.getDeletedCount == 1)
+  }
+
+  def fetchBatchOfNastyOldDraftEmails(): Future[Seq[DraftEmail]] = {
+    collection
+      .withReadPreference(primaryPreferred)
+      .find(
+        filter = exists("isUsingInstant", false)
+      )
+      .limit(50)
+      .toFuture()
+  }
+
+  def persistBatchOfShinyConvertedDraftEmails(draftEmails: Seq[DraftEmail]): Future[Seq[DraftEmail]] = {
+    val results = draftEmails.map(mail =>
+      collection
+        .findOneAndReplace(
+          filter = equal("emailUUID", Codecs.toBson(mail.emailUUID)),
+          replacement = mail,
+          options = FindOneAndReplaceOptions().returnDocument(ReturnDocument.AFTER)
+        ).head()
+    )
+
+    Future.sequence(results)
   }
 }

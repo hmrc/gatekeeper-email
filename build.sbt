@@ -4,6 +4,7 @@ import sbt.Test
 import sbt.Tests.{Group, SubProcess}
 import uk.gov.hmrc.DefaultBuildSettings
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
+import bloop.integrations.sbt.BloopDefaults
 
 val appName = "gatekeeper-email"
 
@@ -81,3 +82,5 @@ def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
       )
     )
   }
+
+  Global / bloopAggregateSourceDependencies := true

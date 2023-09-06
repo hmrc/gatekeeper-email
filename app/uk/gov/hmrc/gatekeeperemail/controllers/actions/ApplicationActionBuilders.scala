@@ -27,7 +27,7 @@ import uk.gov.hmrc.gatekeeperemail.stride.domain.models.GatekeeperRole
 trait AuthorisationActions {
   self: GatekeeperBaseController =>
 
-  private def strideRoleJsValue(minimumGatekeeperRole: GatekeeperRole.GatekeeperRole)(block: MessagesRequest[JsValue] => Future[Result]): Action[JsValue] =
+  private def strideRoleJsValue(minimumGatekeeperRole: GatekeeperRole)(block: MessagesRequest[JsValue] => Future[Result]): Action[JsValue] =
     Action.async(parse.json) { implicit request =>
       gatekeeperRoleActionRefiner(minimumGatekeeperRole)
         .invokeBlock(requestConverter.convert(request), block)
@@ -35,7 +35,7 @@ trait AuthorisationActions {
 
   def loggedInJsValue()(block: Request[JsValue] => Future[Result]): Action[JsValue] = strideRoleJsValue(GatekeeperRole.USER)(block)
 
-  private def strideRoleAnyContent(minimumGatekeeperRole: GatekeeperRole.GatekeeperRole)(block: MessagesRequest[AnyContent] => Future[Result]): Action[AnyContent] =
+  private def strideRoleAnyContent(minimumGatekeeperRole: GatekeeperRole)(block: MessagesRequest[AnyContent] => Future[Result]): Action[AnyContent] =
     Action.async { implicit request =>
       gatekeeperRoleActionRefiner(minimumGatekeeperRole)
         .invokeBlock(requestConverter.convert(request), block)

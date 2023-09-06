@@ -28,7 +28,7 @@ trait LockedScheduledJob extends ScheduledJob {
 
   def interval: FiniteDuration
 
-  def executeInLock(implicit ec: ExecutionContext): Future[this.Result]
+  def executeInLock(implicit ec: ExecutionContext): Future[Result]
 
   val lockService: LockService
 
