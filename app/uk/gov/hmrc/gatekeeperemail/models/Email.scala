@@ -22,8 +22,6 @@ import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
 
 import play.api.libs.json.{Format, Json}
 
-import uk.gov.hmrc.gatekeeperemail.models
-
 sealed abstract class EmailStatus(override val entryName: String) extends EnumEntry
 
 object EmailStatus extends Enum[EmailStatus] with PlayJsonEnum[EmailStatus] {
@@ -39,6 +37,6 @@ object TopicOptionChoice extends Enumeration {
 
   val BUSINESS_AND_POLICY, TECHNICAL, RELEASE_SCHEDULES, EVENT_INVITES = Value
 
-  implicit val format: Format[models.TopicOptionChoice.Value] = Json.formatEnum(TopicOptionChoice)
+  implicit val format: Format[TopicOptionChoice.Value] = Json.formatEnum(TopicOptionChoice)
 
 }
