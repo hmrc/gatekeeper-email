@@ -18,10 +18,8 @@ package uk.gov.hmrc.gatekeeperemail.repositories
 
 import java.util.UUID
 
-import org.bson.BsonValue
 import org.mongodb.scala.ReadPreference.primaryPreferred
 import org.mongodb.scala.bson.{BsonBoolean, BsonDocument}
-
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

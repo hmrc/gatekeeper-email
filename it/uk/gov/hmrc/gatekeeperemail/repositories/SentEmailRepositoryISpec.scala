@@ -20,7 +20,6 @@ import java.util.UUID
 
 import org.mongodb.scala.ReadPreference.primaryPreferred
 import org.mongodb.scala.bson.{BsonBoolean, BsonDocument, BsonInt64}
-
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -37,7 +36,7 @@ import uk.gov.hmrc.gatekeeperemail.models.SentEmail
 import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
 
 class SentEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[SentEmail] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite
-  with FixedClock {
+    with FixedClock {
   val serviceRepo = repository.asInstanceOf[SentEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()

@@ -21,8 +21,8 @@ import scala.concurrent.ExecutionContext
 
 import com.google.inject.AbstractModule
 
-import play.api.inject.ApplicationLifecycle
 import play.api.Application
+import play.api.inject.ApplicationLifecycle
 
 class SchedulerModule extends AbstractModule {
 
@@ -41,5 +41,5 @@ class Scheduler @Inject() (
   )(
     override implicit val ec: ExecutionContext
   ) extends RunningOfScheduledJobs {
-  override lazy val scheduledJobs: Seq[ScheduledJob] = Seq(sentEmailDateConversionJob, draftEmailDateConversionJob) // TODO API-7356 - change back to emailSendingJob
+  override lazy val scheduledJobs: Seq[ScheduledJob] = Seq(emailSendingJob, sentEmailDateConversionJob, draftEmailDateConversionJob)
 }

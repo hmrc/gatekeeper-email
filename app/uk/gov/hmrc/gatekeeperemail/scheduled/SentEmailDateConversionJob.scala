@@ -20,9 +20,10 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
+import uk.gov.hmrc.mongo.lock.MongoLockRepository
+
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.repositories.SentEmailRepository
-import uk.gov.hmrc.mongo.lock.MongoLockRepository
 
 @Singleton
 class SentEmailDateConversionJob @Inject() (appConfig: AppConfig, override val mongoLockRepository: MongoLockRepository, sentEmailRepository: SentEmailRepository)
@@ -30,9 +31,13 @@ class SentEmailDateConversionJob @Inject() (appConfig: AppConfig, override val m
 
   override def name: String = "SentEmailDateConversionJob"
 
-  override def initialDelay: FiniteDuration = appConfig.initialDelay.asInstanceOf[FiniteDuration]
+  private val jobConfig = appConfig.scheduledJobConfig(name)
 
-  override def interval: FiniteDuration = appConfig.interval.asInstanceOf[FiniteDuration]
+  override def initialDelay: FiniteDuration = jobConfig.initialDelay
+
+  override def interval: FiniteDuration = jobConfig.interval
+
+  override def enabled: Boolean = jobConfig.enabled
 
   override def executeInLock(implicit ec: ExecutionContext): Future[Result] = {
     sentEmailRepository.fetchBatchOfNastyOldSentEmails().flatMap(sentEmails => {

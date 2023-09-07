@@ -136,7 +136,7 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
       .find(
         filter = exists("isUsingInstant", false)
       )
-      .limit(50)
+      .limit(1000)
       .toFuture()
   }
 
