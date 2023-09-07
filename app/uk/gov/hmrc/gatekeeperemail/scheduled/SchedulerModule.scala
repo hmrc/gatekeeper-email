@@ -16,15 +16,13 @@
 
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
-import javax.inject.{Inject, Provider, Singleton}
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.DurationInt
 
 import com.google.inject.AbstractModule
 
-import play.api.inject.{ApplicationLifecycle, Binding, Module}
-import play.api.{Application, Configuration, Environment}
-import uk.gov.hmrc.mongo.lock.{LockService, MongoLockRepository}
+import play.api.inject.ApplicationLifecycle
+import play.api.Application
 
 class SchedulerModule extends AbstractModule {
 
@@ -44,18 +42,4 @@ class Scheduler @Inject() (
     override implicit val ec: ExecutionContext
   ) extends RunningOfScheduledJobs {
   override lazy val scheduledJobs: Seq[ScheduledJob] = Seq(sentEmailDateConversionJob, draftEmailDateConversionJob) // TODO API-7356 - change back to emailSendingJob
-}
-
-class SchedulerPlayModule extends Module {
-
-  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
-    Seq(
-      bind[LockService].toProvider[LockServiceProvider]
-    )
-  }
-}
-
-@Singleton
-class LockServiceProvider @Inject() (mongoLockRepository: MongoLockRepository) extends Provider[LockService] {
-  override def get(): LockService = LockService(mongoLockRepository, lockId = "send-email-lock", ttl = 1.hour)
 }

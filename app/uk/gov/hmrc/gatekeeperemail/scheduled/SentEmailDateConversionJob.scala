@@ -20,13 +20,12 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
-import uk.gov.hmrc.mongo.lock.LockService
-
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.repositories.SentEmailRepository
+import uk.gov.hmrc.mongo.lock.MongoLockRepository
 
 @Singleton
-class SentEmailDateConversionJob @Inject() (appConfig: AppConfig, override val lockService: LockService, sentEmailRepository: SentEmailRepository)
+class SentEmailDateConversionJob @Inject() (appConfig: AppConfig, override val mongoLockRepository: MongoLockRepository, sentEmailRepository: SentEmailRepository)
     extends LockedScheduledJob {
 
   override def name: String = "SentEmailDateConversionJob"
