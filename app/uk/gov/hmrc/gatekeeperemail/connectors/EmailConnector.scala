@@ -31,7 +31,7 @@ import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.models.requests.{OneEmailRequest, SendEmailRequest}
 
 @Singleton
-class EmailConnector @Inject()(http: HttpClient, config: EmailConnectorConfig)(implicit ec: ExecutionContext)
+class EmailConnector @Inject() (http: HttpClient, config: EmailConnectorConfig)(implicit ec: ExecutionContext)
     extends HttpErrorFunctions with Logging {
 
   private lazy val serviceUrl = config.emailBaseUrl
