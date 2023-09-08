@@ -14,22 +14,26 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.gatekeeperemail.utils
+package uk.gov.hmrc.gatekeeperemail.util
 
 import java.time.temporal.ChronoUnit
-import java.time.{Clock, LocalDateTime, ZoneOffset}
+import java.time.{Clock, Instant, LocalDateTime}
 
-import uk.gov.hmrc.gatekeeperemail.util.ClockNow
+trait ClockNow {
 
-trait FixedClock extends ClockNow {
-
-  val clock: Clock = {
-    val utc     = ZoneOffset.UTC
-    val ldt     = LocalDateTime.of(2020, 1, 2, 3, 4, 5, 6_000_000).truncatedTo(ChronoUnit.MILLIS)
-    val instant = ldt.toInstant(utc)
-
-    Clock.fixed(instant, utc)
+  implicit class LocalDateTimeTruncateSyntax(ldt: LocalDateTime) {
+    def truncate() = ldt.truncatedTo(ChronoUnit.MILLIS)
   }
-}
 
-object FixedClock extends FixedClock
+  implicit class InstantTruncateSyntax(ins: Instant) {
+    def truncate() = ins.truncatedTo(ChronoUnit.MILLIS)
+  }
+
+  final def precise(): Instant = Instant.now(clock)
+
+  final def now(): LocalDateTime = LocalDateTime.now(clock).truncate()
+
+  final def instant(): Instant = Instant.now(clock).truncate()
+
+  def clock: Clock
+}

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import java.time.{Clock, Instant}
+import java.time.Clock
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future.successful
@@ -33,6 +33,7 @@ import uk.gov.hmrc.gatekeeperemail.models.CombinedApiCategory.toAPICategory
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, DraftEmailRequest, EmailOverride, EmailRequest}
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
+import uk.gov.hmrc.gatekeeperemail.util.ClockNow
 
 @Singleton
 class DraftEmailService @Inject() (
@@ -42,9 +43,9 @@ class DraftEmailService @Inject() (
     draftEmailRepository: DraftEmailRepository,
     sentEmailRepository: SentEmailRepository,
     appConfig: AppConfig,
-    clock: Clock
+    override val clock: Clock
   )(implicit val ec: ExecutionContext
-  ) {
+  ) extends ClockNow {
 
   val logger: Logger = Logger(getClass.getName)
 
@@ -156,8 +157,8 @@ class DraftEmailService @Inject() (
 
     val sentEmails = usersModified.map(elem =>
       SentEmail(
-        createdAt = Instant.now(clock),
-        updatedAt = Instant.now(clock),
+        createdAt = precise(),
+        updatedAt = precise(),
         emailUuid = UUID.fromString(email.emailUUID),
         firstName = elem.firstName,
         lastName = elem.lastName,
@@ -228,7 +229,7 @@ class DraftEmailService @Inject() (
       EmailStatus.PENDING,
       "composedBy",
       Some("approvedBy"),
-      Instant.now(),
+      precise(),
       0,
       isUsingInstant = Some(true)
     )

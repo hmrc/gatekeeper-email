@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
@@ -26,7 +24,7 @@ import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.util.Timeout
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, OptionValues}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.Application
@@ -38,7 +36,7 @@ import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
 
 class FileUploadStatusRepositoryISpec
-    extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll
+    extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll with OptionValues
     with PlayMongoRepositorySupport[UploadInfo] with Matchers with GuiceOneAppPerSuite with FixedClock {
 
   implicit var s: ActorSystem  = ActorSystem("test")
@@ -63,28 +61,27 @@ class FileUploadStatusRepositoryISpec
   "save" should {
     "create a file upload status and retrieve it from database" in {
       val fileReference = Reference(UUID.randomUUID().toString)
-      val fileStatus    = UploadInfo(fileReference, InProgress, LocalDateTime.now(clock).truncatedTo(ChronoUnit.MILLIS))
+      val fileStatus    = UploadInfo(fileReference, InProgress, now())
       await(repository.requestUpload(fileStatus))
 
-      val retrieved = await(repository.findByUploadId(fileReference)).get
+      val retrieved = await(repository.findByUploadId(fileReference))
 
-      retrieved.status shouldBe fileStatus.status
-      retrieved.reference shouldBe fileStatus.reference
-      retrieved.createDateTime should equal(fileStatus.createDateTime)
-
+      retrieved.value.status shouldBe fileStatus.status
+      retrieved.value.reference shouldBe fileStatus.reference
+      retrieved.value.createDateTime should equal(fileStatus.createDateTime)
     }
   }
 
   "update a fileStatus to success" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus    = UploadInfo(fileReference, InProgress, LocalDateTime.now(clock).truncatedTo(ChronoUnit.MILLIS))
+    val fileStatus    = UploadInfo(fileReference, InProgress, now())
     await(repository.requestUpload(fileStatus))
 
-    val retrieved = await(repository.findByUploadId(fileReference)).get
+    val retrieved = await(repository.findByUploadId(fileReference))
 
-    retrieved.status shouldBe fileStatus.status
-    retrieved.reference shouldBe fileStatus.reference
-    retrieved.createDateTime should equal(fileStatus.createDateTime)
+    retrieved.value.status shouldBe fileStatus.status
+    retrieved.value.reference shouldBe fileStatus.reference
+    retrieved.value.createDateTime should equal(fileStatus.createDateTime)
 
     val updated = fileStatus.copy(status = UploadedSuccessfully("abc.jpeg", "jpeg", "http://s3/abc.jpeg", Some(234), "http://aws.object-url"))
     await(repository.updateStatus(reference = fileReference, UploadedSuccessfully("abc.jpeg", "jpeg", "http://s3/abc.jpeg", Some(234), "http://aws.object-url")))
@@ -98,14 +95,14 @@ class FileUploadStatusRepositoryISpec
 
   "update a fileStatus to failedwithErrors" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus    = UploadInfo(fileReference, InProgress, LocalDateTime.now(clock).truncatedTo(ChronoUnit.MILLIS))
+    val fileStatus    = UploadInfo(fileReference, InProgress, now())
     await(repository.requestUpload(fileStatus))
 
-    val retrieved = await(repository.findByUploadId(fileReference)).get
+    val retrieved = await(repository.findByUploadId(fileReference))
 
-    retrieved.status shouldBe fileStatus.status
-    retrieved.reference shouldBe fileStatus.reference
-    retrieved.createDateTime should equal(fileStatus.createDateTime)
+    retrieved.value.status shouldBe fileStatus.status
+    retrieved.value.reference shouldBe fileStatus.reference
+    retrieved.value.createDateTime should equal(fileStatus.createDateTime)
 
     val updated = fileStatus.copy(status = UploadedFailedWithErrors("VIRUS", "found Virus", "1233", fileReference.value))
 
@@ -119,14 +116,14 @@ class FileUploadStatusRepositoryISpec
 
   "update a fileStatus to failed" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus    = UploadInfo(fileReference, InProgress, LocalDateTime.now(clock).truncatedTo(ChronoUnit.MILLIS))
+    val fileStatus    = UploadInfo(fileReference, InProgress, now())
     await(repository.requestUpload(fileStatus))
 
-    val retrieved = await(repository.findByUploadId(fileReference)).get
+    val retrieved = await(repository.findByUploadId(fileReference))
 
-    retrieved.status shouldBe fileStatus.status
-    retrieved.reference shouldBe fileStatus.reference
-    retrieved.createDateTime should equal(fileStatus.createDateTime)
+    retrieved.value.status shouldBe fileStatus.status
+    retrieved.value.reference shouldBe fileStatus.reference
+    retrieved.value.createDateTime should equal(fileStatus.createDateTime)
 
     val updated = fileStatus.copy(status = Failed)
 
@@ -141,14 +138,14 @@ class FileUploadStatusRepositoryISpec
 
   "update a fileStatus to InProgress" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus    = UploadInfo(fileReference, InProgress, LocalDateTime.now(clock).truncatedTo(ChronoUnit.MILLIS))
+    val fileStatus    = UploadInfo(fileReference, InProgress, now())
     await(repository.requestUpload(fileStatus))
 
-    val retrieved = await(repository.findByUploadId(fileReference)).get
+    val retrieved = await(repository.findByUploadId(fileReference))
 
-    retrieved.status shouldBe fileStatus.status
-    retrieved.reference shouldBe fileStatus.reference
-    retrieved.createDateTime should equal(fileStatus.createDateTime)
+    retrieved.value.status shouldBe fileStatus.status
+    retrieved.value.reference shouldBe fileStatus.reference
+    retrieved.value.createDateTime should equal(fileStatus.createDateTime)
 
     val updated = fileStatus.copy(status = InProgress)
 
