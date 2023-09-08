@@ -92,7 +92,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
   lazy implicit val mat: Materializer                                      = app.materializer
   private val requestConverter: RequestConverter                           = app.injector.instanceOf[RequestConverter]
   private val forbiddenHandler                                             = app.injector.instanceOf[ForbiddenHandler]
-  private val mockEmailConnector: EmailConnector                 = mock[EmailConnector]
+  private val mockEmailConnector: EmailConnector                           = mock[EmailConnector]
   private val mockDraftEmailRepository: DraftEmailRepository               = mock[DraftEmailRepository]
   private val mockSentEmailRepository: SentEmailRepository                 = mock[SentEmailRepository]
   private val mockEmailRendererConnector: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]

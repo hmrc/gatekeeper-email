@@ -70,7 +70,7 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
     val appConfigMock                                                = mock[AppConfig]
     val developerConnectorMock: DeveloperConnector                   = mock[DeveloperConnector]
     val apmConnectorMock: ApmConnector                               = mock[ApmConnector]
-    val emailConnectorMock: EmailConnector                 = mock[EmailConnector]
+    val emailConnectorMock: EmailConnector                           = mock[EmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
     val underTest                                                    = new DraftEmailService(emailRendererConnectorMock, developerConnectorMock, apmConnectorMock, emailRepository, sentEmailRepository, appConfigMock, clock)
     val users                                                        = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))

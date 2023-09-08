@@ -26,7 +26,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
-import play.api.http.Status._
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
@@ -43,7 +42,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
     val draftEmailRepositoryMock: DraftEmailRepository               = mock[DraftEmailRepository]
     val draftEmailServiceMock: DraftEmailService                     = mock[DraftEmailService]
     val sentEmailRepositoryMock: SentEmailRepository                 = mock[SentEmailRepository]
-    val emailConnectorMock: EmailConnector                 = mock[EmailConnector]
+    val emailConnectorMock: EmailConnector                           = mock[EmailConnector]
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
     val underTest                                                    = new SentEmailService(emailConnectorMock, draftEmailServiceMock, sentEmailRepositoryMock)
     val templateData                                                 = EmailTemplateData("templateId", Map(), false, Map(), None)
