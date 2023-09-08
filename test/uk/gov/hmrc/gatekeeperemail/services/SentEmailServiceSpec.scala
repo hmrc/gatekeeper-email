@@ -89,6 +89,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
   "sendEmails" should {
     "mark email as sent when email connector receives success response" in new Setup {
       when(sentEmailRepositoryMock.findNextEmailToSend).thenReturn(Future(Some(sentEmail)))
+      when(sentEmailRepositoryMock.markSent(*)).thenReturn(Future(sentEmail.copy(status = SENT)))
       when(draftEmailServiceMock.fetchEmail(sentEmail.emailUuid.toString)).thenReturn(Future(draftEmail))
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(true))
 
