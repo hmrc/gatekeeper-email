@@ -19,14 +19,21 @@ package uk.gov.hmrc.gatekeeperemail.config
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 import play.api.ConfigLoader
+import play.api.libs.json.{Json, OFormat}
 
-import uk.gov.hmrc.gatekeeperemail.models.RegisteredUser
+import uk.gov.hmrc.gatekeeperemail.models.EmailRecipient
+
+case class AdditionalRecipient(email: String, firstName: String, lastName: String) extends EmailRecipient
+
+object AdditionalRecipient {
+  implicit val format: OFormat[AdditionalRecipient] = Json.format[AdditionalRecipient]
+}
 
 object AdditionalRecipientsConfigProvider {
 
-  implicit val configLoader: ConfigLoader[List[RegisteredUser]] = ConfigLoader(_.getStringList).map(
+  implicit val configLoader: ConfigLoader[List[AdditionalRecipient]] = ConfigLoader(_.getStringList).map(
     _.asScala.toList.map(_.split(','))
       .filter(_.length == 3)
-      .map(userDetails => RegisteredUser(userDetails(0), userDetails(1), userDetails(2), true))
+      .map(userDetails => AdditionalRecipient(userDetails(0), userDetails(1), userDetails(2)))
   )
 }

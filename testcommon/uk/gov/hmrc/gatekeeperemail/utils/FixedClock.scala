@@ -14,13 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.gatekeeperemail.repositories
+package uk.gov.hmrc.gatekeeperemail.utils
 
-import play.api.libs.json.{Json, OFormat}
+import java.time.temporal.ChronoUnit
+import java.time.{Clock, LocalDateTime, ZoneOffset}
 
-import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.util.ClockNow
 
-private[repositories] object SentEmailFormatter {
+trait FixedClock extends ClockNow {
 
-  implicit val sentEmailFormatter: OFormat[SentEmail] = Json.format[SentEmail]
+  val clock: Clock = {
+    val utc     = ZoneOffset.UTC
+    val ldt     = LocalDateTime.of(2020, 1, 2, 3, 4, 5, 6_000_000).truncatedTo(ChronoUnit.MILLIS)
+    val instant = ldt.toInstant(utc)
+
+    Clock.fixed(instant, utc)
+  }
 }
+
+object FixedClock extends FixedClock

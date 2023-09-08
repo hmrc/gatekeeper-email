@@ -48,9 +48,9 @@ class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFut
 
     val subject = new RunningOfScheduledJobs {
       override implicit val ec: ExecutionContext              = ExecutionContext.Implicits.global
-      override val application: Application                   = fakeApplication
+      override val application: Application                   = fakeApplication()
       override val scheduledJobs: Seq[ScheduledJob]           = Seq(new TestScheduledJob)
-      override val applicationLifecycle: ApplicationLifecycle = fakeApplication.injector.instanceOf[ApplicationLifecycle]
+      override val applicationLifecycle: ApplicationLifecycle = fakeApplication().injector.instanceOf[ApplicationLifecycle]
     }
   }
 
@@ -65,9 +65,9 @@ class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFut
       }
       runner.cancellables = Seq(new StubCancellable, new StubCancellable)
 
-      every(runner.cancellables) should not be 'cancelled
+      every(runner.cancellables) should not be Symbol("cancelled")
       await(testApp.stop())
-      every(runner.cancellables) should be('cancelled)
+      every(runner.cancellables) shouldBe Symbol("cancelled")
     }
 
     "block while scheduled jobs are still running" in new TestCase {
@@ -90,10 +90,10 @@ class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFut
       }
 
       val stopFuture = testApp.stop()
-      stopFuture should not be 'completed
+      stopFuture should not be Symbol("completed")
 
       stoppableJob.isRunning = Future.successful(false)
-      eventually(timeout(Span(1, Minute))) { stopFuture should be('completed) }
+      eventually(timeout(Span(1, Minute))) { stopFuture shouldBe Symbol("completed") }
     }
   }
 

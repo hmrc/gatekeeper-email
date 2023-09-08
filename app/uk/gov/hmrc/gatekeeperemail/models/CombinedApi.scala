@@ -18,9 +18,7 @@ package uk.gov.hmrc.gatekeeperemail.models
 
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
 
-import play.api.libs.json.{Format, Json}
-
-import uk.gov.hmrc.gatekeeperemail.models.APICategory
+import play.api.libs.json.{Format, Json, OFormat}
 
 sealed trait ApiType extends EnumEntry
 
@@ -45,5 +43,5 @@ object CombinedApiCategory {
 case class CombinedApi(displayName: String, serviceName: String, categories: List[CombinedApiCategory], apiType: ApiType, accessType: Option[APIAccessType])
 
 object CombinedApi {
-  implicit val formatCombinedApi = Json.format[CombinedApi]
+  implicit val format: OFormat[CombinedApi] = Json.format[CombinedApi]
 }

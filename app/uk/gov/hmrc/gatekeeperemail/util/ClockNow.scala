@@ -14,9 +14,26 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.gatekeeperemail.models
+package uk.gov.hmrc.gatekeeperemail.util
 
-/** Used instead of Unit where a method has nothing to return because Unit prevents Scala's type checking from working on mappings of Future[Unit].
-  */
-trait HasSucceeded
-object HasSucceeded extends HasSucceeded
+import java.time.temporal.ChronoUnit
+import java.time.{Clock, Instant, LocalDateTime}
+
+trait ClockNow {
+
+  implicit class LocalDateTimeTruncateSyntax(ldt: LocalDateTime) {
+    def truncate() = ldt.truncatedTo(ChronoUnit.MILLIS)
+  }
+
+  implicit class InstantTruncateSyntax(ins: Instant) {
+    def truncate() = ins.truncatedTo(ChronoUnit.MILLIS)
+  }
+
+  final def precise(): Instant = Instant.now(clock)
+
+  final def now(): LocalDateTime = LocalDateTime.now(clock).truncate()
+
+  final def instant(): Instant = Instant.now(clock).truncate()
+
+  def clock: Clock
+}

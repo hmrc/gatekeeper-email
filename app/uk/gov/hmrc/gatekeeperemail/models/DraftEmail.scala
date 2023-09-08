@@ -16,15 +16,13 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-import java.time.LocalDateTime
-import java.time.LocalDateTime.now
-import java.util.UUID
-import scala.collection.immutable
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 
-import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
-
-import play.api.libs.json.{Format, Json, OFormat}
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
+
+import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
 
 case class EmailTemplateData(
     templateId: String,
@@ -33,6 +31,10 @@ case class EmailTemplateData(
     auditData: Map[String, String] = Map.empty,
     eventUrl: Option[String] = None
   )
+
+object EmailTemplateData {
+  implicit val format: OFormat[EmailTemplateData] = Json.format[EmailTemplateData]
+}
 
 case class DraftEmail(
     emailUUID: String,
@@ -46,73 +48,35 @@ case class DraftEmail(
     status: EmailStatus,
     composedBy: String,
     approvedBy: Option[String],
-    createDateTime: LocalDateTime,
-    emailsCount: Int
+    createDateTime: Instant,
+    emailsCount: Int,
+    isUsingInstant: Option[Boolean] = None
   )
 
-case class OutgoingEmail(
-    emailUUID: String,
-    recipientTitle: String,
-    userSelectionQuery: DevelopersEmailQuery,
-    attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None,
-    markdownEmailBody: String,
-    htmlEmailBody: String,
-    subject: String,
-    status: EmailStatus,
-    composedBy: String,
-    approvedBy: Option[String],
-    emailsCount: Int
-  )
+object DraftEmail extends EnvReads {
+  implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
 
-object OutgoingEmail {
-  implicit val emailOverrideFormatter                                                       = Json.format[EmailOverride]
-  implicit val developersEmailQueryFormatter: OFormat[DevelopersEmailQuery]                 = Json.format[DevelopersEmailQuery]
-  implicit val format: OFormat[UploadCargo]                                                 = Json.format[UploadCargo]
-  implicit val attachmentDetailsFormat: OFormat[UploadedFile]                               = Json.format[UploadedFile]
-  implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
-  implicit val outGoingEmailFmt: OFormat[OutgoingEmail]                                     = Json.format[OutgoingEmail]
+  private val readCreateDateTimeAsInstant = (JsPath \ "createDateTime").read[Instant](MongoJavatimeFormats.instantFormat)
+  private val readCreateDateTimeAsLDT     = (JsPath \ "createDateTime").read[LocalDateTime](DefaultLocalDateTimeReads).map(ldt => ldt.toInstant(ZoneOffset.UTC))
+
+  implicit val writes: OWrites[DraftEmail] = Json.writes[DraftEmail]
+
+  implicit val reads: Reads[DraftEmail] = (
+    (JsPath \ "emailUUID").read[String] and
+      (JsPath \ "templateData").read[EmailTemplateData] and
+      (JsPath \ "recipientTitle").read[String] and
+      (JsPath \ "userSelectionQuery").read[DevelopersEmailQuery] and
+      (JsPath \ "attachmentDetails").readNullable[Seq[UploadedFileWithObjectStore]] and
+      (JsPath \ "markdownEmailBody").read[String] and
+      (JsPath \ "htmlEmailBody").read[String] and
+      (JsPath \ "subject").read[String] and
+      (JsPath \ "status").read[EmailStatus] and
+      (JsPath \ "composedBy").read[String] and
+      (JsPath \ "approvedBy").readNullable[String] and
+      (readCreateDateTimeAsInstant.orElse(readCreateDateTimeAsLDT)) and
+      (JsPath \ "emailsCount").read[Int] and
+      (JsPath \ "isUsingInstant").readNullable[Boolean]
+  )(DraftEmail.apply _)
+
+  implicit val format: OFormat[DraftEmail] = OFormat(reads, writes)
 }
-
-object DraftEmail {
-  implicit val dateFormatter: Format[LocalDateTime]                                         = MongoJavatimeFormats.localDateTimeFormat
-  implicit val emailOverrideFormatter                                                       = Json.format[EmailOverride]
-  implicit val developersEmailQueryFormatter: OFormat[DevelopersEmailQuery]                 = Json.format[DevelopersEmailQuery]
-  implicit val format: OFormat[UploadCargo]                                                 = Json.format[UploadCargo]
-  implicit val attachmentDetailsFormat: OFormat[UploadedFile]                               = Json.format[UploadedFile]
-  implicit val attachmentDetailsWithObjectStoreFormat: OFormat[UploadedFileWithObjectStore] = Json.format[UploadedFileWithObjectStore]
-  implicit val emailTemplateDataFormatter: OFormat[EmailTemplateData]                       = Json.format[EmailTemplateData]
-  implicit val emailFormatter: OFormat[DraftEmail]                                          = Json.format[DraftEmail]
-}
-
-case class SentEmail(
-    updatedAt: LocalDateTime,
-    emailUuid: UUID,
-    firstName: String,
-    lastName: String,
-    recipient: String,
-    status: EmailStatus,
-    failedCount: Int,
-    id: UUID = UUID.randomUUID(),
-    createdAt: LocalDateTime = now()
-  )
-
-sealed abstract class EmailStatus(override val entryName: String) extends EnumEntry
-
-object EmailStatus extends Enum[EmailStatus] with PlayJsonEnum[EmailStatus] {
-  val values: immutable.IndexedSeq[EmailStatus] = findValues
-
-  case object FAILED  extends EmailStatus("FAILED")
-  case object PENDING extends EmailStatus("PENDING")
-  case object SENT    extends EmailStatus("SENT")
-}
-case class EmailOverride(email: List[RegisteredUser], isOverride: Boolean = false)
-
-case class DevelopersEmailQuery(
-    topic: Option[String] = None,
-    apis: Option[Seq[String]] = None,
-    apiCategories: Option[Seq[APICategory]] = None,
-    privateapimatch: Boolean = false,
-    apiVersionFilter: Option[String] = None,
-    allUsers: Boolean = false,
-    emailsForSomeCases: Option[EmailOverride] = None
-  )

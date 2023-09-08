@@ -23,13 +23,13 @@ import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
+import uk.gov.hmrc.gatekeeperemail.repositories.DraftEmailRepository
 
 @Singleton
-class EmailSendingJob @Inject() (appConfig: AppConfig, override val mongoLockRepository: MongoLockRepository, sentEmailService: SentEmailService)
+class DraftEmailDateConversionJob @Inject() (appConfig: AppConfig, override val mongoLockRepository: MongoLockRepository, draftEmailRepository: DraftEmailRepository)
     extends LockedScheduledJob {
 
-  override def name: String = "EmailSendingJob"
+  override def name: String = "DraftEmailDateConversionJob"
 
   private val jobConfig = appConfig.scheduledJobConfig(name)
 
@@ -40,6 +40,12 @@ class EmailSendingJob @Inject() (appConfig: AppConfig, override val mongoLockRep
   override def enabled: Boolean = jobConfig.enabled
 
   override def executeInLock(implicit ec: ExecutionContext): Future[Result] = {
-    sentEmailService.sendNextPendingEmail.map(done => Result(done.toString))
+    draftEmailRepository.fetchBatchOfNastyOldDraftEmails().flatMap(draftEmails => {
+      val alteredDraftEmails = draftEmails.map(e => e.copy(isUsingInstant = Some(true)))
+
+      draftEmailRepository.persistBatchOfShinyConvertedDraftEmails(alteredDraftEmails).map(s =>
+        Result(s"DraftEmailDateConversionJob: found ${draftEmails.size} records, updated ${s.size} records")
+      )
+    })
   }
 }

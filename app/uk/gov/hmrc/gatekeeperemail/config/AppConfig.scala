@@ -17,13 +17,12 @@
 package uk.gov.hmrc.gatekeeperemail.config
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 import play.api.{Configuration, Logging}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import uk.gov.hmrc.gatekeeperemail.config.AdditionalRecipientsConfigProvider.configLoader
-import uk.gov.hmrc.gatekeeperemail.models.RegisteredUser
 
 @Singleton
 class AppConfig @Inject() (config: Configuration)
@@ -34,19 +33,25 @@ class AppConfig @Inject() (config: Configuration)
   val authBaseUrl: String          = baseUrl("auth")
   val emailBaseUrl: String         = baseUrl("email")
   val emailRendererBaseUrl: String = baseUrl("developer-email-renderer")
-  val additionalRecipients         = config.getOptional[List[RegisteredUser]]("additionalRecipients").getOrElse(List())
+  val additionalRecipients         = config.getOptional[List[AdditionalRecipient]]("additionalRecipients").getOrElse(List())
   val sendToActualRecipients       = config.get[Boolean]("sendToActualRecipients")
 
   val emailRecordRetentionPeriod: Int = getConfInt("mongodb.ttlInYears", 7)
   val defaultRetentionPeriod: String  = getConfString("object-store.default-retention-period", "1-year")
   val auditingEnabled: Boolean        = config.get[Boolean]("auditing.enabled")
-  val initialDelay: Duration          = Duration(config.getOptional[String]("scheduled.initDelay").getOrElse("30 sec"))
-  val interval: Duration              = Duration(config.getOptional[String]("scheduled.interval").getOrElse("1 sec"))
 
   val developerBaseUrl = baseUrl("third-party-developer")
 
   val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
+
+  def scheduledJobConfig(jobName: String) = ScheduledJobConfig(
+    Duration(config.get[String](s"scheduledJobs.$jobName.initialDelay")).asInstanceOf[FiniteDuration],
+    Duration(config.get[String](s"scheduledJobs.$jobName.interval")).asInstanceOf[FiniteDuration],
+    config.get[Boolean](s"scheduledJobs.$jobName.enabled")
+  )
 }
+
+case class ScheduledJobConfig(initialDelay: FiniteDuration, interval: FiniteDuration, enabled: Boolean)
 
 trait EmailConnectorConfig {
   val emailBaseUrl: String

@@ -20,20 +20,19 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, stubFor, urlEqualTo, _}
 import com.github.tomakehurst.wiremock.client.WireMock.{verify => wireMockVerify}
-import org.mockito.MockitoSugar.mock
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.libs.json.Json
-import play.api.test.Helpers.{INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
+import play.api.test.Helpers.OK
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.utils.{AsyncHmrcSpec, _}
 
-class HttpDeveloperConnectorSpec extends AsyncHmrcSpec
+class DeveloperConnectorSpec extends AsyncHmrcSpec
     with WireMockSugar
     with BeforeAndAfterEach
     with GuiceOneAppPerSuite
@@ -47,29 +46,29 @@ class HttpDeveloperConnectorSpec extends AsyncHmrcSpec
 
     when(mockAppConfig.developerBaseUrl).thenReturn(wireMockUrl)
 
-    val connector = new HttpDeveloperConnector(mockAppConfig, httpClient)
+    val connector = new DeveloperConnector(mockAppConfig, httpClient)
   }
   "Developer connector" should {
 
     val developerEmail                     = "developer1@example.com"
     val developerEmailWithSpecialCharacter = "developer2+test@example.com"
 
-    def aUserResponse(email: String) = RegisteredUser(email, "first", "last", verified = false)
+    def aUserResponse(email: String) = RegisteredUser(email, "first", "last", verified = true)
 
-    def verifyUserResponse(userResponse: User, expectedEmail: String, expectedFirstName: String, expectedLastName: String) = {
-      userResponse.email shouldBe expectedEmail
-      userResponse.firstName shouldBe expectedFirstName
-      userResponse.lastName shouldBe expectedLastName
+    def verifyUserResponse(registeredUser: RegisteredUser, expectedEmail: String, expectedFirstName: String, expectedLastName: String) = {
+      registeredUser.email shouldBe expectedEmail
+      registeredUser.firstName shouldBe expectedFirstName
+      registeredUser.lastName shouldBe expectedLastName
     }
 
-    "fetch all developers" in new Setup {
-      stubFor(get(urlEqualTo("/developers/all")).willReturn(
+    "fetch verified developers" in new Setup {
+      stubFor(get(urlEqualTo("/developers/all?status=VERIFIED")).willReturn(
         aResponse().withStatus(OK).withBody(
           Json.toJson(Seq(aUserResponse(developerEmail), aUserResponse(developerEmailWithSpecialCharacter))).toString()
         )
       ))
 
-      val result = await(connector.fetchAll())
+      val result = await(connector.fetchVerified())
 
       verifyUserResponse(result(0), developerEmail, "first", "last")
       verifyUserResponse(result(1), developerEmailWithSpecialCharacter, "first", "last")

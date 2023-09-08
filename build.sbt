@@ -4,11 +4,11 @@ import sbt.Test
 import sbt.Tests.{Group, SubProcess}
 import uk.gov.hmrc.DefaultBuildSettings
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
+import bloop.integrations.sbt.BloopDefaults
 
 val appName = "gatekeeper-email"
 
 lazy val playSettings: Seq[Setting[_]] = Seq.empty
-lazy val ComponentTest = config("component") extend Test
 
 scalaVersion := "2.13.8"
 
@@ -33,7 +33,6 @@ lazy val microservice = Project(appName, file("."))
     resolvers ++= Resolvers(),
     routesImport += "uk.gov.hmrc.gatekeeperemail.controllers.binders._"
   )
-  .settings(SilencerSettings())
   .settings(
     Compile / unmanagedResourceDirectories += baseDirectory.value / "resources"
   )
@@ -56,12 +55,14 @@ lazy val microservice = Project(appName, file("."))
     ),
     addTestReportOption(IntegrationTest, "int-test-reports")
   )
-  .configs(ComponentTest)
-  .settings(inConfig(ComponentTest)(Defaults.testSettings): _*)
+  .settings(inConfig(IntegrationTest)(scalafixConfigSettings(IntegrationTest)))
   .settings(
-    ComponentTest / unmanagedSourceDirectories += baseDirectory.value / "component",
-    ComponentTest / unmanagedSourceDirectories += baseDirectory.value / "testcommon",
-    ComponentTest / testGrouping := oneForkedJvmPerTest((ComponentTest / definedTests).value),
+    scalacOptions ++= Seq(
+      "-Wconf:cat=unused&src=views/.*\\.scala:s",
+      "-Wconf:cat=unused&src=.*RoutesPrefix\\.scala:s",
+      "-Wconf:cat=unused&src=.*Routes\\.scala:s",
+      "-Wconf:cat=unused&src=.*ReverseRoutes\\.scala:s"
+    )
   )
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
 
@@ -81,3 +82,5 @@ def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
       )
     )
   }
+
+  Global / bloopAggregateSourceDependencies := true

@@ -16,22 +16,27 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import java.time.LocalDateTime.now
 import java.util.UUID
+
 import org.mongodb.scala.ReadPreference.primaryPreferred
-import org.mongodb.scala.bson.BsonBoolean
+import org.mongodb.scala.bson.{BsonBoolean, BsonDocument}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.gatekeeperemail.models.{DevelopersEmailQuery, DraftEmail, EmailStatus, EmailTemplateData, RegisteredUser, UploadedFileWithObjectStore, User}
-import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
-class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[DraftEmail] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
+import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
+import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
+import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, EmailTemplateData, UploadedFileWithObjectStore}
+import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
+
+class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[DraftEmail] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite with FixedClock {
   val serviceRepo = repository.asInstanceOf[DraftEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
@@ -54,7 +59,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
     val emailPreferences = DevelopersEmailQuery()
 
     val email = DraftEmail(
-      UUID.randomUUID.toString(),
+      UUID.randomUUID.toString,
       templateData,
       "DL Team",
       emailPreferences,
@@ -65,17 +70,16 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
       EmailStatus.FAILED,
       "composedBy",
       Some("approvedBy"),
-      now(),
+      precise(),
       1
     )
-
   }
-  "persist" should {
 
+  "persist" should {
     "insert an Email message when it does not exist" in new Setup {
       await(serviceRepo.persist(email))
 
-      val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred).find().toFuture())
+      val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred()).find().toFuture())
 
       fetchedRecords.size shouldBe 1
       fetchedRecords.head shouldEqual email
@@ -84,7 +88,9 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
     "create index on emailUUID" in new Setup {
       await(serviceRepo.persist(email))
 
-      val Some(globalIdIndex) = await(serviceRepo.collection.listIndexes().toFuture()).find(i => i.get("name").get.asString().getValue == "emailUUIDIndex")
+      val globalIdIndex = await(serviceRepo.collection.listIndexes().toFuture())
+        .find(i => i.get("name").get.asString().getValue == "emailUUIDIndex").get
+
       globalIdIndex.get("unique") shouldBe Some(BsonBoolean(value = true))
       globalIdIndex.get("background").get shouldBe BsonBoolean(true)
     }
@@ -92,7 +98,10 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
     "create TTL index on createDateTime" in new Setup {
       await(serviceRepo.persist(email))
 
-      val Some(globalIdIndex) = await(serviceRepo.collection.listIndexes().toFuture()).find(i => i.get("name").get.asString().getValue == "ttlIndex")
+      val globalIdIndex = await(serviceRepo.collection.listIndexes().toFuture())
+        .find(i => i.get("name").get.asString().getValue == "ttlIndex").get
+
+      globalIdIndex.get("key").get shouldBe BsonDocument("createDateTime" -> Codecs.toBson(1))
       globalIdIndex.get("unique") shouldBe None
       globalIdIndex.get("background").get shouldBe BsonBoolean(true)
     }
@@ -147,7 +156,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
         status = EmailStatus.PENDING,
         composedBy = "Ludwig van Beethoven",
         approvedBy = Some("John Doe"),
-        createDateTime = now(),
+        createDateTime = precise(),
         1
       )
       await(serviceRepo.persist(email))
@@ -182,14 +191,13 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
         status = EmailStatus.PENDING,
         composedBy = "Ludwig van Beethoven",
         approvedBy = Some("John Doe"),
-        createDateTime = now(),
+        createDateTime = precise(),
         1
       )
 
       val updatedEmail = await(serviceRepo.updateEmail(emailUpdate))
 
       updatedEmail shouldBe null
-
     }
   }
 

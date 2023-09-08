@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.gatekeeperemail.models
+package uk.gov.hmrc.gatekeeperemail.models.responses
 
 import play.api.libs.json.{Json, OWrites}
 
-case class TemplateRenderRequest(parameters: Map[String, String], email: Option[String])
+case class ErrorMessage(reason: String)
 
-object TemplateRenderRequest {
+object ErrorMessage {
 
-  implicit val writes: OWrites[TemplateRenderRequest] =
-    Json.writes[TemplateRenderRequest]
+  implicit val writes: OWrites[ErrorMessage] =
+    Json.writes[ErrorMessage]
 }

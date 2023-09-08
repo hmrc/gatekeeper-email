@@ -18,7 +18,6 @@ package uk.gov.hmrc.gatekeeperemail.controllers
 
 import java.io.IOException
 import java.time.Instant
-import java.time.LocalDateTime.now
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -40,15 +39,18 @@ import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
 import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, EmailData, EmailRequest}
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
 import uk.gov.hmrc.gatekeeperemail.services.{DraftEmailService, ObjectStoreService}
 import uk.gov.hmrc.gatekeeperemail.stride.connectors.AuthConnector
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
+import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
 
-class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with Matchers with MockitoSugar with ArgumentMatchersSugar {
+class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with Matchers with MockitoSugar with ArgumentMatchersSugar with FixedClock {
 
   private val subject      = "Email subject"
   private val emailBody    = "Body to be used in the email template"
@@ -68,7 +70,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
     SENT,
     "composedBy",
     Some("approvedBy"),
-    now(),
+    precise(),
     1
   )
   private val emailUUIDToAttachFile = "emailUUID111"
@@ -102,8 +104,11 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
     val mockAppConfig                              = mock[AppConfig]
     val developerConnectorMock: DeveloperConnector = mock[DeveloperConnector]
     val apmConnectorMock: ApmConnector             = mock[ApmConnector]
-    val emailService                               = new DraftEmailService(mockEmailRendererConnector, developerConnectorMock, apmConnectorMock, mockDraftEmailRepository, mockSentEmailRepository, mockAppConfig)
-    val mockEmailService                           = mock[DraftEmailService]
+
+    val emailService =
+      new DraftEmailService(mockEmailRendererConnector, developerConnectorMock, apmConnectorMock, mockDraftEmailRepository, mockSentEmailRepository, mockAppConfig, clock)
+
+    val mockEmailService = mock[DraftEmailService]
 
     val mockObjectStoreService = mock[ObjectStoreService]
     val mockAuthConnector      = mock[AuthConnector]
@@ -128,7 +133,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
       ))))
 
     val emailUUID: String = UUID.randomUUID().toString
-    val dummyEmailData    = DraftEmail("", EmailTemplateData("", Map(), false, Map(), None), "", emailPreferences, None, "", "", "", SENT, "", None, now, 1)
+    val dummyEmailData    = DraftEmail("", EmailTemplateData("", Map(), false, Map(), None), "", emailPreferences, None, "", "", "", SENT, "", None, precise(), 1)
     when(mockDraftEmailRepository.getEmailData(emailUUID)).thenReturn(Future(dummyEmailData))
   }
 

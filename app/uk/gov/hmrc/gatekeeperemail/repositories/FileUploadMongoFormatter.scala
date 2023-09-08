@@ -72,6 +72,7 @@ object FileUploadMongoFormatter {
       jsObject.value.get("_type") match {
         case Some(JsString("InProgress"))               => JsSuccess(InProgress)
         case Some(JsString("Failed"))                   => JsSuccess(Failed)
+        case Some(JsString("BadRequest"))               => JsSuccess(BadRequest)
         case Some(JsString("UploadedSuccessfully"))     => Json.fromJson[UploadedSuccessfully](jsObject)(uploadedSuccessfullyFormat)
         case Some(JsString("UploadedFailedWithErrors")) => Json.fromJson[UploadedFailedWithErrors](jsObject)(uploadedFailedFormat)
         case _                                          => JsError("Unable to decode UploadStatus type")
@@ -85,6 +86,7 @@ object FileUploadMongoFormatter {
       p match {
         case InProgress                  => JsObject(Map("_type" -> JsString("InProgress")))
         case Failed                      => JsObject(Map("_type" -> JsString("Failed")))
+        case BadRequest                  => JsObject(Map("_type" -> JsString("BadRequest")))
         case s: UploadedSuccessfully     => {
           val result = uploadedSuccessfullyFormat.writes(s) ++ Json.obj("_type" -> "UploadedSuccessfully")
           result

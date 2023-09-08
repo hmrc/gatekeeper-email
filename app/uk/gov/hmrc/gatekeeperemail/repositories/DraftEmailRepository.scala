@@ -21,27 +21,28 @@ import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+import com.mongodb.ReadPreference.primaryPreferred
+import com.mongodb.client.model.ReturnDocument
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
-import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.{combine, set}
-import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, ReturnDocument}
-import org.mongodb.scala.result.InsertOneResult
+import org.mongodb.scala.model.{IndexModel, IndexOptions, _}
+import org.mongodb.scala.result._
 import org.mongodb.scala.{MongoClient, MongoCollection}
 
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus}
-import uk.gov.hmrc.gatekeeperemail.repositories.EmailMongoFormatter.emailFormatter
+import uk.gov.hmrc.gatekeeperemail.models._
 
 @Singleton
 class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[DraftEmail](
       mongoComponent = mongoComponent,
       collectionName = "draftemails",
-      domainFormat = emailFormatter,
+      domainFormat = DraftEmail.format,
       indexes = Seq(
         IndexModel(
           ascending("emailUUID"),
@@ -67,11 +68,11 @@ class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig:
         fromRegistries(
           fromCodecs(
             Codecs.playFormatCodec(domainFormat),
-            Codecs.playFormatCodec(EmailMongoFormatter.emailTemplateDataFormatter),
-            Codecs.playFormatCodec(EmailMongoFormatter.cargoFormat),
-            Codecs.playFormatCodec(EmailMongoFormatter.attachmentDetailsFormat),
-            Codecs.playFormatCodec(EmailMongoFormatter.attachmentDetailsWithObjectStoreFormat),
-            Codecs.playFormatCodec(EmailMongoFormatter.emailFormatter)
+            Codecs.playFormatCodec(EmailTemplateData.format),
+            Codecs.playFormatCodec(UploadCargo.format),
+            Codecs.playFormatCodec(UploadedFile.format),
+            Codecs.playFormatCodec(UploadedFileWithObjectStore.format),
+            Codecs.playFormatCodec(DraftEmail.format)
           ),
           MongoClient.DEFAULT_CODEC_REGISTRY
         )
@@ -88,7 +89,7 @@ class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig:
     for (emailData <- findByEmailUUID(UUID.fromString(emailUUID))) yield {
       emailData match {
         case Some(email) => email
-        case None        => throw new Exception(s"Email with id ${emailUUID} not found")
+        case None        => throw new Exception(s"Email with id $emailUUID not found")
       }
     }
   }
@@ -101,7 +102,7 @@ class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig:
         set("emailsCount", emailCount)
       ),
       options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
-    ).map(_.asInstanceOf[DraftEmail]).head()
+    ).head()
   }
 
   def updateEmail(email: DraftEmail): Future[DraftEmail] = {
@@ -115,10 +116,33 @@ class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig:
         set("attachmentDetails", email.attachmentDetails.getOrElse(Seq.empty))
       ),
       options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
-    ).map(_.asInstanceOf[DraftEmail]).head()
+    ).head()
   }
 
   def deleteByEmailUUID(emailUUID: String): Future[Boolean] = {
-    collection.deleteOne(equal("emailUUID", Codecs.toBson(emailUUID))).head().map(x => x.getDeletedCount() == 1)
+    collection.deleteOne(equal("emailUUID", Codecs.toBson(emailUUID))).head().map(x => x.getDeletedCount == 1)
+  }
+
+  def fetchBatchOfNastyOldDraftEmails(): Future[Seq[DraftEmail]] = {
+    collection
+      .withReadPreference(primaryPreferred)
+      .find(
+        filter = exists("isUsingInstant", false)
+      )
+      .limit(1000)
+      .toFuture()
+  }
+
+  def persistBatchOfShinyConvertedDraftEmails(draftEmails: Seq[DraftEmail]): Future[Seq[DraftEmail]] = {
+    val results = draftEmails.map(mail =>
+      collection
+        .findOneAndReplace(
+          filter = equal("emailUUID", Codecs.toBson(mail.emailUUID)),
+          replacement = mail,
+          options = FindOneAndReplaceOptions().returnDocument(ReturnDocument.AFTER)
+        ).head()
+    )
+
+    Future.sequence(results)
   }
 }

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import java.time.LocalDateTime
+import java.time.Clock
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future.successful
@@ -26,11 +26,14 @@ import play.api.Logger
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.APIAccessType.{PRIVATE, PUBLIC}
 import uk.gov.hmrc.gatekeeperemail.models.CombinedApiCategory.toAPICategory
 import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, DraftEmailRequest, EmailOverride, EmailRequest}
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
+import uk.gov.hmrc.gatekeeperemail.util.ClockNow
 
 @Singleton
 class DraftEmailService @Inject() (
@@ -39,15 +42,14 @@ class DraftEmailService @Inject() (
     apmConnector: ApmConnector,
     draftEmailRepository: DraftEmailRepository,
     sentEmailRepository: SentEmailRepository,
-    appConfig: AppConfig
+    appConfig: AppConfig,
+    override val clock: Clock
   )(implicit val ec: ExecutionContext
-  ) {
+  ) extends ClockNow {
 
   val logger: Logger = Logger(getClass.getName)
 
   def persistEmail(emailRequest: EmailRequest, emailUUID: String): Future[DraftEmail] = {
-    implicit val hc = HeaderCarrier()
-
     val email: DraftEmail = emailData(emailRequest, emailUUID)
 
     val sendEmailRequest =
@@ -64,10 +66,10 @@ class DraftEmailService @Inject() (
 
   def sendEmail(emailUUID: String): Future[DraftEmail] = {
     for {
-      email         <- draftEmailRepository.getEmailData(emailUUID)
-      users         <- callThirdPartyDeveloper(email.userSelectionQuery)
-      usersModified <- persistInEmailQueue(email, users)
-      draftEmail    <- draftEmailRepository.updateEmailSentStatus(emailUUID, usersModified.size)
+      email      <- draftEmailRepository.getEmailData(emailUUID)
+      users      <- callThirdPartyDeveloper(email.userSelectionQuery)
+      recipients <- persistInEmailQueue(email, users)
+      draftEmail <- draftEmailRepository.updateEmailSentStatus(emailUUID, recipients.size)
     } yield draftEmail
   }
 
@@ -79,13 +81,12 @@ class DraftEmailService @Inject() (
         .map(emailOverride => emailOverride.copy(email = List.empty))
     )
     val numberOfOverrides        = emailPreferences.emailsForSomeCases.map(_.email.size).getOrElse(0)
-    val verifiedOverrides        = emailPreferences.emailsForSomeCases.map(_.email.count(_.verified)).getOrElse(0)
-    logger.info(s"Email Preferences (with overrides redacted) before calling TPD: $emailPreferencesRedacted with $numberOfOverrides overrides of which $verifiedOverrides are verified")
+    logger.info(s"Email Preferences (with overrides redacted) before calling TPD: $emailPreferencesRedacted with $numberOfOverrides overrides")
 
     val emails = emailPreferences match {
       case DevelopersEmailQuery(None, None, None, false, None, true, None)             =>
         logger.info(s"Emailing All Users scenario.. ")
-        developerConnector.fetchAll().map(_.filter(_.verified))
+        developerConnector.fetchVerified()
       case DevelopersEmailQuery(topic, Some(selectedAPIs), None, _, None, false, None) =>
         logger.info(s"Emailing Selected Apis to users that are not overridden")
         val selectedTopic: Option[TopicOptionChoice.Value] = topic.map(TopicOptionChoice.withName)
@@ -134,39 +135,41 @@ class DraftEmailService @Inject() (
           successful(List.empty[RegisteredUser])
         case (PUBLIC, _)  =>
           logger.debug(s"Before fetchByEmailPreferences topic: $topic  apiNames: $apiNames categories.distinct: ${categories.distinct} privateapimatch: false")
-          developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories.distinct), false).map(_.filter(_.verified))
+          developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories.distinct), false)
         case (PRIVATE, _) =>
           logger.debug(s"Before fetchByEmailPreferences topic: $topic  apiNames: $apiNames categories.distinct: ${categories.distinct} privateapimatch: false")
-          developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories.distinct), true).map(_.filter(_.verified))
+          developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories.distinct), true)
       }
 
     })
   }
 
-  private def persistInEmailQueue(email: DraftEmail, users: List[RegisteredUser]): Future[List[RegisteredUser]] = {
+  private def persistInEmailQueue(email: DraftEmail, users: List[RegisteredUser]): Future[List[EmailRecipient]] = {
 
     // if sendToActualRecipients is true then actualUsers   + additional recipients
     // if sendToActualRecipients is false  then just  additional recipients
     val usersModified = if (appConfig.sendToActualRecipients) {
-      (users ++ appConfig.additionalRecipients).distinct
+      // If an additional recipient is also in the users list, it will get two emails
+      users.distinct ++ appConfig.additionalRecipients
     } else {
       appConfig.additionalRecipients
     }
 
     val sentEmails = usersModified.map(elem =>
       SentEmail(
-        createdAt = LocalDateTime.now(),
-        updatedAt = LocalDateTime.now(),
+        createdAt = precise(),
+        updatedAt = precise(),
         emailUuid = UUID.fromString(email.emailUUID),
         firstName = elem.firstName,
         lastName = elem.lastName,
         recipient = elem.email,
         status = EmailStatus.PENDING,
-        failedCount = 0
+        failedCount = 0,
+        isUsingInstant = Some(true)
       )
     )
 
-    if (!sentEmails.isEmpty) {
+    if (sentEmails.nonEmpty) {
       sentEmailRepository.persist(sentEmails)
     } else {
       logger.warn(s"No Email Addresses selected for sending emails")
@@ -226,8 +229,9 @@ class DraftEmailService @Inject() (
       EmailStatus.PENDING,
       "composedBy",
       Some("approvedBy"),
-      LocalDateTime.now(),
-      0
+      precise(),
+      0,
+      isUsingInstant = Some(true)
     )
   }
 

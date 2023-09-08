@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apigatekeeperapprovalsfrontend.utils
+package uk.gov.hmrc.gatekeeperemail.models.requests
 
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.libs.json.{Json, OWrites}
 
-import play.api.test.{CSRFTokenHelper, FakeRequest}
-import play.filters.csrf.CSRFAddToken
+case class TemplateRenderRequest(parameters: Map[String, String], email: Option[String])
 
-trait WithCSRFAddToken {
-  self: GuiceOneAppPerSuite =>
+object TemplateRenderRequest {
 
-  val addToken = app.injector.instanceOf[CSRFAddToken]
-
-  implicit class CSRFRequest[T](request: FakeRequest[T]) {
-    def withCSRFToken: FakeRequest[T] = CSRFTokenHelper.addCSRFToken(request).asInstanceOf[FakeRequest[T]]
-  }
+  implicit val writes: OWrites[TemplateRenderRequest] =
+    Json.writes[TemplateRenderRequest]
 }
