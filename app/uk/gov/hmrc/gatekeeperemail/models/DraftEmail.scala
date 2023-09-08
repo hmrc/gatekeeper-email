@@ -65,7 +65,7 @@ object DraftEmail extends EnvReads {
     (JsPath \ "emailUUID").read[String] and
       (JsPath \ "templateData").read[EmailTemplateData] and
       (JsPath \ "recipientTitle").read[String] and
-      (JsPath \ "userSelectionQuery").read[DevelopersEmailQuery] and
+      ((JsPath \ "userSelectionQuery").read[DevelopersEmailQuery] or Reads.pure(DevelopersEmailQuery())) and
       (JsPath \ "attachmentDetails").readNullable[Seq[UploadedFileWithObjectStore]] and
       (JsPath \ "markdownEmailBody").read[String] and
       (JsPath \ "htmlEmailBody").read[String] and
@@ -74,7 +74,7 @@ object DraftEmail extends EnvReads {
       (JsPath \ "composedBy").read[String] and
       (JsPath \ "approvedBy").readNullable[String] and
       (readCreateDateTimeAsInstant.orElse(readCreateDateTimeAsLDT)) and
-      (JsPath \ "emailsCount").read[Int] and
+      ((JsPath \ "emailsCount").read[Int] or Reads.pure(0)) and
       (JsPath \ "isUsingInstant").readNullable[Boolean]
   )(DraftEmail.apply _)
 
