@@ -37,20 +37,18 @@ class SentEmailService @Inject() (
   ) extends Logging {
 
   def sendNextPendingEmail: Future[String] = {
-    def updateEmailStatusToSent(email: SentEmail): String = {
-      sentEmailRepository.markSent(email)
-      "Sent successfully"
+    def updateEmailStatusToSent(email: SentEmail): Future[Either[String, String]] = {
+      sentEmailRepository.markSent(email).map(_ => Right("Sent successfully"))
     }
 
-    def handleEmailSendingFailed(email: SentEmail): String = {
+    def handleEmailSendingFailed(email: SentEmail): Future[Either[String, String]] = {
       if (email.failedCount > 2) {
         logger.info(s"Marking email with id ${email.id} as failed as sending it has failed 3 times")
-        sentEmailRepository.markFailed(email)
+        sentEmailRepository.markFailed(email).map(_ => Left("Sending failed, giving up"))
       } else {
         logger.info(s"Email with id ${email.id} has now failed to send ${email.failedCount + 1} times")
-        sentEmailRepository.incrementFailedCount(email)
+        sentEmailRepository.incrementFailedCount(email).map(_ => Left("Sending failed, retrying"))
       }
-      "Sending failed"
     }
 
     def findAndSendNextEmail(sentEmail: SentEmail): Future[Either[String, Boolean]] = {
@@ -85,9 +83,6 @@ class SentEmailService @Inject() (
         case None            => Left("No emails to send")
       }
     }
-//    def findNextEmail: Future[Option[SentEmail]] = {
-//      sentEmailRepository.findNextEmailToSend
-//    }
 
     def sendEmail(emailRequest: SendEmailRequest): Future[Boolean] = {
       emailConnector.sendEmail(emailRequest)
@@ -96,7 +91,7 @@ class SentEmailService @Inject() (
     (for {
       sentEmail <- EitherT(findNextEmail)
       status    <- EitherT(findAndSendNextEmail(sentEmail))
-      message    = if (status) updateEmailStatusToSent(sentEmail) else handleEmailSendingFailed(sentEmail)
+      message   <- EitherT(if (status) updateEmailStatusToSent(sentEmail) else handleEmailSendingFailed(sentEmail))
     } yield message)
       .value.map {
         case Right(message) => message
