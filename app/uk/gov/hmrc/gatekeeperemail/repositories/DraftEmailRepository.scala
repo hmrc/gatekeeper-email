@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-import com.mongodb.ReadPreference.primaryPreferred
 import com.mongodb.client.model.ReturnDocument
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
 import org.mongodb.scala.model.Filters._
@@ -122,28 +121,5 @@ class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig:
 
   def deleteByEmailUUID(emailUUID: String): Future[Boolean] = {
     collection.deleteOne(equal("emailUUID", Codecs.toBson(emailUUID))).head().map(x => x.getDeletedCount == 1)
-  }
-
-  def fetchBatchOfNastyOldDraftEmails(batchSize: Int): Future[Seq[DraftEmail]] = {
-    collection
-      .withReadPreference(primaryPreferred)
-      .find(
-        filter = exists("isUsingInstant", false)
-      )
-      .limit(batchSize)
-      .toFuture()
-  }
-
-  def persistBatchOfShinyConvertedDraftEmails(draftEmails: Seq[DraftEmail]): Future[Seq[DraftEmail]] = {
-    val results = draftEmails.map(mail =>
-      collection
-        .findOneAndReplace(
-          filter = equal("emailUUID", Codecs.toBson(mail.emailUUID)),
-          replacement = mail,
-          options = FindOneAndReplaceOptions().returnDocument(ReturnDocument.AFTER)
-        ).head()
-    )
-
-    Future.sequence(results)
   }
 }
