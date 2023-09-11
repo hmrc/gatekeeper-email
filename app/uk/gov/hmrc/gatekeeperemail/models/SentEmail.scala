@@ -19,10 +19,8 @@ package uk.gov.hmrc.gatekeeperemail.models
 import java.time.Instant
 import java.util.UUID
 
+import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
-import play.api.libs.json.Format
-import play.api.libs.json.OFormat
-import play.api.libs.json.Json
 
 case class SentEmail(
     updatedAt: Instant,
@@ -38,5 +36,5 @@ case class SentEmail(
 
 object SentEmail {
   implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
-  implicit val format: OFormat[SentEmail] = Json.format[SentEmail]
+  implicit val format: OFormat[SentEmail]     = Json.format[SentEmail]
 }

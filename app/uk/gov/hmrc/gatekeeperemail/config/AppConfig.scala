@@ -45,7 +45,7 @@ class AppConfig @Inject() (config: Configuration)
   val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
 
   def scheduledJobBatchSize(jobName: String) = config.get[Int](s"scheduledJobs.$jobName.batchSize")
-  
+
   def scheduledJobConfig(jobName: String) = ScheduledJobConfig(
     Duration(config.get[String](s"scheduledJobs.$jobName.initialDelay")).asInstanceOf[FiniteDuration],
     Duration(config.get[String](s"scheduledJobs.$jobName.interval")).asInstanceOf[FiniteDuration],

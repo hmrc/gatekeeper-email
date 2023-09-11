@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
+import java.time.Instant
+
 import play.api.libs.json._
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
-import java.time.Instant
 
 case class EmailTemplateData(
     templateId: String,
@@ -52,5 +53,5 @@ case class DraftEmail(
 
 object DraftEmail {
   implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
-  implicit val format: OFormat[DraftEmail] = Json.format[DraftEmail]
+  implicit val format: OFormat[DraftEmail]    = Json.format[DraftEmail]
 }
