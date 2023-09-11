@@ -124,13 +124,13 @@ class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig:
     collection.deleteOne(equal("emailUUID", Codecs.toBson(emailUUID))).head().map(x => x.getDeletedCount == 1)
   }
 
-  def fetchBatchOfNastyOldDraftEmails(): Future[Seq[DraftEmail]] = {
+  def fetchBatchOfNastyOldDraftEmails(batchSize: Int): Future[Seq[DraftEmail]] = {
     collection
       .withReadPreference(primaryPreferred)
       .find(
         filter = exists("isUsingInstant", false)
       )
-      .limit(1000)
+      .limit(batchSize)
       .toFuture()
   }
 
