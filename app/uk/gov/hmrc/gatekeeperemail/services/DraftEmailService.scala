@@ -164,8 +164,7 @@ class DraftEmailService @Inject() (
         lastName = elem.lastName,
         recipient = elem.email,
         status = EmailStatus.PENDING,
-        failedCount = 0,
-        isUsingInstant = Some(true)
+        failedCount = 0
       )
     )
 
@@ -230,8 +229,7 @@ class DraftEmailService @Inject() (
       "composedBy",
       Some("approvedBy"),
       precise(),
-      0,
-      isUsingInstant = Some(true)
+      0
     )
   }
 

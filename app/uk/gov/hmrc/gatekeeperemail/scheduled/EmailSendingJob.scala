@@ -24,10 +24,11 @@ import uk.gov.hmrc.mongo.lock.MongoLockRepository
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
+import uk.gov.hmrc.gatekeeperemail.util.ApplicationLogger
 
 @Singleton
 class EmailSendingJob @Inject() (appConfig: AppConfig, override val mongoLockRepository: MongoLockRepository, sentEmailService: SentEmailService)
-    extends LockedScheduledJob {
+    extends LockedScheduledJob with ApplicationLogger {
 
   override def name: String = "EmailSendingJob"
 
@@ -40,6 +41,13 @@ class EmailSendingJob @Inject() (appConfig: AppConfig, override val mongoLockRep
   override def enabled: Boolean = jobConfig.enabled
 
   override def executeInLock(implicit ec: ExecutionContext): Future[Result] = {
-    sentEmailService.sendNextPendingEmail.map(done => Result(done.toString))
+    sentEmailService.sendNextPendingEmail.map(done => {
+      // If an email has been sent then log a message out to confirm this.
+      if(done == 1) {
+        logger.info(s"${name} has successfully sent the next pending email.")
+      }
+
+      Result(done.toString)
+    })
   }
 }
