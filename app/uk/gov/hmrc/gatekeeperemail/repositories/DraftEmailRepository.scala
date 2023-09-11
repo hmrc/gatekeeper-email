@@ -43,6 +43,7 @@ class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig:
       mongoComponent = mongoComponent,
       collectionName = "draftemails",
       domainFormat = DraftEmail.format,
+      replaceIndexes = true,
       indexes = Seq(
         IndexModel(
           ascending("emailUUID"),
