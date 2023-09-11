@@ -31,6 +31,8 @@ class DraftEmailDateConversionJob @Inject() (appConfig: AppConfig, override val 
 
   override def name: String = "DraftEmailDateConversionJob"
 
+  private val batchSize = appConfig.scheduledJobBatchSize(name)
+
   private val jobConfig = appConfig.scheduledJobConfig(name)
 
   override def initialDelay: FiniteDuration = jobConfig.initialDelay
@@ -40,7 +42,7 @@ class DraftEmailDateConversionJob @Inject() (appConfig: AppConfig, override val 
   override def enabled: Boolean = jobConfig.enabled
 
   override def executeInLock(implicit ec: ExecutionContext): Future[Result] = {
-    draftEmailRepository.fetchBatchOfNastyOldDraftEmails().flatMap(draftEmails => {
+    draftEmailRepository.fetchBatchOfNastyOldDraftEmails(batchSize).flatMap(draftEmails => {
       val alteredDraftEmails = draftEmails.map(e => e.copy(isUsingInstant = Some(true)))
 
       draftEmailRepository.persistBatchOfShinyConvertedDraftEmails(alteredDraftEmails).map(s =>

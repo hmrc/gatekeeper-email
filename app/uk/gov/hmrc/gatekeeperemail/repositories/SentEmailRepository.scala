@@ -130,13 +130,13 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
       .head()
   }
 
-  def fetchBatchOfNastyOldSentEmails(): Future[Seq[SentEmail]] = {
+  def fetchBatchOfNastyOldSentEmails(batchSize: Int): Future[Seq[SentEmail]] = {
     collection
       .withReadPreference(primaryPreferred)
       .find(
         filter = exists("isUsingInstant", false)
       )
-      .limit(1000)
+      .limit(batchSize)
       .toFuture()
   }
 
