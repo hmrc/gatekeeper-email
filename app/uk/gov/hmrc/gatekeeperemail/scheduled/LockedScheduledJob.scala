@@ -35,7 +35,7 @@ trait LockedScheduledJob extends ScheduledJob {
   val mongoLockRepository: MongoLockRepository
 
   // Lock for twice the interval, but at least 2 minutes
-  def lockTimeToLive: Int = Math.min(2 * interval.toMinutes, 2).toInt
+  def lockTimeToLive: Int = Math.max(2 * interval.toMinutes, 2).toInt
 
   lazy val lockService: LockService = LockService(mongoLockRepository, lockId = s"$name-lock", ttl = lockTimeToLive.minutes)
 
