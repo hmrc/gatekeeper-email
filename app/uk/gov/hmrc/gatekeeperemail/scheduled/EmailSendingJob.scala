@@ -40,6 +40,6 @@ class EmailSendingJob @Inject() (appConfig: AppConfig, override val mongoLockRep
   override def enabled: Boolean = jobConfig.enabled
 
   override def executeInLock(implicit ec: ExecutionContext): Future[Result] = {
-    sentEmailService.sendNextPendingEmail.map(done => Result(done.toString))
+    sentEmailService.sendNextPendingEmail.map(Result)
   }
 }

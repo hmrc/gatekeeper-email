@@ -33,14 +33,14 @@ import org.scalatest.matchers.should.Matchers
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{stubMessagesControllerComponents, _}
+import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
-import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailConnector, GatekeeperEmailRendererConnector}
+import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, EmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, EmailData, EmailRequest}
@@ -92,7 +92,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
   lazy implicit val mat: Materializer                                      = app.materializer
   private val requestConverter: RequestConverter                           = app.injector.instanceOf[RequestConverter]
   private val forbiddenHandler                                             = app.injector.instanceOf[ForbiddenHandler]
-  private val mockEmailConnector: GatekeeperEmailConnector                 = mock[GatekeeperEmailConnector]
+  private val mockEmailConnector: EmailConnector                           = mock[EmailConnector]
   private val mockDraftEmailRepository: DraftEmailRepository               = mock[DraftEmailRepository]
   private val mockSentEmailRepository: SentEmailRepository                 = mock[SentEmailRepository]
   private val mockEmailRendererConnector: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
@@ -141,7 +141,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
     "return 200" in new Setup {
       AuthConnectorMock.Authorise.thenReturn()
       when(mockEmailService.sendEmail(emailUUID)).thenReturn(successful(draftEmail))
-      when(mockEmailConnector.sendEmail(*)).thenReturn(successful(Status.OK))
+      when(mockEmailConnector.sendEmail(*)).thenReturn(successful(true))
       when(mockDraftEmailRepository.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       when(mockDraftEmailRepository.updateEmailSentStatus(*, *)).thenReturn(successful(draftEmail))
       when(mockSentEmailRepository.persist(*)).thenReturn(Future(InsertManyResult.unacknowledged()))
