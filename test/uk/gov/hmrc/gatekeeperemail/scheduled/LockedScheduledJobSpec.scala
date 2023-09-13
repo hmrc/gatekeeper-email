@@ -68,11 +68,11 @@ class LockedScheduledJobSpec extends AnyWordSpec with Matchers with ScalaFutures
     "execute in lock when Mongo lock can be obtained" in new Setup {
       when(mockLockRepository.takeLock(*, *, *)).thenReturn(Future.successful(true))
       when(mockLockRepository.releaseLock(*, *)).thenReturn(Future.successful(()))
-      when(mockSentEmailService.sendNextPendingEmail).thenReturn(Future(1))
+      when(mockSentEmailService.sendNextPendingEmail).thenReturn(Future("Sent successfully"))
 
       val result = await(subject.execute)
 
-      result.message shouldBe "Job named EmailSendingJob ran, and completed, with result 1"
+      result.message shouldBe "Job named EmailSendingJob ran, and completed, with result Sent successfully"
       verify(mockLockRepository).takeLock(eqTo("EmailSendingJob-lock"), *, *)
       verify(mockLockRepository).releaseLock(eqTo("EmailSendingJob-lock"), *)
     }
