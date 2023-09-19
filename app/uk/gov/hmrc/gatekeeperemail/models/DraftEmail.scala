@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.time.Instant
 
-import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
@@ -49,34 +48,10 @@ case class DraftEmail(
     composedBy: String,
     approvedBy: Option[String],
     createDateTime: Instant,
-    emailsCount: Int,
-    isUsingInstant: Option[Boolean] = None
+    emailsCount: Int
   )
 
-object DraftEmail extends EnvReads {
+object DraftEmail {
   implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
-
-  private val readCreateDateTimeAsInstant = (JsPath \ "createDateTime").read[Instant](MongoJavatimeFormats.instantFormat)
-  private val readCreateDateTimeAsLDT     = (JsPath \ "createDateTime").read[LocalDateTime](DefaultLocalDateTimeReads).map(ldt => ldt.toInstant(ZoneOffset.UTC))
-
-  implicit val writes: OWrites[DraftEmail] = Json.writes[DraftEmail]
-
-  implicit val reads: Reads[DraftEmail] = (
-    (JsPath \ "emailUUID").read[String] and
-      (JsPath \ "templateData").read[EmailTemplateData] and
-      (JsPath \ "recipientTitle").read[String] and
-      ((JsPath \ "userSelectionQuery").read[DevelopersEmailQuery] or Reads.pure(DevelopersEmailQuery())) and
-      (JsPath \ "attachmentDetails").readNullable[Seq[UploadedFileWithObjectStore]] and
-      (JsPath \ "markdownEmailBody").read[String] and
-      (JsPath \ "htmlEmailBody").read[String] and
-      (JsPath \ "subject").read[String] and
-      (JsPath \ "status").read[EmailStatus] and
-      (JsPath \ "composedBy").read[String] and
-      (JsPath \ "approvedBy").readNullable[String] and
-      (readCreateDateTimeAsInstant.orElse(readCreateDateTimeAsLDT)) and
-      ((JsPath \ "emailsCount").read[Int] or Reads.pure(0)) and
-      (JsPath \ "isUsingInstant").readNullable[Boolean]
-  )(DraftEmail.apply _)
-
-  implicit val format: OFormat[DraftEmail] = OFormat(reads, writes)
+  implicit val format: OFormat[DraftEmail]    = Json.format[DraftEmail]
 }

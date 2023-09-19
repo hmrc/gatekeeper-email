@@ -35,11 +35,9 @@ class SchedulerModule extends AbstractModule {
 class Scheduler @Inject() (
     override val applicationLifecycle: ApplicationLifecycle,
     override val application: Application,
-    emailSendingJob: EmailSendingJob,
-    sentEmailDateConversionJob: SentEmailDateConversionJob,
-    draftEmailDateConversionJob: DraftEmailDateConversionJob
+    emailSendingJob: EmailSendingJob
   )(
     override implicit val ec: ExecutionContext
   ) extends RunningOfScheduledJobs {
-  override lazy val scheduledJobs: Seq[ScheduledJob] = Seq(emailSendingJob, sentEmailDateConversionJob, draftEmailDateConversionJob)
+  override lazy val scheduledJobs: Seq[ScheduledJob] = Seq(emailSendingJob)
 }
