@@ -105,9 +105,9 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
     when(developerConnectorMock.fetchByEmailPreferences(*, *, *, *)(*)).thenReturn(Future(users))
     when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
-      CombinedApi("VAT", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PUBLIC)),
-      CombinedApi("CORP", "CORP", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
-      CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))
+      CombinedApi("VAT", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, Some(PUBLIC)),
+      CombinedApi("CORP", "CORP", List(ApiCategory.AGENTS), ApiType.REST_API, Some(PRIVATE)),
+      CombinedApi("SELF", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, Some(PRIVATE))
     )))
   }
 
@@ -166,9 +166,9 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       when(developerConnectorMock.fetchByEmailPreferences(*, *, *, *)(*)).thenReturn(Future(users))
       when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
-        CombinedApi("VAT", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PUBLIC)),
-        CombinedApi("CORP", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
-        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))
+        CombinedApi("VAT", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, Some(PUBLIC)),
+        CombinedApi("CORP", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, Some(PRIVATE)),
+        CombinedApi("SELF", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, Some(PRIVATE))
       )))
 
       val overriddenPref = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("VAT", "CORP")))
@@ -182,12 +182,12 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
     "save the email data when sending email to a specific API emails addresses into mongodb repo when privateapi selection is true" in new Setup {
       when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")), Some(List(APICategory("TAX"))), true)(hc)).thenReturn(Future(users))
+      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")), Some(List(ApiCategory.AGENTS)), true)(hc)).thenReturn(Future(users))
       when(developerConnectorMock.fetchByEmailPreferences(*, *, *, *)(*)).thenReturn(Future(users))
       when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
-        CombinedApi("VAT", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PUBLIC)),
-        CombinedApi("CORP", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
-        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))
+        CombinedApi("VAT", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, Some(PUBLIC)),
+        CombinedApi("CORP", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, Some(PRIVATE)),
+        CombinedApi("SELF", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, Some(PRIVATE))
       )))
 
       val overriddenPref = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("VAT", "CORP")), privateapimatch = true)
@@ -201,12 +201,12 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
     "do not save the email data when sending email to a specific API which are empty stringed" in new Setup {
       when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
-      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")), Some(List(APICategory("TAX"))), true)(hc)).thenReturn(Future(users))
+      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")), Some(List(ApiCategory.AGENTS)), true)(hc)).thenReturn(Future(users))
       when(developerConnectorMock.fetchByEmailPreferences(*, *, *, *)(*)).thenReturn(Future(users))
       when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
-        CombinedApi("VAT", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PUBLIC)),
-        CombinedApi("CORP", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
-        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))
+        CombinedApi("VAT", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, Some(PUBLIC)),
+        CombinedApi("CORP", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, Some(PRIVATE)),
+        CombinedApi("SELF", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, Some(PRIVATE))
       )))
 
       val overriddenPref = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("", "")), privateapimatch = true)
@@ -222,9 +222,9 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       when(draftEmailRepositoryMock.persist(*)).thenReturn(Future(InsertOneResult.acknowledged(BsonNumber(1))))
       when(developerConnectorMock.fetchByEmailPreferences(*, *, *, *)(*)).thenReturn(Future(users))
       when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
-        CombinedApi("VAT", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PUBLIC)),
-        CombinedApi("CORP", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE)),
-        CombinedApi("SELF", "VAT", List(CombinedApiCategory("TAX")), ApiType.REST_API, Some(PRIVATE))
+        CombinedApi("VAT", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, Some(PUBLIC)),
+        CombinedApi("CORP", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, Some(PRIVATE)),
+        CombinedApi("SELF", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, Some(PRIVATE))
       )))
 
       val overriddenPref = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("VAT1", "CORP1")))
@@ -304,8 +304,8 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
         email.copy(userSelectionQuery = DevelopersEmailQuery(emailsForSomeCases = Some(EmailOverride(users, false))))
       ))
 
-      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")), Some(List(APICategory("TAX"))), true)(hc)).thenReturn(Future(List(userOne)))
-      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")), Some(List(APICategory("TAX"))), false)(hc)).thenReturn(Future(List(userTwo)))
+      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")), Some(List(ApiCategory.AGENTS)), true)(hc)).thenReturn(Future(List(userOne)))
+      when(developerConnectorMock.fetchByEmailPreferences(TopicOptionChoice.TECHNICAL, Some(List("VAT")), Some(List(ApiCategory.AGENTS)), false)(hc)).thenReturn(Future(List(userTwo)))
 
       await(underTest.sendEmail(email.emailUUID))
 
