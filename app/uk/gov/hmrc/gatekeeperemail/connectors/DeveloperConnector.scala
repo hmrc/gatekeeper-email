@@ -37,13 +37,13 @@ class DeveloperConnector @Inject() (appConfig: AppConfig, http: HttpClient)(impl
   def fetchByEmailPreferences(
       topic: TopicOptionChoice,
       maybeApis: Option[Seq[String]] = None,
-      maybeApiCategories: Option[Seq[APICategory]] = None,
+      maybeApiCategories: Option[Seq[ApiCategory]] = None,
       privateapimatch: Boolean = false
     )(implicit hc: HeaderCarrier
     ): Future[List[RegisteredUser]] = {
     logger.info(s"fetchByEmailPreferences topic is $topic maybeApis: $maybeApis maybeApuCategories $maybeApiCategories privateapimatch $privateapimatch")
     val regimes: Seq[(String, String)] = maybeApiCategories.fold(Seq.empty[(String, String)])(regimes =>
-      regimes.flatMap(regime => Seq("regime" -> regime.value))
+      regimes.flatMap(regime => Seq("regime" -> regime.toString))
     )
     val privateapimatchParams          = if (privateapimatch) Seq("privateapimatch" -> "true") else Seq.empty
     val queryParams                    =
