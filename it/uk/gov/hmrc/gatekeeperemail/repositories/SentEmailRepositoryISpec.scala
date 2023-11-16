@@ -100,7 +100,7 @@ class SentEmailRepositoryISpec
       ttlIndex.get("key").get shouldBe BsonDocument("createdAt" -> Codecs.toBson(1))
       ttlIndex.get("unique") shouldBe None
       ttlIndex.get("background").get shouldBe BsonBoolean(true)
-      ttlIndex.get("expireAfterSeconds") shouldBe Some(BsonInt64(60 * 60 * 24 * 365 * 7))
+      ttlIndex.get("expireAfterSeconds").value.asNumber().intValue() shouldBe 60 * 60 * 24 * 365 * 7
     }
   }
 
