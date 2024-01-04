@@ -75,7 +75,8 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
   )
   val dummyCallBackBody  = DummyCallBackBody(reference)
   val uploadInfoFailed   = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors, now())
-  implicit val timeout   = Timeout(FiniteDuration(20, SECONDS))
+
+  implicit val timeout: Timeout = Timeout(FiniteDuration(20, SECONDS))
 
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()

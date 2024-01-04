@@ -18,6 +18,8 @@ package uk.gov.hmrc.gatekeeperemail.models
 
 import scala.collection.immutable.ListSet
 
+import play.api.libs.json.Format
+
 sealed trait ApiCategory {
 
   lazy val displayText: String = {
@@ -78,7 +80,7 @@ object ApiCategory {
     OTHER
   ))
 
-  implicit val formatApiCategory = SealedTraitJsonFormatting.createFormatFor[ApiCategory]("API Category", apply)
+  implicit val formatApiCategory: Format[ApiCategory] = SealedTraitJsonFormatting.createFormatFor[ApiCategory]("API Category", apply)
 
   def apply(text: String): Option[ApiCategory] = {
     ApiCategory.values.find(_.toString == text.toUpperCase)

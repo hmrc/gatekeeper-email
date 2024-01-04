@@ -26,7 +26,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.http.Status.OK
 import play.api.libs.json.Json
-import play.api.mvc.ControllerComponents
+import play.api.mvc.{AnyContentAsEmpty, ControllerComponents}
 import play.api.test.Helpers.{contentAsJson, status}
 import play.api.test.{FakeRequest, StubControllerComponentsFactory, StubPlayBodyParsersFactory}
 
@@ -98,7 +98,7 @@ class UploadCallbackControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPer
     val mockUpscanCallbackService: UpscanCallbackService = mock[UpscanCallbackService]
     val controllerComponents: ControllerComponents       = stubControllerComponents()
     val underTest                                        = new UploadCallbackController(mockUpscanCallbackService, controllerComponents)
-    implicit lazy val request                            = FakeRequest()
+    implicit lazy val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
     when(mockUpscanCallbackService.handleCallback(readyCallbackBody)).thenReturn(successful(uploadInfoSuccess))
     when(mockUpscanCallbackService.handleCallback(failedCallbackBody)).thenReturn(successful(uploadInfoFailed))
   }

@@ -47,17 +47,17 @@ case class FailedCallbackBody(
   ) extends CallbackBody
 
 object CallbackBody {
-  implicit val uploadDetailsReads  = Json.reads[UploadDetails]
-  implicit val uploadDetailsWrites = Json.writes[UploadDetails]
-  implicit val uploadDetails       = Format(uploadDetailsReads, uploadDetailsWrites)
+  implicit val uploadDetailsReads: Reads[UploadDetails] = Json.reads[UploadDetails]
+  implicit val uploadDetailsWrites: OWrites[UploadDetails] = Json.writes[UploadDetails]
+  implicit val uploadDetails: Format[UploadDetails] = Format(uploadDetailsReads, uploadDetailsWrites)
 
-  implicit val errorDetailsReads = Json.reads[ErrorDetails]
+  implicit val errorDetailsReads: Reads[ErrorDetails] = Json.reads[ErrorDetails]
 
-  implicit val readyCallbackBodyReads = Json.reads[ReadyCallbackBody]
+  implicit val readyCallbackBodyReads: Reads[ReadyCallbackBody] = Json.reads[ReadyCallbackBody]
 
-  implicit val failedCallbackBodyReads = Json.reads[FailedCallbackBody]
+  implicit val failedCallbackBodyReads: Reads[FailedCallbackBody] = Json.reads[FailedCallbackBody]
 
-  implicit val reads = new Reads[CallbackBody] {
+  implicit val reads: Reads[CallbackBody] = new Reads[CallbackBody] {
 
     override def reads(json: JsValue): JsResult[CallbackBody] = json \ "fileStatus" match {
       case JsDefined(JsString("READY"))  => implicitly[Reads[ReadyCallbackBody]].reads(json)

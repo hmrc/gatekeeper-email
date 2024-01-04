@@ -39,7 +39,7 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec
     with UrlEncoding {
 
   trait Setup {
-    implicit val hc = HeaderCarrier()
+    implicit val hc: HeaderCarrier = HeaderCarrier()
 
     val mockAppConfig = mock[AppConfig]
     val httpClient    = app.injector.instanceOf[HttpClient]

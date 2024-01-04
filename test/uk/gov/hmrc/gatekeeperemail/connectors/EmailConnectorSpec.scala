@@ -72,7 +72,7 @@ class EmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with 
       val emailBaseUrl = wireMockUrl
     }
 
-    implicit val hc = HeaderCarrier()
+    implicit val hc: HeaderCarrier = HeaderCarrier()
 
     lazy val underTest = new EmailConnector(httpClient, fakeEmailConnectorConfig)
   }

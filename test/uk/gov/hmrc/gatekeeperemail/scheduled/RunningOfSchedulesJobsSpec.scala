@@ -33,9 +33,9 @@ import play.api.Application
 import play.api.inject.ApplicationLifecycle
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.gatekeeperemail.utils.HmrcSpec
 
-class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFutures with GuiceOneAppPerTest with MockitoSugar
-    with BeforeAndAfterEach {
+class RunningOfSchedulesJobsSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach {
 
   override def fakeApplication() =
     new GuiceApplicationBuilder().configure(

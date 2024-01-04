@@ -26,7 +26,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.http.Status.{BAD_REQUEST, OK}
 import play.api.libs.json.{JsResultException, Json}
-import play.api.mvc.ControllerComponents
+import play.api.mvc.{AnyContentAsEmpty, ControllerComponents}
 import play.api.test.Helpers.{contentAsJson, contentAsString, status}
 import play.api.test.{FakeRequest, StubControllerComponentsFactory, StubPlayBodyParsersFactory}
 
@@ -58,7 +58,7 @@ class UploadFormControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPerSuit
     val mockFileUploadStatusService: FileUploadStatusService = mock[FileUploadStatusService]
     val controllerComponents: ControllerComponents           = stubControllerComponents()
     val underTest                                            = new UploadFormController(mockFileUploadStatusService, controllerComponents, stubPlayBodyParsers(materializer))
-    implicit lazy val request                                = FakeRequest()
+    implicit lazy val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
     when(mockFileUploadStatusService.requestUpload(reference)).thenReturn(successful(uploadInfoInProgress))
     when(mockFileUploadStatusService.registerUploadResult(reference, uploadStatusSuccess)).thenReturn(successful(uploadInfo1))
     when(mockFileUploadStatusService.registerUploadResult(reference, Failed)).thenReturn(successful(uploadInfoInFailed))

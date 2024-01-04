@@ -19,6 +19,7 @@ package uk.gov.hmrc.apiplatform.modules.stride.connectors.mocks
 import java.util.UUID
 import scala.concurrent.Future.{failed, successful}
 
+import org.mockito.Strictness.Lenient
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 
 import uk.gov.hmrc.auth.core.retrieve.{Name, Retrieval, ~}
@@ -64,6 +65,6 @@ trait AuthConnectorMockModule extends MockitoSugar with ArgumentMatchersSugar {
   }
 
   object AuthConnectorMock extends BaseAuthConnectorMock {
-    val aMock = mock[AuthConnector](withSettings.lenient())
+    val aMock = mock[AuthConnector](withSettings.strictness(Lenient))
   }
 }

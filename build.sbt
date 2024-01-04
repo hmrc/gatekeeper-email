@@ -10,17 +10,15 @@ val appName = "gatekeeper-email"
 
 lazy val playSettings: Seq[Setting[_]] = Seq.empty
 
-scalaVersion := "2.13.8"
+scalaVersion := "2.13.12"
 
-ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
+ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(
-    play.sbt.PlayScala,
-    SbtDistributablesPlugin
-  )
+  .enablePlugins(PlayScala, SbtDistributablesPlugin)
+  .disablePlugins(JUnitXmlReportPlugin)
   .settings(playSettings: _*)
   .settings(scalaSettings: _*)
   .settings(playPublishingSettings: _*)
@@ -55,7 +53,7 @@ lazy val microservice = Project(appName, file("."))
     ),
     addTestReportOption(IntegrationTest, "int-test-reports")
   )
-  .settings(inConfig(IntegrationTest)(scalafixConfigSettings(IntegrationTest)))
+  .settings(scalafixConfigSettings(IntegrationTest))
   .settings(
     scalacOptions ++= Seq(
       "-Wconf:cat=unused&src=views/.*\\.scala:s",
@@ -64,7 +62,6 @@ lazy val microservice = Project(appName, file("."))
       "-Wconf:cat=unused&src=.*ReverseRoutes\\.scala:s"
     )
   )
-  .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
 
 
 lazy val playPublishingSettings: Seq[sbt.Setting[_]] = Seq(
@@ -84,3 +81,12 @@ def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
   }
 
   Global / bloopAggregateSourceDependencies := true
+
+commands ++= Seq(
+  Command.command("run-all-tests") { state => "test" :: "it:test" :: state },
+
+  Command.command("clean-and-test") { state => "clean" :: "compile" :: "run-all-tests" :: state },
+
+  // Coverage does not need compile !
+  Command.command("pre-commit") { state => "clean" :: "scalafmtAll" :: "scalafixAll" :: "coverage" :: "run-all-tests" :: "coverageOff" :: "coverageAggregate" :: state }
+)

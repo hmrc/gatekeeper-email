@@ -99,5 +99,5 @@ object FileUploadMongoFormatter {
   implicit val uploadStatusFormat: Format[UploadStatus] = Format(read, write)
   val uploadInfoReads                                   = Json.reads[UploadInfo]
   val uploadInfoWrites                                  = Json.writes[UploadInfo]
-  implicit val uploadInfo                               = Json.format[UploadInfo]
+  implicit val uploadInfo: OFormat[UploadInfo]          = Json.format[UploadInfo]
 }
