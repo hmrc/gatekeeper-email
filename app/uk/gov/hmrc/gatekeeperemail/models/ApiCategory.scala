@@ -121,7 +121,6 @@ object ApiCategory {
 }
 // scalastyle:on cyclomatic.complexity
 
-
 object SealedTraitJsonFormatting {
   import play.api.libs.json._
 

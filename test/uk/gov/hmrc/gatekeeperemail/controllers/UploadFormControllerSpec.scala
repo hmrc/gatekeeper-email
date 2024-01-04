@@ -58,6 +58,7 @@ class UploadFormControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPerSuit
     val mockFileUploadStatusService: FileUploadStatusService = mock[FileUploadStatusService]
     val controllerComponents: ControllerComponents           = stubControllerComponents()
     val underTest                                            = new UploadFormController(mockFileUploadStatusService, controllerComponents, stubPlayBodyParsers(materializer))
+
     implicit lazy val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
     when(mockFileUploadStatusService.requestUpload(reference)).thenReturn(successful(uploadInfoInProgress))
     when(mockFileUploadStatusService.registerUploadResult(reference, uploadStatusSuccess)).thenReturn(successful(uploadInfo1))

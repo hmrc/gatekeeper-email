@@ -139,7 +139,7 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with Before
         case Left(ex: Exception) =>
           ex.getMessage shouldBe "POST of 'http://localhost:22222/templates/gatekeeper' returned 404. Response body: ''"
           ex.statusCode shouldBe Status.NOT_FOUND
-        case Right(_) => fail()
+        case Right(_)            => fail()
       }
     }
   }

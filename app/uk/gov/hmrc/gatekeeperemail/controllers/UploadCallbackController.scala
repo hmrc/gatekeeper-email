@@ -47,9 +47,9 @@ case class FailedCallbackBody(
   ) extends CallbackBody
 
 object CallbackBody {
-  implicit val uploadDetailsReads: Reads[UploadDetails] = Json.reads[UploadDetails]
+  implicit val uploadDetailsReads: Reads[UploadDetails]    = Json.reads[UploadDetails]
   implicit val uploadDetailsWrites: OWrites[UploadDetails] = Json.writes[UploadDetails]
-  implicit val uploadDetails: Format[UploadDetails] = Format(uploadDetailsReads, uploadDetailsWrites)
+  implicit val uploadDetails: Format[UploadDetails]        = Format(uploadDetailsReads, uploadDetailsWrites)
 
   implicit val errorDetailsReads: Reads[ErrorDetails] = Json.reads[ErrorDetails]
 

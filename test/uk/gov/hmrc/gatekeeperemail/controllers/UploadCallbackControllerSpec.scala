@@ -98,6 +98,7 @@ class UploadCallbackControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPer
     val mockUpscanCallbackService: UpscanCallbackService = mock[UpscanCallbackService]
     val controllerComponents: ControllerComponents       = stubControllerComponents()
     val underTest                                        = new UploadCallbackController(mockUpscanCallbackService, controllerComponents)
+
     implicit lazy val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
     when(mockUpscanCallbackService.handleCallback(readyCallbackBody)).thenReturn(successful(uploadInfoSuccess))
     when(mockUpscanCallbackService.handleCallback(failedCallbackBody)).thenReturn(successful(uploadInfoFailed))
