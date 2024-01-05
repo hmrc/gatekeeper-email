@@ -18,7 +18,7 @@ package uk.gov.hmrc.gatekeeperemail.models
 
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
 
-import play.api.libs.json.{Format, Json, OFormat}
+import play.api.libs.json.{Json, OFormat}
 
 sealed trait ApiType extends EnumEntry
 
@@ -27,8 +27,6 @@ object ApiType extends Enum[ApiType] with PlayJsonEnum[ApiType] {
   case object REST_API extends ApiType
   case object XML_API  extends ApiType
 }
-
-
 
 // case class CombinedApiCategory(value: String) extends AnyVal
 

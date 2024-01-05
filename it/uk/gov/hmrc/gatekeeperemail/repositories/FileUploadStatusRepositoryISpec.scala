@@ -39,9 +39,9 @@ class FileUploadStatusRepositoryISpec
     extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll with OptionValues
     with PlayMongoRepositorySupport[UploadInfo] with Matchers with GuiceOneAppPerSuite with FixedClock {
 
-  implicit var s: ActorSystem  = ActorSystem("test")
-  implicit var m: Materializer = Materializer(s)
-  implicit val timeOut         = Timeout(FiniteDuration(20, SECONDS))
+  implicit var s: ActorSystem   = ActorSystem("test")
+  implicit var m: Materializer  = Materializer(s)
+  implicit val timeOut: Timeout = Timeout(FiniteDuration(20, SECONDS))
 
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()

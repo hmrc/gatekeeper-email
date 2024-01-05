@@ -32,8 +32,8 @@ import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, Upl
 
 class UpscanCallbackService @Inject() (sessionStorage: FileUploadStatusRepository, objectStoreClient: PlayObjectStoreClient, appConfig: AppConfig)(implicit val ec: ExecutionContext) {
 
-  private val logger = Logger(this.getClass)
-  implicit val hc    = HeaderCarrier()
+  private val logger             = Logger(this.getClass)
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   def uploadToObjectStore(readyCallback: ReadyCallbackBody) = {
     logger.info(s"uploadToObjectStore $readyCallback")

@@ -20,11 +20,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 
-import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
 
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -33,9 +30,9 @@ import uk.gov.hmrc.mongo.lock.MongoLockRepository
 
 import uk.gov.hmrc.gatekeeperemail.config.{AppConfig, ScheduledJobConfig}
 import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
+import uk.gov.hmrc.gatekeeperemail.utils.HmrcSpec
 
-class LockedScheduledJobSpec extends AnyWordSpec with Matchers with ScalaFutures with GuiceOneAppPerTest with MockitoSugar
-    with BeforeAndAfterEach {
+class LockedScheduledJobSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach {
 
   override def fakeApplication() =
     new GuiceApplicationBuilder().configure(

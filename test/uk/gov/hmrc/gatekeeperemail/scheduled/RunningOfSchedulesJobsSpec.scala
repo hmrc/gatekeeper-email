@@ -20,13 +20,10 @@ import scala.concurrent.duration.{Deadline, DurationInt, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
 
 import akka.actor.Cancellable
-import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Minute, Span}
-import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
 
 import play.api.Application
@@ -34,8 +31,9 @@ import play.api.inject.ApplicationLifecycle
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
-class RunningOfSchedulesJobsSpec extends AnyWordSpec with Matchers with ScalaFutures with GuiceOneAppPerTest with MockitoSugar
-    with BeforeAndAfterEach {
+import uk.gov.hmrc.gatekeeperemail.utils.HmrcSpec
+
+class RunningOfSchedulesJobsSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach {
 
   override def fakeApplication() =
     new GuiceApplicationBuilder().configure(
