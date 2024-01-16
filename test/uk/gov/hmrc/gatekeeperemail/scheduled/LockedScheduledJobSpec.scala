@@ -26,11 +26,11 @@ import org.scalatestplus.play.guice.GuiceOneAppPerTest
 
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
 
 import uk.gov.hmrc.gatekeeperemail.config.{AppConfig, ScheduledJobConfig}
 import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
-import uk.gov.hmrc.gatekeeperemail.utils.HmrcSpec
 
 class LockedScheduledJobSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach {
 

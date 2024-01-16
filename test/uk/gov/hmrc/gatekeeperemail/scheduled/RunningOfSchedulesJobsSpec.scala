@@ -30,8 +30,7 @@ import play.api.Application
 import play.api.inject.ApplicationLifecycle
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-
-import uk.gov.hmrc.gatekeeperemail.utils.HmrcSpec
+import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
 
 class RunningOfSchedulesJobsSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach {
 
@@ -72,12 +71,6 @@ class RunningOfSchedulesJobsSpec extends HmrcSpec with ScalaFutures with GuiceOn
       private val testApp = fakeApplication()
       val stoppableJob    = new TestScheduledJob() {
         override def name: String = "StoppableJob"
-      }
-      private val runner  = new RunningOfScheduledJobs {
-        override lazy val ec: ExecutionContext                       = ExecutionContext.Implicits.global
-        override lazy val applicationLifecycle: ApplicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
-        override lazy val scheduledJobs: Seq[ScheduledJob]           = Seq(stoppableJob)
-        override lazy val application: Application                   = testApp
       }
 
       stoppableJob.isRunning = Future.successful(true)

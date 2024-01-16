@@ -26,8 +26,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
-import uk.gov.hmrc.gatekeeperemail.models.TopicOptionChoice.TopicOptionChoice
-import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.models.{TopicOptionChoice, _}
 
 @Singleton
 class DeveloperConnector @Inject() (appConfig: AppConfig, http: HttpClient)(implicit ec: ExecutionContext) extends Logging {

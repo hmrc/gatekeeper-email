@@ -19,17 +19,24 @@ package uk.gov.hmrc.gatekeeperemail.models.responses
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json.{JsObject, Json}
 
-object ErrorCode extends Enumeration {
-  type ErrorCode = Value
-  val ACCEPT_HEADER_INVALID   = Value("ACCEPT_HEADER_INVALID")
-  val INVALID_REQUEST_PAYLOAD = Value("INVALID_REQUEST_PAYLOAD")
-  val INTERNAL_SERVER_ERROR   = Value("INTERNAL_SERVER_ERROR")
-  val BAD_REQUEST             = Value("BAD_REQUEST")
+sealed trait ErrorCode
+
+object ErrorCode {
+  case object ACCEPT_HEADER_INVALID   extends ErrorCode
+  case object INVALID_REQUEST_PAYLOAD extends ErrorCode
+  case object INTERNAL_SERVER_ERROR   extends ErrorCode
+  case object BAD_REQUEST             extends ErrorCode
+
+  val values = Set(ACCEPT_HEADER_INVALID, INVALID_REQUEST_PAYLOAD, INTERNAL_SERVER_ERROR, BAD_REQUEST)
+
+  def apply(text: String): Option[ErrorCode] = ErrorCode.values.find(_.toString() == text.toUpperCase)
+
+  def unsafeApply(text: String): ErrorCode = apply(text).getOrElse(throw new RuntimeException(s"$text is not a valid Error Code"))
 }
 
 object JsErrorResponse {
 
-  def apply(errorCode: ErrorCode.Value, message: JsValueWrapper): JsObject =
+  def apply(errorCode: ErrorCode, message: JsValueWrapper): JsObject =
     Json.obj(
       "code"    -> errorCode.toString,
       "message" -> message

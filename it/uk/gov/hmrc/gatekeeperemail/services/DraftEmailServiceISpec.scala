@@ -30,6 +30,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
@@ -40,7 +41,6 @@ import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector,
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, EmailData, EmailRequest}
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
-import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
 
 class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with MockitoSugar with ArgumentMatchersSugar
     with GuiceOneAppPerSuite with FixedClock with PlayMongoRepositorySupport[DraftEmail] {

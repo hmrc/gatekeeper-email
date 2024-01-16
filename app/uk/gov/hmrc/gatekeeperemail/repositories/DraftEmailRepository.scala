@@ -98,7 +98,7 @@ class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig:
     collection.findOneAndUpdate(
       equal("emailUUID", Codecs.toBson(emailUUID)),
       update = combine(
-        set("status", Codecs.toBson(EmailStatus.SENT)),
+        set("status", Codecs.toBson[EmailStatus](EmailStatus.SENT)),
         set("emailsCount", emailCount)
       ),
       options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)

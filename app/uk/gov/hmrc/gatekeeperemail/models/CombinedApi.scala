@@ -16,31 +16,26 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
+import play.api.libs.json._
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiAccessType
+import uk.gov.hmrc.apiplatform.modules.common.domain.services.SealedTraitJsonFormatting
 
-import play.api.libs.json.{Json, OFormat}
+sealed trait ApiType
 
-sealed trait ApiType extends EnumEntry
-
-object ApiType extends Enum[ApiType] with PlayJsonEnum[ApiType] {
-  val values = findValues
+object ApiType {
   case object REST_API extends ApiType
   case object XML_API  extends ApiType
+  val values = Set(REST_API, XML_API)
+
+  def apply(text: String): Option[ApiType] = ApiType.values.find(_.toString() == text.toUpperCase)
+
+  def unsafeApply(text: String): ApiType = apply(text).getOrElse(throw new RuntimeException(s"$text is not a valid Api Type"))
+
+  implicit val format: Format[ApiType] = SealedTraitJsonFormatting.createFormatFor[ApiType]("Api Type", apply)
+
 }
 
-// case class CombinedApiCategory(value: String) extends AnyVal
-
-// object CombinedApiCategory {
-//   implicit val categoryFormat: Format[CombinedApiCategory] = Json.format[CombinedApiCategory]
-
-//   def toAPICategory(combinedApiCategory: CombinedApiCategory): APICategory = {
-//     APICategory(combinedApiCategory.value)
-//   }
-// }
-
-//TODO -change accessType from being an option when APM version which starts returning this data
-// is deployed to production
-case class CombinedApi(displayName: String, serviceName: String, categories: List[ApiCategory], apiType: ApiType, accessType: Option[APIAccessType])
+case class CombinedApi(displayName: String, serviceName: String, categories: List[ApiCategory], apiType: ApiType, accessType: ApiAccessType)
 
 object CombinedApi {
   implicit val format: OFormat[CombinedApi] = Json.format[CombinedApi]

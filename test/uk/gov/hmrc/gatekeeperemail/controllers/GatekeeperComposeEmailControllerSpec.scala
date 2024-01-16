@@ -34,12 +34,12 @@ import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, EmailConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
 import uk.gov.hmrc.gatekeeperemail.models._
@@ -48,14 +48,12 @@ import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmail
 import uk.gov.hmrc.gatekeeperemail.services.{DraftEmailService, ObjectStoreService}
 import uk.gov.hmrc.gatekeeperemail.stride.connectors.AuthConnector
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
-import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
 
 class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with Matchers with MockitoSugar with ArgumentMatchersSugar with FixedClock {
 
   private val subject      = "Email subject"
   private val emailBody    = "Body to be used in the email template"
   private val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
-  private val users        = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
   val emailPreferences     = DevelopersEmailQuery()
 
   private val draftEmail            = DraftEmail(
@@ -81,7 +79,6 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
   private val uploadedFileSeq                              = Seq(uploadedFile123)
   private val uploadedFileMetadata: UploadedFileMetadata   = UploadedFileMetadata(Nonce.random, uploadedFileSeq, cargo)
   private val emailRequest                                 = EmailRequest(emailPreferences, "gatekeeper", EmailData(subject, emailBody))
-  private val wrongEmailRequest                            = EmailRequest(emailPreferences, "gatekeeper", EmailData(subject, emailBody))
 
   private val fakeRequestToUpdateFiles                                     = FakeRequest("POST", "/gatekeeperemail/updatefiles")
     .withHeaders("Content-Type" -> "application/json")

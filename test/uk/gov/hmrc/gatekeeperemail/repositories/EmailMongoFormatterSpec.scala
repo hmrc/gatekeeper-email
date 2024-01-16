@@ -21,12 +21,11 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 import play.api.libs.json.{JsObject, JsString}
+import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 
-import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
 import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
 import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailTemplateData}
-import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
 
 class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSugar with ArgumentMatchersSugar with FixedClock {
 
@@ -34,7 +33,6 @@ class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSuga
     val formatter = DraftEmail.format
 
     "correctly write a Email message" in {
-      val users                   = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
       val data: EmailTemplateData = EmailTemplateData("gatekeeper", Map(), false, Map(), None)
       val emailPreferences        = DevelopersEmailQuery()
 
