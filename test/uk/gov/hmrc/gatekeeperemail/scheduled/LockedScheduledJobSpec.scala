@@ -26,13 +26,13 @@ import org.scalatestplus.play.guice.GuiceOneAppPerTest
 
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
-import uk.gov.hmrc.mongo.lock.MongoLockRepository
+import uk.gov.hmrc.apiplatform.modules.common.utils.{FixedClock, HmrcSpec}
+import uk.gov.hmrc.mongo.lock.{Lock, MongoLockRepository}
 
 import uk.gov.hmrc.gatekeeperemail.config.{AppConfig, ScheduledJobConfig}
 import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
 
-class LockedScheduledJobSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach {
+class LockedScheduledJobSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach with FixedClock {
 
   override def fakeApplication() =
     new GuiceApplicationBuilder().configure(
@@ -53,7 +53,7 @@ class LockedScheduledJobSpec extends HmrcSpec with ScalaFutures with GuiceOneApp
   "ExclusiveScheduledJob" should {
 
     "back off when Mongo lock cannot be obtained" in new Setup {
-      when(mockLockRepository.takeLock(*, *, *)).thenReturn(Future.successful(false))
+      when(mockLockRepository.takeLock(*, *, *)).thenReturn(Future.successful(None))
 
       val result = await(subject.execute)
 
@@ -63,7 +63,7 @@ class LockedScheduledJobSpec extends HmrcSpec with ScalaFutures with GuiceOneApp
     }
 
     "execute in lock when Mongo lock can be obtained" in new Setup {
-      when(mockLockRepository.takeLock(*, *, *)).thenReturn(Future.successful(true))
+      when(mockLockRepository.takeLock(*, *, *)).thenReturn(Future.successful(Some(Lock("", "", instant, instant))))
       when(mockLockRepository.releaseLock(*, *)).thenReturn(Future.successful(()))
       when(mockSentEmailService.sendNextPendingEmail).thenReturn(Future("Sent successfully"))
 

@@ -17,7 +17,6 @@
 package uk.gov.hmrc.gatekeeperemail.services
 
 import java.time.Instant
-import java.time.LocalDateTime.now
 import java.util.UUID.randomUUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future.successful
@@ -33,6 +32,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.await
+import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
@@ -43,7 +43,7 @@ import uk.gov.hmrc.gatekeeperemail.controllers._
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 
-class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupport[UploadInfo] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
+class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupport[UploadInfo] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite with FixedClock {
 
   case class DummyCallBackBody(reference: String) extends CallbackBody
 
@@ -62,7 +62,7 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
     )
   )
   val uploadStatusSuccess           = UploadedSuccessfully("test.pdf", "application/pdf", "https://bucketName.s3.eu-west-2.amazonaws.com?1235676", Some(45678L), "gatekeeper-email/test.pdf")
-  val uploadInfoSuccess             = UploadInfo(Reference(reference), uploadStatusSuccess, now())
+  val uploadInfoSuccess             = UploadInfo(Reference(reference), uploadStatusSuccess, instant)
   val uploadStatusSFailedWithErrors = UploadedFailedWithErrors("FAILED", "QUARANTINE", "This file has a virus", reference)
 
   val failedCallbackBody = FailedCallbackBody(
@@ -74,7 +74,7 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
     )
   )
   val dummyCallBackBody  = DummyCallBackBody(reference)
-  val uploadInfoFailed   = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors, now())
+  val uploadInfoFailed   = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors, instant)
 
   implicit val timeout: Timeout = Timeout(FiniteDuration(20, SECONDS))
 
@@ -86,11 +86,11 @@ class UpscanCallbackServiceSpec extends AnyWordSpec with PlayMongoRepositorySupp
       )
 
   override implicit lazy val app: Application = appBuilder.build()
-  override protected def repository           = app.injector.instanceOf[FileUploadStatusRepository]
+  override protected val repository           = app.injector.instanceOf[FileUploadStatusRepository]
   val objectStoreClient                       = mock[PlayObjectStoreClient]
   val mockAppConfig                           = mock[AppConfig]
   val t                                       = new UpscanCallbackService(repository, objectStoreClient, mockAppConfig)
-  val f                                       = new FileUploadStatusService(repository)
+  val f                                       = new FileUploadStatusService(repository, clock)
 
   override def beforeEach(): Unit = {
     prepareDatabase()

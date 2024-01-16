@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
-import java.time.{Instant, LocalDateTime}
+import java.time.Instant
 import java.util.UUID.randomUUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future.successful
@@ -29,6 +29,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{AnyContentAsEmpty, ControllerComponents}
 import play.api.test.Helpers.{contentAsJson, status}
 import play.api.test.{FakeRequest, StubControllerComponentsFactory, StubPlayBodyParsersFactory}
+import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
@@ -38,7 +39,8 @@ import uk.gov.hmrc.gatekeeperemail.services.UpscanCallbackService
 
 class UploadCallbackControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPerSuite
     with StubControllerComponentsFactory
-    with StubPlayBodyParsersFactory {
+    with StubPlayBodyParsersFactory
+    with FixedClock {
 
   val uploadId  = UploadId(randomUUID)
   val reference = randomUUID.toString
@@ -89,8 +91,8 @@ class UploadCallbackControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPer
                                  |}
         """.stripMargin
 
-  val uploadInfoSuccess = UploadInfo(Reference(reference), uploadStatusSuccess, LocalDateTime.now())
-  val uploadInfoFailed  = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors, LocalDateTime.now())
+  val uploadInfoSuccess = UploadInfo(Reference(reference), uploadStatusSuccess, instant)
+  val uploadInfoFailed  = UploadInfo(Reference(reference), uploadStatusSFailedWithErrors, instant)
 
   implicit lazy val materializer: Materializer = mock[Materializer]
 

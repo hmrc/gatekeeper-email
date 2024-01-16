@@ -37,7 +37,7 @@ import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
 import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, EmailTemplateData, UploadedFileWithObjectStore}
 
 class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[DraftEmail] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite with FixedClock {
-  val serviceRepo = repository.asInstanceOf[DraftEmailRepository]
+  lazy val serviceRepo = repository.asInstanceOf[DraftEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
 
@@ -51,7 +51,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override protected def repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
+  override protected val repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
 
   trait Setup {
     val templateData     = EmailTemplateData("templateId", Map(), false, Map(), None)

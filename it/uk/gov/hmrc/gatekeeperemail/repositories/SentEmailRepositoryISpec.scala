@@ -44,7 +44,7 @@ class SentEmailRepositoryISpec
     with FixedClock
     with OptionValues {
 
-  val serviceRepo = repository.asInstanceOf[SentEmailRepository]
+  lazy val serviceRepo = repository.asInstanceOf[SentEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
 
@@ -58,7 +58,7 @@ class SentEmailRepositoryISpec
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override protected def repository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
+  override protected val repository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
 
   val sentEmail = List(SentEmail(
     createdAt = precise(),

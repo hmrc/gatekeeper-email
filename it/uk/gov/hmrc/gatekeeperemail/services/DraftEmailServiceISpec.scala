@@ -44,8 +44,8 @@ import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmail
 
 class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with MockitoSugar with ArgumentMatchersSugar
     with GuiceOneAppPerSuite with FixedClock with PlayMongoRepositorySupport[DraftEmail] {
-  val emailRepository     = repository.asInstanceOf[DraftEmailRepository]
-  val sentEmailRepository = serepository.asInstanceOf[SentEmailRepository]
+  lazy val emailRepository     = repository.asInstanceOf[DraftEmailRepository]
+  lazy val sentEmailRepository = serepository.asInstanceOf[SentEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
 
@@ -59,7 +59,7 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override protected def repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
+  override protected val repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
   protected def serepository: PlayMongoRepository[SentEmail]         = app.injector.instanceOf[SentEmailRepository]
 
   implicit val hc: HeaderCarrier = HeaderCarrier()

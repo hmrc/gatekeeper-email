@@ -24,6 +24,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.Logger
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiAccessType
+import uk.gov.hmrc.apiplatform.modules.common.services.ClockNow
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
@@ -32,7 +33,6 @@ import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector,
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, DraftEmailRequest, EmailOverride, EmailRequest}
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
-import uk.gov.hmrc.gatekeeperemail.util.ClockNow
 
 @Singleton
 class DraftEmailService @Inject() (
@@ -42,7 +42,7 @@ class DraftEmailService @Inject() (
     draftEmailRepository: DraftEmailRepository,
     sentEmailRepository: SentEmailRepository,
     appConfig: AppConfig,
-    override val clock: Clock
+    val clock: Clock
   )(implicit val ec: ExecutionContext
   ) extends ClockNow {
 

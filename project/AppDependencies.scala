@@ -3,7 +3,7 @@ import sbt._
 object AppDependencies {
 
   lazy val bootstrapPlayVersion = "7.12.0"
-  lazy val hmrcMongoVersion     = "0.74.0"
+  lazy val hmrcMongoVersion     = "1.7.0"
   lazy val akkaVersion          = "2.6.19"
   lazy val commonDomainVersion  = "0.10.0"
   lazy val apiDomainVersion     = "0.11.0"

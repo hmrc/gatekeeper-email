@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.gatekeeperemail.controllers
 
-import java.time.LocalDateTime
 import java.util.UUID.randomUUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future.successful
@@ -29,6 +28,7 @@ import play.api.libs.json.{JsResultException, Json}
 import play.api.mvc.{AnyContentAsEmpty, ControllerComponents}
 import play.api.test.Helpers.{contentAsJson, contentAsString, status}
 import play.api.test.{FakeRequest, StubControllerComponentsFactory, StubPlayBodyParsersFactory}
+import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.models.JsonFormatters._
@@ -38,7 +38,7 @@ import uk.gov.hmrc.gatekeeperemail.services.FileUploadStatusService
 
 class UploadFormControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPerSuite
     with StubControllerComponentsFactory
-    with StubPlayBodyParsersFactory {
+    with StubPlayBodyParsersFactory with FixedClock {
 
   val uploadId            = UploadId(randomUUID)
   val reference           = randomUUID.toString
@@ -48,9 +48,9 @@ class UploadFormControllerSpec extends AsyncHmrcTestSpec with GuiceOneAppPerSuit
     """{"name" : "abc.txt", "mimeType" : "pdf", "downloadUrl" : "http://abcs3",
       |"size" : 1234, "_type" : "UploadedSuccessfully", "objectStoreUrl": "http://aws.s3.object-store-url"}""".stripMargin
   val failedBody           = """{"_type" : "Failed"}"""
-  val uploadInfo1          = UploadInfo(Reference(reference), uploadStatusSuccess, LocalDateTime.now())
-  val uploadInfoInProgress = UploadInfo(Reference(reference), InProgress, LocalDateTime.now())
-  val uploadInfoInFailed   = UploadInfo(Reference(reference), Failed, LocalDateTime.now())
+  val uploadInfo1          = UploadInfo(Reference(reference), uploadStatusSuccess, instant)
+  val uploadInfoInProgress = UploadInfo(Reference(reference), InProgress, instant)
+  val uploadInfoInFailed   = UploadInfo(Reference(reference), Failed, instant)
 
   implicit lazy val materializer: Materializer = mock[Materializer]
 
