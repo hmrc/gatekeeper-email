@@ -28,12 +28,12 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
 import uk.gov.hmrc.gatekeeperemail.models.SentEmail
-import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
 
 class SentEmailRepositoryISpec
     extends AnyWordSpec
@@ -44,7 +44,7 @@ class SentEmailRepositoryISpec
     with FixedClock
     with OptionValues {
 
-  val serviceRepo = repository.asInstanceOf[SentEmailRepository]
+  lazy val serviceRepo = repository.asInstanceOf[SentEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
 
@@ -58,7 +58,7 @@ class SentEmailRepositoryISpec
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override protected def repository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
+  override protected val repository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
 
   val sentEmail = List(SentEmail(
     createdAt = precise(),

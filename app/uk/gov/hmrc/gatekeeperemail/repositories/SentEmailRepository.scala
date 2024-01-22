@@ -72,7 +72,7 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
         fromRegistries(
           fromCodecs(
             Codecs.playFormatCodec(domainFormat),
-            Codecs.playFormatCodec(EmailStatus.jsonFormat)
+            Codecs.playFormatCodec(EmailStatus.format)
           ),
           MongoClient.DEFAULT_CODEC_REGISTRY
         )
@@ -80,7 +80,7 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
 
   def findNextEmailToSend: Future[Option[SentEmail]] = {
     collection.withReadPreference(primaryPreferred)
-      .find(filter = equal("status", Codecs.toBson(EmailStatus.PENDING)))
+      .find(filter = equal("status", Codecs.toBson[EmailStatus](EmailStatus.PENDING)))
       .sort(ascending("createdAt"))
       .limit(1)
       .toFuture()
@@ -109,7 +109,7 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
       .findOneAndUpdate(
         filter = equal("id", Codecs.toBson(email.id)),
         update = combine(
-          set("status", Codecs.toBson(EmailStatus.FAILED)),
+          set("status", Codecs.toBson[EmailStatus](EmailStatus.FAILED)),
           set("updatedAt", Codecs.toBson(now(clock)))
         ),
         options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
@@ -122,7 +122,7 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
       .findOneAndUpdate(
         filter = equal("id", Codecs.toBson(email.id)),
         update = combine(
-          set("status", Codecs.toBson(EmailStatus.SENT)),
+          set("status", Codecs.toBson[EmailStatus](EmailStatus.SENT)),
           set("updatedAt", Codecs.toBson(now(clock)))
         ),
         options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)

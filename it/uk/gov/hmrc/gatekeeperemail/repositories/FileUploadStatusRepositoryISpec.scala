@@ -29,11 +29,11 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcSpec
 import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
 
 class FileUploadStatusRepositoryISpec
     extends AsyncHmrcSpec with BeforeAndAfterEach with BeforeAndAfterAll with OptionValues
@@ -48,7 +48,7 @@ class FileUploadStatusRepositoryISpec
 
   override implicit lazy val app: Application = appBuilder.build()
 
-  def repository = app.injector.instanceOf[FileUploadStatusRepository]
+  override val repository = app.injector.instanceOf[FileUploadStatusRepository]
 
   override def beforeEach(): Unit = {
     prepareDatabase()
@@ -61,7 +61,7 @@ class FileUploadStatusRepositoryISpec
   "save" should {
     "create a file upload status and retrieve it from database" in {
       val fileReference = Reference(UUID.randomUUID().toString)
-      val fileStatus    = UploadInfo(fileReference, InProgress, now())
+      val fileStatus    = UploadInfo(fileReference, InProgress, instant)
       await(repository.requestUpload(fileStatus))
 
       val retrieved = await(repository.findByUploadId(fileReference))
@@ -74,7 +74,7 @@ class FileUploadStatusRepositoryISpec
 
   "update a fileStatus to success" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus    = UploadInfo(fileReference, InProgress, now())
+    val fileStatus    = UploadInfo(fileReference, InProgress, instant)
     await(repository.requestUpload(fileStatus))
 
     val retrieved = await(repository.findByUploadId(fileReference))
@@ -95,7 +95,7 @@ class FileUploadStatusRepositoryISpec
 
   "update a fileStatus to failedwithErrors" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus    = UploadInfo(fileReference, InProgress, now())
+    val fileStatus    = UploadInfo(fileReference, InProgress, instant)
     await(repository.requestUpload(fileStatus))
 
     val retrieved = await(repository.findByUploadId(fileReference))
@@ -116,7 +116,7 @@ class FileUploadStatusRepositoryISpec
 
   "update a fileStatus to failed" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus    = UploadInfo(fileReference, InProgress, now())
+    val fileStatus    = UploadInfo(fileReference, InProgress, instant)
     await(repository.requestUpload(fileStatus))
 
     val retrieved = await(repository.findByUploadId(fileReference))
@@ -138,7 +138,7 @@ class FileUploadStatusRepositoryISpec
 
   "update a fileStatus to InProgress" in {
     val fileReference = Reference(UUID.randomUUID().toString)
-    val fileStatus    = UploadInfo(fileReference, InProgress, now())
+    val fileStatus    = UploadInfo(fileReference, InProgress, instant)
     await(repository.requestUpload(fileStatus))
 
     val retrieved = await(repository.findByUploadId(fileReference))

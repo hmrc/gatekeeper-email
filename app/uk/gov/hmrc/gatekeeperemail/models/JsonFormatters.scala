@@ -16,10 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.models
 
-import java.time.LocalDateTime
-
 import play.api.libs.json._
-import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 
@@ -27,8 +24,7 @@ trait JsonFormatters {
 
   implicit val bsonFormat: OFormat[UploadId] = Json.format[UploadId]
 
-  implicit val referenceFormat: OFormat[Reference]  = Json.format[Reference]
-  implicit val dateFormatter: Format[LocalDateTime] = MongoJavatimeFormats.localDateTimeFormat
+  implicit val referenceFormat: OFormat[Reference] = Json.format[Reference]
 
   // NOTE - these override the defaults in order to push dates in non-mongo format
   implicit val uploadedSuccessfullyFormat: OFormat[UploadedSuccessfully]         = Json.format[UploadedSuccessfully]

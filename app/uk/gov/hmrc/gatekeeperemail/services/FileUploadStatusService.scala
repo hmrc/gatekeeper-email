@@ -16,17 +16,19 @@
 
 package uk.gov.hmrc.gatekeeperemail.services
 
-import java.time.LocalDateTime
+import java.time.Clock
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+
+import uk.gov.hmrc.apiplatform.modules.common.services.ClockNow
 
 import uk.gov.hmrc.gatekeeperemail.models.{InProgress, Reference, UploadStatus}
 import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 
-class FileUploadStatusService @Inject() (repository: FileUploadStatusRepository)(implicit ec: ExecutionContext) extends UploadProgressTracker {
+class FileUploadStatusService @Inject() (repository: FileUploadStatusRepository, val clock: Clock)(implicit ec: ExecutionContext) extends UploadProgressTracker with ClockNow {
 
   override def requestUpload(fileReference: String): Future[UploadInfo] =
-    repository.requestUpload(UploadInfo(Reference(fileReference), InProgress, LocalDateTime.now()))
+    repository.requestUpload(UploadInfo(Reference(fileReference), InProgress, instant()))
 
   override def registerUploadResult(fileReference: String, uploadStatus: UploadStatus): Future[UploadInfo] =
     repository.updateStatus(Reference(fileReference), uploadStatus)

@@ -30,6 +30,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
@@ -40,12 +41,11 @@ import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector,
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, EmailData, EmailRequest}
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
-import uk.gov.hmrc.gatekeeperemail.utils.FixedClock
 
 class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with MockitoSugar with ArgumentMatchersSugar
     with GuiceOneAppPerSuite with FixedClock with PlayMongoRepositorySupport[DraftEmail] {
-  val emailRepository     = repository.asInstanceOf[DraftEmailRepository]
-  val sentEmailRepository = serepository.asInstanceOf[SentEmailRepository]
+  lazy val emailRepository     = repository.asInstanceOf[DraftEmailRepository]
+  lazy val sentEmailRepository = serepository.asInstanceOf[SentEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
 
@@ -59,7 +59,7 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override protected def repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
+  override protected val repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
   protected def serepository: PlayMongoRepository[SentEmail]         = app.injector.instanceOf[SentEmailRepository]
 
   implicit val hc: HeaderCarrier = HeaderCarrier()

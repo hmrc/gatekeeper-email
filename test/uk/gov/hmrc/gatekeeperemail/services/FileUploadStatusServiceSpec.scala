@@ -29,19 +29,20 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.await
+import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
 import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadedFailedWithErrors, UploadedSuccessfully}
 import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 
-class FileUploadStatusServiceSpec extends AnyWordSpec with PlayMongoRepositorySupport[UploadInfo] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite {
+class FileUploadStatusServiceSpec extends AnyWordSpec with PlayMongoRepositorySupport[UploadInfo] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite with FixedClock {
 
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
 
   override implicit lazy val app: Application = appBuilder.build()
-  override protected def repository           = app.injector.instanceOf[FileUploadStatusRepository]
-  val t                                       = new FileUploadStatusService(repository)
+  override protected val repository           = app.injector.instanceOf[FileUploadStatusRepository]
+  val t                                       = new FileUploadStatusService(repository, clock)
 
   override def beforeEach(): Unit = {
     prepareDatabase()

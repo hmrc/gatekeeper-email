@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import java.time.LocalDateTime
+import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,7 +34,7 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoReposito
 import uk.gov.hmrc.gatekeeperemail.models.{Reference, UploadStatus}
 import uk.gov.hmrc.gatekeeperemail.repositories.FileUploadMongoFormatter._
 
-case class UploadInfo(reference: Reference, status: UploadStatus, createDateTime: LocalDateTime)
+case class UploadInfo(reference: Reference, status: UploadStatus, createDateTime: Instant)
 
 object UploadInfo {
   val status                              = "status"
@@ -63,8 +63,7 @@ class FileUploadStatusRepository @Inject() (mongoComponent: MongoComponent)(impl
             Codecs.playFormatCodec(initiateFormat),
             Codecs.playFormatCodec(failedFormat),
             Codecs.playFormatCodec(uploadedSuccessfullyFormat),
-            Codecs.playFormatCodec(uploadedFailedFormat),
-            Codecs.playFormatCodec(dateFormatter)
+            Codecs.playFormatCodec(uploadedFailedFormat)
           ),
           MongoClient.DEFAULT_CODEC_REGISTRY
         )

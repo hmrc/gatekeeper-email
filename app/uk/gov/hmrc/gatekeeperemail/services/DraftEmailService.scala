@@ -23,16 +23,16 @@ import scala.concurrent.Future.successful
 import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.Logger
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiAccessType
+import uk.gov.hmrc.apiplatform.modules.common.services.ClockNow
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models.APIAccessType.{PRIVATE, PUBLIC}
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, DraftEmailRequest, EmailOverride, EmailRequest}
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
-import uk.gov.hmrc.gatekeeperemail.util.ClockNow
 
 @Singleton
 class DraftEmailService @Inject() (
@@ -42,7 +42,7 @@ class DraftEmailService @Inject() (
     draftEmailRepository: DraftEmailRepository,
     sentEmailRepository: SentEmailRepository,
     appConfig: AppConfig,
-    override val clock: Clock
+    val clock: Clock
   )(implicit val ec: ExecutionContext
   ) extends ClockNow {
 
@@ -88,15 +88,15 @@ class DraftEmailService @Inject() (
         developerConnector.fetchVerified()
       case DevelopersEmailQuery(topic, Some(selectedAPIs), None, _, None, false, None) =>
         logger.info(s"Emailing Selected Apis to users that are not overridden")
-        val selectedTopic: Option[TopicOptionChoice.Value] = topic.map(TopicOptionChoice.withName)
+        val selectedTopic: Option[TopicOptionChoice] = topic.map(TopicOptionChoice.unsafeApply(_))
         if (selectedAPIs.forall(_.isEmpty)) {
           Future.successful(List.empty)
         } else {
           for {
             apis         <- apmConnector.fetchAllCombinedApis()
             filteredApis  = filterSelectedApis(Some(selectedAPIs.toList), apis).sortBy(_.displayName)
-            publicUsers  <- handleGettingApiUsers(filteredApis, selectedTopic, PUBLIC)
-            privateUsers <- handleGettingApiUsers(filteredApis, selectedTopic, PRIVATE)
+            publicUsers  <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.PUBLIC)
+            privateUsers <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.PRIVATE)
             combinedUsers = publicUsers ++ privateUsers
             _             = logger.info(s"Outgoing Emails count is ${combinedUsers.size}")
           } yield combinedUsers
@@ -106,7 +106,7 @@ class DraftEmailService @Inject() (
       case _                                                                           =>
         logger.info("Getting Emails for Default match case")
         emailPreferences.topic.map(t =>
-          developerConnector.fetchByEmailPreferences(TopicOptionChoice.withName(t), emailPreferences.apis, emailPreferences.apiCategories)
+          developerConnector.fetchByEmailPreferences(TopicOptionChoice.unsafeApply(t), emailPreferences.apis, emailPreferences.apiCategories)
         ).getOrElse(Future.successful(List.empty))
     }
     emails
@@ -118,24 +118,24 @@ class DraftEmailService @Inject() (
 
   private def handleGettingApiUsers(
       apis: List[CombinedApi],
-      selectedTopic: Option[TopicOptionChoice.Value],
-      apiAcessType: APIAccessType
+      selectedTopic: Option[TopicOptionChoice],
+      apiAcessType: ApiAccessType
     )(implicit hc: HeaderCarrier
     ): Future[List[RegisteredUser]] = {
     // APSR-1418 - the accesstype inside combined api is option as a temporary measure until APM version which conatins the change to
     // return this is deployed out to all environments
     logger.info(s"In handleGettingApiUsers  apis: $apis  selectedTopic $selectedTopic apiAccessType ${apiAcessType.toString}")
-    val filteredApis = apis.filter(_.accessType.getOrElse(APIAccessType.PUBLIC) == apiAcessType)
+    val filteredApis = apis.filter(_.accessType == apiAcessType)
     val categories   = filteredApis.flatMap(_.categories)
     val apiNames     = filteredApis.map(_.serviceName)
     selectedTopic.fold(Future.successful(List.empty[RegisteredUser]))(topic => {
       (apiAcessType, filteredApis) match {
-        case (_, Nil)     =>
+        case (_, Nil)                   =>
           successful(List.empty[RegisteredUser])
-        case (PUBLIC, _)  =>
+        case (ApiAccessType.PUBLIC, _)  =>
           logger.debug(s"Before fetchByEmailPreferences topic: $topic  apiNames: $apiNames categories.distinct: ${categories.distinct} privateapimatch: false")
           developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories.distinct), false)
-        case (PRIVATE, _) =>
+        case (ApiAccessType.PRIVATE, _) =>
           logger.debug(s"Before fetchByEmailPreferences topic: $topic  apiNames: $apiNames categories.distinct: ${categories.distinct} privateapimatch: false")
           developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories.distinct), true)
       }

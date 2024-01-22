@@ -16,23 +16,20 @@
 
 package uk.gov.hmrc.gatekeeperemail.repository
 
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+
+import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 
 import uk.gov.hmrc.gatekeeperemail.models.{InProgress, Reference, UploadedSuccessfully}
 import uk.gov.hmrc.gatekeeperemail.repositories.UploadInfo
 
-class UploadInfoTest extends AnyWordSpec with Matchers {
+class UploadInfoTest extends AnyWordSpec with Matchers with FixedClock {
 
   "Serialization and deserialization of UploadDetails" should {
 
     "serialize and deserialize InProgress status" in {
-
-      val dateTime: LocalDateTime = LocalDateTime.parse("02/02/2022 20:27:05", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-      val input                   = UploadInfo(Reference("ABC"), InProgress, dateTime)
+      val input = UploadInfo(Reference("ABC"), InProgress, instant)
 
       val serialized = UploadInfo.format.writes(input)
       val output     = UploadInfo.format.reads(serialized)
@@ -43,8 +40,8 @@ class UploadInfoTest extends AnyWordSpec with Matchers {
     }
 
     "serialize and deserialize Failed status" in {
-      val dateTime: LocalDateTime = LocalDateTime.parse("02/02/2022 20:27:05", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-      val input                   = UploadInfo(Reference("ABC"), InProgress, dateTime)
+
+      val input = UploadInfo(Reference("ABC"), InProgress, instant)
 
       val serialized = UploadInfo.format.writes(input)
       val output     = UploadInfo.format.reads(serialized)
@@ -54,11 +51,10 @@ class UploadInfoTest extends AnyWordSpec with Matchers {
     }
 
     "serialize and deserialize UploadedSuccessfully status when size is unknown" in {
-      val dateTime: LocalDateTime = LocalDateTime.parse("02/02/2022 20:27:05", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-      val input                   = UploadInfo(
+      val input = UploadInfo(
         Reference("ABC"),
         UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = None, "http://aws.s3.object-store-url"),
-        dateTime
+        instant
       )
 
       val serialized = UploadInfo.format.writes(input)
@@ -70,12 +66,11 @@ class UploadInfoTest extends AnyWordSpec with Matchers {
     }
 
     "serialize and deserialize UploadedSuccessfully status when size is known" in {
-      val dateTime: LocalDateTime = LocalDateTime.parse("02/02/2022 20:27:05", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
 
       val input = UploadInfo(
         Reference("ABC"),
         UploadedSuccessfully("foo.txt", "text/plain", "http:localhost:8080", size = Some(123456), "http://aws.s3.object-store-url"),
-        dateTime
+        instant
       )
 
       val serialized = UploadInfo.format.writes(input)
