@@ -48,7 +48,7 @@ class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSuga
         SENT,
         "composedBy",
         Some("approvedBy"),
-        precise(),
+        instant,
         2
       )
 

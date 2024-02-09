@@ -23,8 +23,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.{failed, successful}
 
-import akka.stream.Materializer
 import com.mongodb.client.result.{InsertManyResult, InsertOneResult}
+import org.apache.pekko.stream.Materializer
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.{ArgumentCaptor, ArgumentMatchersSugar, MockitoSugar}
 import org.mongodb.scala.bson.BsonNumber
@@ -68,7 +68,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
     SENT,
     "composedBy",
     Some("approvedBy"),
-    precise(),
+    instant,
     1
   )
   private val emailUUIDToAttachFile = "emailUUID111"
@@ -130,7 +130,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
       ))))
 
     val emailUUID: String = UUID.randomUUID().toString
-    val dummyEmailData    = DraftEmail("", EmailTemplateData("", Map(), false, Map(), None), "", emailPreferences, None, "", "", "", SENT, "", None, precise(), 1)
+    val dummyEmailData    = DraftEmail("", EmailTemplateData("", Map(), false, Map(), None), "", emailPreferences, None, "", "", "", SENT, "", None, instant, 1)
     when(mockDraftEmailRepository.getEmailData(emailUUID)).thenReturn(Future(dummyEmailData))
   }
 

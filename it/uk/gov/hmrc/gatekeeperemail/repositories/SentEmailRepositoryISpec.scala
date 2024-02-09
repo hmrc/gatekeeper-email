@@ -61,8 +61,8 @@ class SentEmailRepositoryISpec
   override protected val repository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
 
   val sentEmail = List(SentEmail(
-    createdAt = precise(),
-    updatedAt = precise(),
+    createdAt = instant,
+    updatedAt = instant,
     emailUuid = UUID.randomUUID(),
     firstName = "first",
     lastName = "last",
@@ -107,7 +107,7 @@ class SentEmailRepositoryISpec
   "findNextEmailToSend" should {
     "find the oldest pending email" in {
       val expectedNextSendRecipient = "old.email@digital.hmrc.gov.uk"
-      val emailsToSend              = List(sentEmail.head.copy(createdAt = precise().minusSeconds(10 * 60), recipient = expectedNextSendRecipient))
+      val emailsToSend              = List(sentEmail.head.copy(createdAt = instant.minusSeconds(10 * 60), recipient = expectedNextSendRecipient))
       await(serviceRepo.persist(emailsToSend))
       await(serviceRepo.persist(sentEmail))
 

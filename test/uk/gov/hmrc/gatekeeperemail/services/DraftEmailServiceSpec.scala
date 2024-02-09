@@ -80,7 +80,7 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       SENT,
       "composedBy",
       Some("approvedBy"),
-      precise(),
+      instant,
       2
     )
     when(emailRendererConnectorMock.getTemplatedEmail(*))

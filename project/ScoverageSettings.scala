@@ -18,7 +18,6 @@ object ScoverageSettings {
       "Reverse.*",
       "Routes.*",
       "router\\.*",
-      "com.kenshoo.play.metrics.*",
       ".*definition.*",
       "uk.gov.hmrc.BuildInfo.*"
     ).mkString(";")

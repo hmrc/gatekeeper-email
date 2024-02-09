@@ -61,13 +61,13 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       SENT,
       "composedBy",
       Some("approvedBy"),
-      precise(),
+      instant,
       1
     )
 
     val sentEmail = SentEmail(
-      createdAt = precise(),
-      updatedAt = precise(),
+      createdAt = instant,
+      updatedAt = instant,
       emailUuid = UUID.randomUUID(),
       firstName = "first",
       lastName = "last",
