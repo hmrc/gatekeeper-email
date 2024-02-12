@@ -19,7 +19,7 @@ package uk.gov.hmrc.gatekeeperemail.scheduled
 import scala.concurrent.duration.{Deadline, DurationInt, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
 
-import akka.actor.Cancellable
+import org.apache.pekko.actor.{Cancellable, Scheduler}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.concurrent.ScalaFutures
@@ -90,7 +90,7 @@ class RunningOfSchedulesJobsSpec extends HmrcSpec with ScalaFutures with GuiceOn
 
   trait TestCase {
 
-    class StubbedScheduler extends akka.actor.Scheduler {
+    class StubbedScheduler extends Scheduler {
 
       override def scheduleWithFixedDelay(
           initialDelay: FiniteDuration,

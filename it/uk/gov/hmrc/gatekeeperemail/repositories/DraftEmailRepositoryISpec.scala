@@ -156,7 +156,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
         status = EmailStatus.PENDING,
         composedBy = "Ludwig van Beethoven",
         approvedBy = Some("John Doe"),
-        createDateTime = precise(),
+        createDateTime = instant,
         1
       )
       await(serviceRepo.persist(email))
@@ -191,7 +191,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
         status = EmailStatus.PENDING,
         composedBy = "Ludwig van Beethoven",
         approvedBy = Some("John Doe"),
-        createDateTime = precise(),
+        createDateTime = instant,
         1
       )
 

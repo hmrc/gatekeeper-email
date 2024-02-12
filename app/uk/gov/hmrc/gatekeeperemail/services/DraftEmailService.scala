@@ -156,8 +156,8 @@ class DraftEmailService @Inject() (
 
     val sentEmails = usersModified.map(elem =>
       SentEmail(
-        createdAt = precise(),
-        updatedAt = precise(),
+        createdAt = instant(),
+        updatedAt = instant(),
         emailUuid = UUID.fromString(email.emailUUID),
         firstName = elem.firstName,
         lastName = elem.lastName,
@@ -227,7 +227,7 @@ class DraftEmailService @Inject() (
       EmailStatus.PENDING,
       "composedBy",
       Some("approvedBy"),
-      precise(),
+      instant(),
       0
     )
   }
