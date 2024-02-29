@@ -61,7 +61,8 @@ lazy val it = (project in file("it"))
   .dependsOn(microservice % "test->test")
   .settings(
     name := "integration-tests",
-    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-eT")
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-eT"),
+    DefaultBuildSettings.itSettings()
   )
 
 commands ++= Seq(
