@@ -24,5 +24,5 @@ object AppDependencies {
     "org.mockito"           %% "mockito-scala-scalatest"         % "1.17.29",
     "org.scalaj"            %% "scalaj-http"                     % "2.4.2",
     "uk.gov.hmrc"           %% "api-platform-test-common-domain" % commonDomainVersion
-  ).map(_ % "test, it")
+  ).map(_ % "test")
 }
