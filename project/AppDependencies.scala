@@ -12,7 +12,7 @@ object AppDependencies {
   val compile = Seq(
     "uk.gov.hmrc"             %% "bootstrap-backend-play-30"   % bootstrapPlayVersion,
     "uk.gov.hmrc.mongo"       %% "hmrc-mongo-play-30"          % hmrcMongoVersion,
-    "uk.gov.hmrc.objectstore" %% "object-store-client-play-30" % "1.3.0",
+    "uk.gov.hmrc.objectstore" %% "object-store-client-play-30" % "1.4.0",
     "org.typelevel"           %% "cats-core"                   % "2.10.0",
     "org.apache.pekko"        %% "pekko-connectors-mongodb"    % "1.0.2",
     "uk.gov.hmrc"             %% "api-platform-api-domain"     % apiDomainVersion
@@ -21,8 +21,7 @@ object AppDependencies {
   val test = Seq(
     "uk.gov.hmrc"           %% "bootstrap-test-play-30"          % bootstrapPlayVersion,
     "uk.gov.hmrc.mongo"     %% "hmrc-mongo-test-play-30"         % hmrcMongoVersion,
-    "org.mockito"           %% "mockito-scala-scalatest"         % "1.17.29",
-    "org.scalaj"            %% "scalaj-http"                     % "2.4.2",
+    "org.scalatestplus"     %% "mockito-5-10"                    % "3.2.18.0",
     "uk.gov.hmrc"           %% "api-platform-test-common-domain" % commonDomainVersion
   ).map(_ % "test")
 }
