@@ -99,8 +99,10 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       Integer.valueOf(1) -> new BsonInt32(33)
     }
     val sentEmailCaptor: ArgumentCaptor[List[SentEmail]] = ArgumentCaptor.forClass(classOf[List[SentEmail]])
+    val sentOneEmailCaptor: ArgumentCaptor[SentEmail]    = ArgumentCaptor.forClass(classOf[SentEmail])
     when(draftEmailRepositoryMock.updateEmailSentStatus(*, *)).thenReturn(Future(email))
     when(sentEmailRepositoryMock.persist(sentEmailCaptor.capture())).thenReturn(Future(InsertManyResult.acknowledged(insertIds)))
+    when(sentEmailRepositoryMock.persistOne(sentOneEmailCaptor.capture())).thenReturn(Future(InsertOneResult.acknowledged(new BsonInt32(33))))
     when(developerConnectorMock.fetchVerified()(*)).thenReturn(Future(users))
 
     when(developerConnectorMock.fetchByEmailPreferences(*, *, *, *)(*)).thenReturn(Future(users))
@@ -285,6 +287,16 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
 
     def fromEmailRecipient(user: EmailRecipient) = {
       (user.email, user.firstName, user.lastName, 0, PENDING)
+    }
+
+    "successfully send (into Mongo) a test email with a single recipient" in new EmailSetup {
+      when(draftEmailRepositoryMock.getEmailData(*)).thenReturn(Future(email))
+
+      await(underTest.sendEmail(email.emailUUID, userOne.email))
+
+      verify(draftEmailRepositoryMock).getEmailData(email.emailUUID)
+      verify(sentEmailRepositoryMock).persistOne(*)
+      fromSentEmail(sentOneEmailCaptor.getValue) shouldBe (userOne.email, "Test", "Email", 0, PENDING)
     }
 
     "successfully send (into Mongo) an email with two recipients and an additional recipient" in new EmailSetup {

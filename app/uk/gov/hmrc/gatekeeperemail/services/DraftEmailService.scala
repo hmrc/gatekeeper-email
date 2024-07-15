@@ -22,6 +22,8 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future.successful
 import scala.concurrent.{ExecutionContext, Future}
 
+import org.mongodb.scala.result.InsertOneResult
+
 import play.api.Logger
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiAccessType
 import uk.gov.hmrc.apiplatform.modules.common.services.ClockNow
@@ -174,6 +176,29 @@ class DraftEmailService @Inject() (
     }
 
     Future.successful(usersModified)
+  }
+
+  def sendEmail(emailUUID: String, emailAddress: String): Future[DraftEmail] = {
+    for {
+      email <- draftEmailRepository.getEmailData(emailUUID)
+      _     <- persistInEmailQueue(email, emailAddress)
+    } yield email
+  }
+
+  private def persistInEmailQueue(email: DraftEmail, emailAddress: String): Future[InsertOneResult] = {
+    val sentEmails =
+      SentEmail(
+        createdAt = instant(),
+        updatedAt = instant(),
+        emailUuid = UUID.fromString(email.emailUUID),
+        firstName = "Test",
+        lastName = "Email",
+        recipient = emailAddress,
+        status = EmailStatus.PENDING,
+        failedCount = 0
+      )
+
+    sentEmailRepository.persistOne(sentEmails)
   }
 
   def fetchEmail(emailUUID: String): Future[DraftEmail] = {

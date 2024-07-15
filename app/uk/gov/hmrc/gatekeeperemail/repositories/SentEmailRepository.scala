@@ -104,6 +104,10 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
     collection.insertMany(entity).toFuture()
   }
 
+  def persistOne(entity: SentEmail): Future[InsertOneResult] = {
+    collection.insertOne(entity).toFuture()
+  }
+
   def markFailed(email: SentEmail): Future[SentEmail] = {
     collection.withReadPreference(primaryPreferred)
       .findOneAndUpdate(
