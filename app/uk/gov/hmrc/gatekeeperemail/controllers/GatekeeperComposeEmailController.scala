@@ -26,7 +26,7 @@ import play.api.mvc._
 import uk.gov.hmrc.objectstore.client.ObjectSummaryWithMd5
 
 import uk.gov.hmrc.gatekeeperemail.controllers.actions.AuthorisationActions
-import uk.gov.hmrc.gatekeeperemail.models.requests.{EmailData, EmailRequest}
+import uk.gov.hmrc.gatekeeperemail.models.requests._
 import uk.gov.hmrc.gatekeeperemail.models.responses.{ErrorCode, JsErrorResponse, OutgoingEmail}
 import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, UploadedFileMetadata, UploadedFileWithObjectStore}
 import uk.gov.hmrc.gatekeeperemail.services.{DraftEmailService, ObjectStoreService}
@@ -169,6 +169,13 @@ class GatekeeperComposeEmailController @Inject() (
     emailService.sendEmail(emailUUID)
       .map(email => Ok(toJson(outgoingEmail(email))))
       .recover(recovery)
+  }
+
+  def sendTestEmail(emailUUID: String): Action[JsValue] = loggedInJsValue() { implicit request =>
+    withJsonBody[TestEmailRequest] { req =>
+      emailService.sendEmail(emailUUID, req.email)
+        .map(email => Ok(toJson(outgoingEmail(email))))
+    } recover recovery
   }
 
   private def outgoingEmail(email: DraftEmail): OutgoingEmail = {

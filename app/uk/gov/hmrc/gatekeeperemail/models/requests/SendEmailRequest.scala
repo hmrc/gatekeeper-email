@@ -80,3 +80,9 @@ case class EmailRequest(
 object EmailRequest {
   implicit val format: OFormat[EmailRequest] = Json.format[EmailRequest]
 }
+
+case class TestEmailRequest(email: String)
+
+object TestEmailRequest {
+  implicit val format: OFormat[TestEmailRequest] = Json.format[TestEmailRequest]
+}
