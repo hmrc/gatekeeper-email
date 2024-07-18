@@ -53,7 +53,7 @@ class SentEmailService @Inject() (
       logger.debug(s"Fetching template with UUID ${sentEmail.emailUuid} to send email with UUID ${sentEmail.id}")
       val tags = Map[String, String]("regime" -> "API Platform", "template" -> "gatekeeper", "messageId" -> sentEmail.emailUuid.toString)
 
-      for {
+      (for {
         draftEmail                 <- draftEmailService.fetchEmail(sentEmail.emailUuid.toString)
         parametersWithRecipientName = draftEmail.templateData.parameters +
                                         ("firstName"      -> s"${sentEmail.firstName}") +
@@ -71,7 +71,7 @@ class SentEmailService @Inject() (
                                       )
         result                     <- emailConnector.sendEmail(emailRequestData)
         message                    <- if (result) updateEmailStatusToSent(sentEmail) else handleEmailSendingFailed(sentEmail)
-      } yield message
+      } yield message).recoverWith(_ => handleEmailSendingFailed(sentEmail))
     }
 
     sentEmailRepository.findNextEmailToSend.flatMap {

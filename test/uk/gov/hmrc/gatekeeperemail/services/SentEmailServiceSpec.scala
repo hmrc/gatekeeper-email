@@ -125,6 +125,18 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       verify(sentEmailRepositoryMock).incrementFailedCount(sentEmail)
     }
 
+    "increment failed count when no draft email" in new Setup {
+      when(sentEmailRepositoryMock.incrementFailedCount(*)).thenReturn(Future(sentEmail))
+      when(sentEmailRepositoryMock.findNextEmailToSend).thenReturn(Future(Some(sentEmail)))
+      when(draftEmailServiceMock.fetchEmail(sentEmail.emailUuid.toString)).thenReturn(Future.failed(new Exception("not found")))
+      when(emailConnectorMock.sendEmail(*)).thenReturn(Future(false))
+
+      await(underTest.sendNextPendingEmail)
+
+      verify(draftEmailServiceMock).fetchEmail(sentEmail.emailUuid.toString)
+      verify(sentEmailRepositoryMock).incrementFailedCount(sentEmail)
+    }
+
     "mark as failed when maximum fail count reached" in new Setup {
       val emailToSend = sentEmail.copy(failedCount = 4)
       when(sentEmailRepositoryMock.markFailed(emailToSend)).thenReturn(Future(emailToSend))
