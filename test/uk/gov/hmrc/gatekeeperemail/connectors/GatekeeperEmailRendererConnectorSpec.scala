@@ -29,7 +29,8 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.http.Status.OK
 import play.mvc.Http.Status
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
@@ -70,7 +71,7 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with Before
   val emailPreferences  = DevelopersEmailQuery()
 
   trait Setup {
-    val httpClient = app.injector.instanceOf[HttpClient]
+    val httpClient = app.injector.instanceOf[HttpClientV2]
 
     val fakeEmailRendererConnectorConfig = new EmailRendererConnectorConfig {
       val emailRendererBaseUrl = wireMockUrl

@@ -30,7 +30,12 @@ import uk.gov.hmrc.gatekeeperemail.controllers.{CallbackBody, FailedCallbackBody
 import uk.gov.hmrc.gatekeeperemail.models._
 import uk.gov.hmrc.gatekeeperemail.repositories.{FileUploadStatusRepository, UploadInfo}
 
-class UpscanCallbackService @Inject() (sessionStorage: FileUploadStatusRepository, objectStoreClient: PlayObjectStoreClient, appConfig: AppConfig)(implicit val ec: ExecutionContext) {
+class UpscanCallbackService @Inject() (
+    sessionStorage: FileUploadStatusRepository,
+    objectStoreClient: PlayObjectStoreClient,
+    appConfig: AppConfig
+  )(implicit val ec: ExecutionContext
+  ) {
 
   private val logger             = Logger(this.getClass)
   implicit val hc: HeaderCarrier = HeaderCarrier()

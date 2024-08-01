@@ -25,7 +25,8 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.libs.json.Json
 import play.api.test.Helpers.OK
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
@@ -42,7 +43,7 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     val mockAppConfig = mock[AppConfig]
-    val httpClient    = app.injector.instanceOf[HttpClient]
+    val httpClient    = app.injector.instanceOf[HttpClientV2]
 
     when(mockAppConfig.developerBaseUrl).thenReturn(wireMockUrl)
 

@@ -23,15 +23,17 @@ import scala.util.control.NonFatal
 import play.api.Logging
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status
+import play.api.libs.json.Json
 import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpErrorFunctions, HttpResponse, StringContextOps, UpstreamErrorResponse}
 
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.models.requests.{OneEmailRequest, SendEmailRequest}
 
 @Singleton
-class EmailConnector @Inject() (http: HttpClient, config: EmailConnectorConfig)(implicit ec: ExecutionContext)
+class EmailConnector @Inject() (http: HttpClientV2, config: EmailConnectorConfig)(implicit ec: ExecutionContext)
     extends HttpErrorFunctions with Logging {
 
   private lazy val serviceUrl = config.emailBaseUrl
@@ -55,9 +57,12 @@ class EmailConnector @Inject() (http: HttpClient, config: EmailConnectorConfig)(
 
   private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, Boolean]] = {
     val oneEmailRequest = OneEmailRequest(List(request.to), request.templateId, request.parameters, request.force, request.auditData, request.eventUrl, request.tags)
-    http.POST[OneEmailRequest, HttpResponse](s"$serviceUrl/developer/email", oneEmailRequest).map {
-      res => Right(res.status == Status.ACCEPTED)
-    }
+    http.post(url"$serviceUrl/developer/email")
+      .withBody(Json.toJson(oneEmailRequest))
+      .execute[HttpResponse]
+      .map {
+        res => Right(res.status == Status.ACCEPTED)
+      }
       .recover {
         case NonFatal(e) =>
           logger.error(e.getMessage)

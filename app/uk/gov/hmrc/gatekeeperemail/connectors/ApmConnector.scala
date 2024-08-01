@@ -20,15 +20,16 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
 import uk.gov.hmrc.gatekeeperemail.models.CombinedApi
 
 @Singleton
-class ApmConnector @Inject() (http: HttpClient, config: ApmConnector.Config)(implicit ec: ExecutionContext) {
+class ApmConnector @Inject() (http: HttpClientV2, config: ApmConnector.Config)(implicit ec: ExecutionContext) {
 
   def fetchAllCombinedApis()(implicit hc: HeaderCarrier): Future[List[CombinedApi]] = {
-    http.GET[List[CombinedApi]](s"${config.serviceBaseUrl}/combined-rest-xml-apis")
+    http.get(url"${config.serviceBaseUrl}/combined-rest-xml-apis").execute[List[CombinedApi]]
   }
 
 }
