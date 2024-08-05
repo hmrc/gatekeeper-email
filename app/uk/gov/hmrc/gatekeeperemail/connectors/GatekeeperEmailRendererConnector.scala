@@ -21,15 +21,17 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.Logging
 import play.api.http.HeaderNames.CONTENT_TYPE
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpErrorFunctions, UpstreamErrorResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpErrorFunctions, StringContextOps, UpstreamErrorResponse}
 
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.models.requests.{DraftEmailRequest, TemplateRenderRequest}
 import uk.gov.hmrc.gatekeeperemail.models.{RenderResult, TemplateRenderResult}
 
 @Singleton
-class GatekeeperEmailRendererConnector @Inject() (httpClient: HttpClient, config: EmailRendererConnectorConfig)(implicit ec: ExecutionContext)
+class GatekeeperEmailRendererConnector @Inject() (httpClient: HttpClientV2, config: EmailRendererConnectorConfig)(implicit ec: ExecutionContext)
     extends HttpErrorFunctions with Logging {
 
   private lazy val serviceUrl = config.emailRendererBaseUrl
@@ -37,20 +39,20 @@ class GatekeeperEmailRendererConnector @Inject() (httpClient: HttpClient, config
   def getTemplatedEmail(emailRequest: DraftEmailRequest): Future[Either[UpstreamErrorResponse, RenderResult]] = {
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(CONTENT_TYPE -> "application/json")
 
-    httpClient.POST[TemplateRenderRequest, TemplateRenderResult](
-      s"$serviceUrl/templates/${emailRequest.templateId}",
-      TemplateRenderRequest(emailRequest.parameters, None)
-    ) map { result =>
-      Right(
-        RenderResult(
-          result.plain,
-          result.html,
-          result.fromAddress,
-          result.subject,
-          result.service
+    httpClient.post(url"$serviceUrl/templates/${emailRequest.templateId}")
+      .withBody(Json.toJson(TemplateRenderRequest(emailRequest.parameters, None)))
+      .execute[TemplateRenderResult]
+      .map { result =>
+        Right(
+          RenderResult(
+            result.plain,
+            result.html,
+            result.fromAddress,
+            result.subject,
+            result.service
+          )
         )
-      )
-    } recover {
+      } recover {
       case errorResponse: UpstreamErrorResponse =>
         Left(errorResponse)
     }

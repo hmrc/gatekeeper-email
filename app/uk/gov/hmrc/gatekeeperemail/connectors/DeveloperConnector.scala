@@ -22,14 +22,15 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.Logging
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.models.{TopicOptionChoice, _}
 
 @Singleton
-class DeveloperConnector @Inject() (appConfig: AppConfig, http: HttpClient)(implicit ec: ExecutionContext) extends Logging {
+class DeveloperConnector @Inject() (appConfig: AppConfig, http: HttpClientV2)(implicit ec: ExecutionContext) extends Logging {
 
   import RegisteredUser.registeredUserFormat
 
@@ -50,12 +51,13 @@ class DeveloperConnector @Inject() (appConfig: AppConfig, http: HttpClient)(impl
         maybeApis.fold(Seq.empty[(String, String)])(apis => apis.map(("service" -> _))) ++ privateapimatchParams
 
     // The third-party-developer service only returns verified registered users at this endpoint
-    http.GET[List[RegisteredUser]](s"${appConfig.developerBaseUrl}/developers/email-preferences", queryParams)
+    http.get(url"${appConfig.developerBaseUrl}/developers/email-preferences?$queryParams")
+      .execute[List[RegisteredUser]]
       .map(_.filter(_.verified)) // double-check
   }
 
   def fetchVerified()(implicit hc: HeaderCarrier): Future[List[RegisteredUser]] = {
-    http.GET[List[RegisteredUser]](s"${appConfig.developerBaseUrl}/developers/all?status=VERIFIED")
+    http.get(url"${appConfig.developerBaseUrl}/developers/all?status=VERIFIED").execute[List[RegisteredUser]]
   }
 
 }

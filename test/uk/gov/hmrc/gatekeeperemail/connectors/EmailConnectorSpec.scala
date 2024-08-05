@@ -27,14 +27,15 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.http.Status.OK
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.test.HttpClientV2Support
 
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.models.requests.SendEmailRequest
 
-class EmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite {
+class EmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite with HttpClientV2Support {
 
   val stubPort       = sys.env.getOrElse("WIREMOCK", "22222").toInt
   val stubHost       = "localhost"
@@ -66,7 +67,6 @@ class EmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with 
   val users            = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
 
   trait Setup {
-    val httpClient = app.injector.instanceOf[HttpClient]
 
     val fakeEmailConnectorConfig = new EmailConnectorConfig {
       val emailBaseUrl = wireMockUrl
@@ -74,7 +74,7 @@ class EmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with 
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    lazy val underTest = new EmailConnector(httpClient, fakeEmailConnectorConfig)
+    lazy val underTest = new EmailConnector(httpClientV2, fakeEmailConnectorConfig)
   }
 
   trait WorkingHttp {
