@@ -73,7 +73,6 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       templateData,
       "DL Team",
       emailPreferences,
-      None,
       "markdownEmailBody",
       "This is test email",
       "test subject",

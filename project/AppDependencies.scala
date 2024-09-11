@@ -12,7 +12,6 @@ object AppDependencies {
   val compile = Seq(
     "uk.gov.hmrc"             %% "bootstrap-backend-play-30"   % bootstrapPlayVersion,
     "uk.gov.hmrc.mongo"       %% "hmrc-mongo-play-30"          % hmrcMongoVersion,
-    "uk.gov.hmrc.objectstore" %% "object-store-client-play-30" % "2.0.0",
     "org.typelevel"           %% "cats-core"                   % "2.10.0",
     "org.apache.pekko"        %% "pekko-connectors-mongodb"    % "1.0.2",
     "uk.gov.hmrc"             %% "api-platform-api-domain"     % apiDomainVersion

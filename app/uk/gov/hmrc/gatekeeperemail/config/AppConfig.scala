@@ -37,7 +37,6 @@ class AppConfig @Inject() (config: Configuration)
   val sendToActualRecipients       = config.get[Boolean]("sendToActualRecipients")
 
   val emailRecordRetentionPeriod: Int = config.get[Int]("mongodb.ttlInYears")
-  val defaultRetentionPeriod: String  = config.get[String]("object-store.default-retention-period")
   val auditingEnabled: Boolean        = config.get[Boolean]("auditing.enabled")
 
   val developerBaseUrl = baseUrl("third-party-developer")

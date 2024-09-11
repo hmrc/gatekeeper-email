@@ -34,9 +34,14 @@ import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
-import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, EmailTemplateData, UploadedFileWithObjectStore}
+import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, EmailTemplateData}
 
-class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupport[DraftEmail] with Matchers with BeforeAndAfterEach with GuiceOneAppPerSuite with FixedClock {
+class DraftEmailRepositoryISpec extends AnyWordSpec
+    with PlayMongoRepositorySupport[DraftEmail]
+    with Matchers
+    with BeforeAndAfterEach
+    with GuiceOneAppPerSuite
+    with FixedClock {
   lazy val serviceRepo = repository.asInstanceOf[DraftEmailRepository]
 
   override implicit lazy val app: Application = appBuilder.build()
@@ -63,7 +68,6 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
       templateData,
       "DL Team",
       emailPreferences,
-      None,
       "markdownEmailBody",
       "This is test email",
       "test subject",
@@ -142,14 +146,11 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
   "updateEmail" should {
     "successfully update a previously persisted email" in new Setup {
       val templateDataForUpdate = EmailTemplateData("updatedTemplateId", Map(), true, Map(), Some("url"))
-      val objectStoreFile       =
-        UploadedFileWithObjectStore("upscanReference", "downloadUrl", "uploadTimestamp", "checksum", "fileName", "fileMimeType", 1024, None, None, None, None, None)
       val emailUpdate           = DraftEmail(
         emailUUID = email.emailUUID,
         templateData = templateDataForUpdate,
         recipientTitle = "Mrs",
         emailPreferences,
-        attachmentDetails = Some(List(objectStoreFile)),
         markdownEmailBody = "some markdown body",
         htmlEmailBody = "some html body",
         subject = "what's it for",
@@ -167,7 +168,6 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
       updatedEmail.htmlEmailBody shouldBe emailUpdate.htmlEmailBody
       updatedEmail.markdownEmailBody shouldBe emailUpdate.markdownEmailBody
       updatedEmail.subject shouldBe emailUpdate.subject
-      updatedEmail.attachmentDetails shouldBe emailUpdate.attachmentDetails
       updatedEmail.emailUUID shouldBe email.emailUUID
       updatedEmail.recipientTitle shouldBe email.recipientTitle
       updatedEmail.status shouldBe email.status
@@ -177,14 +177,11 @@ class DraftEmailRepositoryISpec extends AnyWordSpec with PlayMongoRepositorySupp
 
     "return null when email cannot be found" in new Setup {
       val templateDataForUpdate = EmailTemplateData("updatedTemplateId", Map(), true, Map(), Some("url"))
-      val objectStoreFile       =
-        UploadedFileWithObjectStore("upscanReference", "downloadUrl", "uploadTimestamp", "checksum", "fileName", "fileMimeType", 1024, None, None, None, None, None)
       val emailUpdate           = DraftEmail(
         emailUUID = UUID.randomUUID().toString,
         templateData = templateDataForUpdate,
         recipientTitle = "Mrs",
         emailPreferences,
-        attachmentDetails = Some(List(objectStoreFile)),
         markdownEmailBody = "some markdown body",
         htmlEmailBody = "some html body",
         subject = "what's it for",

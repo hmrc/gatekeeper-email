@@ -41,7 +41,6 @@ class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSuga
         data,
         "DL Team",
         emailPreferences,
-        None,
         "markdownEmailBody",
         "This is test email",
         "test subject",

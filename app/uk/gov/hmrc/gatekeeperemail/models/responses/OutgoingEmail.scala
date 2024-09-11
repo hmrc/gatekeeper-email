@@ -18,14 +18,13 @@ package uk.gov.hmrc.gatekeeperemail.models.responses
 
 import play.api.libs.json.{Json, OFormat}
 
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus
 import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
-import uk.gov.hmrc.gatekeeperemail.models.{EmailStatus, UploadedFileWithObjectStore}
 
 case class OutgoingEmail(
     emailUUID: String,
     recipientTitle: String,
     userSelectionQuery: DevelopersEmailQuery,
-    attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None,
     markdownEmailBody: String,
     htmlEmailBody: String,
     subject: String,

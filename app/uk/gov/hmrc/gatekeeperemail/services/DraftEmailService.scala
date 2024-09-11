@@ -245,7 +245,6 @@ class DraftEmailService @Inject() (
       emailTemplateData,
       recipientsTitle,
       emailRequest.userSelectionQuery,
-      emailRequest.attachmentDetails,
       emailRequest.emailData.emailBody,
       emailRequest.emailData.emailBody,
       emailRequest.emailData.emailSubject,

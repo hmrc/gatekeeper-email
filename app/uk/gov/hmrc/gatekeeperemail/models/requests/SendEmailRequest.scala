@@ -18,8 +18,6 @@ package uk.gov.hmrc.gatekeeperemail.models.requests
 
 import play.api.libs.json.{Json, OFormat}
 
-import uk.gov.hmrc.gatekeeperemail.models.UploadedFileWithObjectStore
-
 case class EmailData(emailSubject: String, emailBody: String)
 
 object EmailData {
@@ -73,8 +71,7 @@ case class EmailRequest(
     emailData: EmailData,
     force: Boolean = false,
     auditData: Map[String, String] = Map.empty,
-    eventUrl: Option[String] = None,
-    attachmentDetails: Option[Seq[UploadedFileWithObjectStore]] = None
+    eventUrl: Option[String] = None
   )
 
 object EmailRequest {
