@@ -69,9 +69,6 @@ class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig:
           fromCodecs(
             Codecs.playFormatCodec(domainFormat),
             Codecs.playFormatCodec(EmailTemplateData.format),
-            Codecs.playFormatCodec(UploadCargo.format),
-            Codecs.playFormatCodec(UploadedFile.format),
-            Codecs.playFormatCodec(UploadedFileWithObjectStore.format),
             Codecs.playFormatCodec(DraftEmail.format)
           ),
           MongoClient.DEFAULT_CODEC_REGISTRY
@@ -112,8 +109,7 @@ class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig:
         set("templateData", email.templateData),
         set("htmlEmailBody", email.htmlEmailBody),
         set("markdownEmailBody", email.markdownEmailBody),
-        set("subject", email.subject),
-        set("attachmentDetails", email.attachmentDetails.getOrElse(Seq.empty))
+        set("subject", email.subject)
       ),
       options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
     ).head()

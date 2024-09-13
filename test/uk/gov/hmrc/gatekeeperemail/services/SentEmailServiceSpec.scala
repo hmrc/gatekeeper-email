@@ -54,7 +54,6 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       templateData,
       "DL Team",
       emailPreferences,
-      None,
       "markdownEmailBody",
       "Test email",
       "test subject",

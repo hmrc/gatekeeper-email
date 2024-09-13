@@ -17,8 +17,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(ScoverageSettings())
   .settings(
     libraryDependencies ++= AppDependencies(),
-    retrieveManaged := true,
-    routesImport += "uk.gov.hmrc.gatekeeperemail.controllers.binders._"
+    retrieveManaged := true
   )
   .settings(
     Compile / unmanagedResourceDirectories += baseDirectory.value / "resources"

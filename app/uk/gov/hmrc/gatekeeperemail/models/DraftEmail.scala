@@ -40,7 +40,6 @@ case class DraftEmail(
     templateData: EmailTemplateData,
     recipientTitle: String,
     userSelectionQuery: DevelopersEmailQuery,
-    attachmentDetails: Option[Seq[UploadedFileWithObjectStore]],
     markdownEmailBody: String,
     htmlEmailBody: String,
     subject: String,

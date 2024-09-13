@@ -6,12 +6,3 @@ POST        /gatekeeper-email/send-test-email/:emailUUID     uk.gov.hmrc.gatekee
 GET         /gatekeeper-email/fetch-email/:emailUUID         uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.fetchEmail(emailUUID)
 POST        /gatekeeper-email/delete-email/:emailUUID        uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.deleteEmail(emailUUID)
 POST        /gatekeeper-email/update-email                   uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.updateEmail(emailUUID)
-
-POST        /gatekeeperemail/upscancallback                  uk.gov.hmrc.gatekeeperemail.controllers.UploadCallbackController.callback
-
-POST        /gatekeeperemail/insertfileuploadstatus          uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.addUploadedFileStatus(key)
-POST        /gatekeeperemail/updatefileuploadstatus          uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.updateUploadedFileStatus(key)
-GET         /gatekeeperemail/fetchfileuploadstatus           uk.gov.hmrc.gatekeeperemail.controllers.UploadFormController.fetchUploadedFileStatus(key)
-
-+ nocsrf
-POST        /gatekeeperemail/updatefiles                     uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperComposeEmailController.updateFiles()
