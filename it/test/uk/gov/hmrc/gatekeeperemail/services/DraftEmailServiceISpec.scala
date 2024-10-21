@@ -30,6 +30,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.Actors
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -74,6 +75,7 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
     val emailRendererConnectorMock: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
     val underTest                                                    = new DraftEmailService(emailRendererConnectorMock, developerConnectorMock, apmConnectorMock, emailRepository, sentEmailRepository, appConfigMock, clock)
     val users                                                        = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
+    val gatekeeperUser                                               = Actors.GatekeeperUser("Test user")
   }
 
   "saveEmail" should {
@@ -89,7 +91,7 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
           "subject",
           ""
         ))))
-      val emailRequest      = EmailRequest(emailPreferences, "gatekeeper", EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map())
+      val emailRequest      = EmailRequest(emailPreferences, "gatekeeper", EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map(), composedBy = gatekeeperUser)
       val email: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
       email.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
       val fetchedRecords    = await(emailRepository.collection.withReadPreference(primaryPreferred()).find().toFuture())
@@ -97,7 +99,7 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
       fetchedRecords.size shouldBe 1
       fetchedRecords.head.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
       fetchedRecords.head.markdownEmailBody shouldBe "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls"
-
+      fetchedRecords.head.composedBy shouldBe gatekeeperUser.user
     }
   }
 }

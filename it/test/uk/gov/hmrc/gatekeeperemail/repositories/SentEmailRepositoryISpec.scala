@@ -68,7 +68,8 @@ class SentEmailRepositoryISpec
     lastName = "last",
     recipient = "first.last@digital.hmrc.gov.uk",
     status = PENDING,
-    failedCount = 0
+    failedCount = 0,
+    composedBy = "Test user"
   )
 
   val sentEmails = List(sentEmail)

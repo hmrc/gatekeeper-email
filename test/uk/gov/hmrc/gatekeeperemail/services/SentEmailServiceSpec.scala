@@ -48,6 +48,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
     val templateData                                                 = EmailTemplateData("templateId", Map(), false, Map(), None)
     val users                                                        = List(RegisteredUser("example@example.com", "first name", "last name", true), RegisteredUser("example2@example2.com", "first name2", "last name2", true))
     val emailPreferences                                             = DevelopersEmailQuery()
+    val gatekeeperUser                                               = "Test user"
 
     val draftEmail = DraftEmail(
       "emailId-123",
@@ -58,7 +59,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       "Test email",
       "test subject",
       SENT,
-      "composedBy",
+      gatekeeperUser,
       Some("approvedBy"),
       instant,
       1
@@ -72,7 +73,8 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       lastName = "last",
       recipient = "first.last@digital.hmrc.gov.uk",
       status = PENDING,
-      failedCount = 0
+      failedCount = 0,
+      composedBy = "Test user"
     )
 
     when(emailRendererConnectorMock.getTemplatedEmail(*))

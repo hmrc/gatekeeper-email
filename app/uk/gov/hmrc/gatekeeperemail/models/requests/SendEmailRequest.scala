@@ -17,6 +17,7 @@
 package uk.gov.hmrc.gatekeeperemail.models.requests
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.Actors
 
 case class EmailData(emailSubject: String, emailBody: String)
 
@@ -71,7 +72,8 @@ case class EmailRequest(
     emailData: EmailData,
     force: Boolean = false,
     auditData: Map[String, String] = Map.empty,
-    eventUrl: Option[String] = None
+    eventUrl: Option[String] = None,
+    composedBy: Actors.GatekeeperUser
   )
 
 object EmailRequest {

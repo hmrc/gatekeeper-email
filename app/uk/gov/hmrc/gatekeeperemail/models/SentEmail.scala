@@ -31,7 +31,8 @@ case class SentEmail(
     status: EmailStatus,
     failedCount: Int,
     id: UUID = UUID.randomUUID(),
-    createdAt: Instant
+    createdAt: Instant,
+    composedBy: String
   )
 
 object SentEmail {
