@@ -32,6 +32,7 @@ import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.Actors
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -51,6 +52,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
   private val emailBody    = "Body to be used in the email template"
   private val templateData = EmailTemplateData("templateId", Map(), false, Map(), None)
   val emailPreferences     = DevelopersEmailQuery()
+  val gatekeeperUser       = Actors.GatekeeperUser("Test user")
 
   private val draftEmail = DraftEmail(
     "emailId-123",
@@ -61,13 +63,13 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
     "This is test email",
     "test subject",
     SENT,
-    "composedBy",
+    gatekeeperUser.user,
     Some("approvedBy"),
     instant,
     1
   )
 
-  private val emailRequest = EmailRequest(emailPreferences, "gatekeeper", EmailData(subject, emailBody))
+  private val emailRequest = EmailRequest(emailPreferences, "gatekeeper", EmailData(subject, emailBody), composedBy = gatekeeperUser)
 
   private val fakeSaveEmailRequest            = FakeRequest("POST", "/gatekeeper-email/save-email").withBody(Json.toJson(emailRequest))
   private val fakeDeleteEmailRequest          = FakeRequest("POST", "/gatekeeper-email/delete-email")
@@ -120,7 +122,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
     val fakeEmailRequest = FakeRequest("POST", s"/gatekeeper-email/send-test-email/$emailUUID")
       .withHeaders("Content-Type" -> "application/json")
       .withBody(Json.toJson(TestEmailRequest(emailAddress)))
-    val dummyEmailData   = DraftEmail("", EmailTemplateData("", Map(), false, Map(), None), "", emailPreferences, "", "", "", SENT, "", None, instant, 1)
+    val dummyEmailData   = DraftEmail("", EmailTemplateData("", Map(), false, Map(), None), "", emailPreferences, "", "", "", SENT, gatekeeperUser.user, None, instant, 1)
     when(mockDraftEmailRepository.getEmailData(emailUUID)).thenReturn(Future(dummyEmailData))
   }
 

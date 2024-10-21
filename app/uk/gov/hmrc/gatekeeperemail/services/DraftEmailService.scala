@@ -165,7 +165,8 @@ class DraftEmailService @Inject() (
         lastName = elem.lastName,
         recipient = elem.email,
         status = EmailStatus.PENDING,
-        failedCount = 0
+        failedCount = 0,
+        composedBy = email.composedBy
       )
     )
 
@@ -195,7 +196,8 @@ class DraftEmailService @Inject() (
         lastName = "Email",
         recipient = emailAddress,
         status = EmailStatus.PENDING,
-        failedCount = 0
+        failedCount = 0,
+        composedBy = email.composedBy
       )
 
     sentEmailRepository.persistOne(sentEmails)
@@ -249,7 +251,7 @@ class DraftEmailService @Inject() (
       emailRequest.emailData.emailBody,
       emailRequest.emailData.emailSubject,
       EmailStatus.PENDING,
-      "composedBy",
+      emailRequest.composedBy.user,
       Some("approvedBy"),
       instant(),
       0
