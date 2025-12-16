@@ -48,6 +48,13 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
       replaceIndexes = true,
       indexes = Seq(
         IndexModel(
+          ascending("id"),
+          IndexOptions()
+            .name("idIndex")
+            .background(true)
+            .unique(true)
+        ),
+        IndexModel(
           ascending("status", "createdAt"),
           IndexOptions()
             .name("emailNextSendIndex")
