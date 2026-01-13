@@ -43,7 +43,7 @@ class EmailSendingJob @Inject() (appConfig: AppConfig, override val mongoLockRep
   override def executeInLock(implicit ec: ExecutionContext): Future[Result] = {
     sentEmailService.sendNextPendingEmail.map(done => {
       // If an email has been sent then log a message out to confirm this.
-      if (done == 1) {
+      if (done == "Sent successfully") {
         logger.info(s"${name} has successfully sent the next pending email.")
       }
 
