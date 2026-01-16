@@ -76,24 +76,23 @@ trait GatekeeperAuthorisationActions {
     }
 
   private def authPredicate(minimumRoleRequired: GatekeeperRole): Predicate = {
-    val adminEnrolment     = Enrolment(strideAuthConfig.adminRole)
-    val superUserEnrolment = Enrolment(strideAuthConfig.superUserRole)
-    val userEnrolment      = Enrolment(strideAuthConfig.userRole)
+    val adminEnrolment        = Enrolment(strideAuthConfig.adminRole)
+    val superUserEnrolment    = Enrolment(strideAuthConfig.superUserRole)
+    val advancedUserEnrolment = Enrolment(strideAuthConfig.advancedUserRole)
+    val userEnrolment         = Enrolment(strideAuthConfig.userRole)
 
     minimumRoleRequired match {
-      case GatekeeperRole.ADMIN     => adminEnrolment
-      case GatekeeperRole.SUPERUSER => adminEnrolment or superUserEnrolment
-      case GatekeeperRole.USER      => adminEnrolment or superUserEnrolment or userEnrolment
+      case GatekeeperRole.ADMIN        => adminEnrolment
+      case GatekeeperRole.SUPERUSER    => adminEnrolment or superUserEnrolment
+      case GatekeeperRole.ADVANCEDUSER => adminEnrolment or superUserEnrolment or advancedUserEnrolment
+      case GatekeeperRole.USER         => adminEnrolment or superUserEnrolment or advancedUserEnrolment or userEnrolment
     }
   }
 
-  private def gatekeeperRoleAction(minimumRoleRequired: GatekeeperRole)(block: LoggedInRequest[_] => Future[Result]): Action[AnyContent] =
-    Action.async { implicit request =>
-      gatekeeperRoleActionRefiner(minimumRoleRequired).invokeBlock(convertRequest(request), block)
-    }
-
-  def anyStrideUserAction(block: LoggedInRequest[_] => Future[Result]): Action[AnyContent] =
-    gatekeeperRoleAction(GatekeeperRole.USER)(block)
+  // private def gatekeeperRoleAction(minimumRoleRequired: GatekeeperRole)(block: LoggedInRequest[_] => Future[Result]): Action[AnyContent] =
+  //   Action.async { implicit request =>
+  //     gatekeeperRoleActionRefiner(minimumRoleRequired).invokeBlock(convertRequest(request), block)
+  //   }
 
   def convertRequest[A](request: Request[A]): MessagesRequest[A] = {
     requestConverter.convert(request)
