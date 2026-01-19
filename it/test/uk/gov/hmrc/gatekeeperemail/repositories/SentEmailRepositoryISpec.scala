@@ -142,7 +142,7 @@ class SentEmailRepositoryISpec
   "findNextEmailToSend" should {
     "find the oldest pending email" in {
       val expectedNextSendRecipient = "old.email@digital.hmrc.gov.uk"
-      val emailsToSend              = List(sentEmail.copy(createdAt = instant.minusSeconds(10 * 60), recipient = expectedNextSendRecipient))
+      val emailsToSend              = List(sentEmail.copy(id = UUID.randomUUID(), createdAt = instant.minusSeconds(10 * 60), recipient = expectedNextSendRecipient))
       await(serviceRepo.persist(emailsToSend))
       await(serviceRepo.persist(sentEmails))
 
@@ -153,7 +153,7 @@ class SentEmailRepositoryISpec
     }
 
     "ignore emails with failed status" in {
-      val emailsToSend = List(sentEmail.copy(status = FAILED, recipient = "failed.send@abc.com"))
+      val emailsToSend = List(sentEmail.copy(id = UUID.randomUUID(), status = FAILED, recipient = "failed.send@abc.com"))
       await(serviceRepo.persist(emailsToSend))
       await(serviceRepo.persist(sentEmails))
 
@@ -164,7 +164,7 @@ class SentEmailRepositoryISpec
     }
 
     "handle documents with the same created time" in {
-      val emailsToSend = List(sentEmail.copy(recipient = "failed.send@abc.com"))
+      val emailsToSend = List(sentEmail.copy(id = UUID.randomUUID(), recipient = "failed.send@abc.com"))
       await(serviceRepo.persist(emailsToSend))
       await(serviceRepo.persist(sentEmails))
 
