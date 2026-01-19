@@ -20,6 +20,9 @@ lazy val microservice = Project(appName, file("."))
     retrieveManaged := true
   )
   .settings(
+    Compile / unmanagedResourceDirectories += baseDirectory.value / "resources"
+  )
+  .settings(
     Test / fork := false,
     Test / parallelExecution := false,
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-eT"),

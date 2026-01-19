@@ -30,14 +30,14 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
-import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
+import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
 import uk.gov.hmrc.gatekeeperemail.models.SentEmail
 
 class SentEmailRepositoryISpec
     extends AnyWordSpec
-    with DefaultPlayMongoRepositorySupport[SentEmail]
+    with PlayMongoRepositorySupport[SentEmail]
     with Matchers
     with BeforeAndAfterEach
     with GuiceOneAppPerSuite
@@ -46,7 +46,11 @@ class SentEmailRepositoryISpec
 
   lazy val serviceRepo = repository.asInstanceOf[SentEmailRepository]
 
-  override lazy val app: Application = appBuilder.build()
+  override implicit lazy val app: Application = appBuilder.build()
+
+  override def beforeEach(): Unit = {
+    prepareDatabase()
+  }
 
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
@@ -54,7 +58,7 @@ class SentEmailRepositoryISpec
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override lazy val repository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
+  override protected val repository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
 
   val sentEmail: SentEmail = SentEmail(
     createdAt = instant,
