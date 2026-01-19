@@ -30,25 +30,21 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
-import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
+import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
 import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, EmailTemplateData}
 
 class DraftEmailRepositoryISpec extends AnyWordSpec
-    with PlayMongoRepositorySupport[DraftEmail]
+    with DefaultPlayMongoRepositorySupport[DraftEmail]
     with Matchers
     with BeforeAndAfterEach
     with GuiceOneAppPerSuite
     with FixedClock {
   lazy val serviceRepo = repository.asInstanceOf[DraftEmailRepository]
 
-  override implicit lazy val app: Application = appBuilder.build()
-
-  override def beforeEach(): Unit = {
-    prepareDatabase()
-  }
+  override lazy val app: Application = appBuilder.build()
 
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
@@ -56,7 +52,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override protected val repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
+  override lazy val repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
 
   trait Setup {
     val templateData     = EmailTemplateData("templateId", Map(), false, Map(), None)
