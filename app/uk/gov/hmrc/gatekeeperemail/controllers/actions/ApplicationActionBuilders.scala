@@ -33,7 +33,7 @@ trait AuthorisationActions {
         .invokeBlock(requestConverter.convert(request), block)
     }
 
-  def loggedInJsValue()(block: Request[JsValue] => Future[Result]): Action[JsValue] = strideRoleJsValue(GatekeeperRole.USER)(block)
+  def loggedInJsValue()(block: Request[JsValue] => Future[Result]): Action[JsValue] = strideRoleJsValue(GatekeeperRole.ADVANCEDUSER)(block)
 
   private def strideRoleAnyContent(minimumGatekeeperRole: GatekeeperRole)(block: MessagesRequest[AnyContent] => Future[Result]): Action[AnyContent] =
     Action.async { implicit request =>
@@ -41,5 +41,13 @@ trait AuthorisationActions {
         .invokeBlock(requestConverter.convert(request), block)
     }
 
-  def loggedInAnyContent()(block: Request[AnyContent] => Future[Result]): Action[AnyContent] = strideRoleAnyContent(GatekeeperRole.USER)(block)
+  def loggedInAnyContent()(block: Request[AnyContent] => Future[Result]): Action[AnyContent] = strideRoleAnyContent(GatekeeperRole.ADVANCEDUSER)(block)
+
+  private def strideRole(minimumGatekeeperRole: GatekeeperRole)(block: MessagesRequest[_] => Future[Result]): Action[AnyContent] =
+    Action.async { implicit request: Request[_] =>
+      gatekeeperRoleActionRefiner(minimumGatekeeperRole)
+        .invokeBlock(requestConverter.convert(request), block)
+    }
+  def asAdvancedUser[C]()(block: Request[_] => Future[Result]): Action[AnyContent]                                               = strideRole(GatekeeperRole.ADVANCEDUSER)(block)
+
 }
