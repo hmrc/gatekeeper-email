@@ -28,6 +28,7 @@ case class StrideAuthConfig(
     origin: String,
     adminRole: String,
     superUserRole: String,
+    advancedUserRole: String,
     userRole: String,
     successUrlBase: String
   )
@@ -53,13 +54,14 @@ class StrideAuthConfigProvider @Inject() (configuration: Configuration) extends 
     val authBaseUrl    = baseUrl("auth")
     val strideLoginUrl = s"${baseUrl("stride-auth-frontend")}/stride/sign-in"
 
-    val strideConfig   = configuration.underlying.getConfig("stride")
-    val origin         = strideConfig.getString("origin")
-    val adminRole      = strideConfig.getString("roles.admin")
-    val superUserRole  = strideConfig.getString("roles.super-user")
-    val userRole       = strideConfig.getString("roles.user")
-    val successUrlBase = strideConfig.getString("success-url-base")
+    val strideConfig     = configuration.underlying.getConfig("stride")
+    val origin           = strideConfig.getString("origin")
+    val adminRole        = strideConfig.getString("roles.admin")
+    val superUserRole    = strideConfig.getString("roles.super-user")
+    val advancedUserRole = strideConfig.getString("roles.advanced-user")
+    val userRole         = strideConfig.getString("roles.user")
+    val successUrlBase   = strideConfig.getString("success-url-base")
 
-    StrideAuthConfig(authBaseUrl, strideLoginUrl, origin, adminRole, superUserRole, userRole, successUrlBase)
+    StrideAuthConfig(authBaseUrl, strideLoginUrl, origin, adminRole, superUserRole, advancedUserRole, userRole, successUrlBase)
   }
 }
