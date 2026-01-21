@@ -19,7 +19,8 @@ package uk.gov.hmrc.gatekeeperemail.stride.domain.models
 sealed trait GatekeeperRole
 
 object GatekeeperRole {
-  case object USER      extends GatekeeperRole
-  case object SUPERUSER extends GatekeeperRole
-  case object ADMIN     extends GatekeeperRole
+  case object USER         extends GatekeeperRole
+  case object SUPERUSER    extends GatekeeperRole
+  case object ADVANCEDUSER extends GatekeeperRole
+  case object ADMIN        extends GatekeeperRole
 }

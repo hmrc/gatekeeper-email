@@ -76,14 +76,16 @@ trait GatekeeperAuthorisationActions {
     }
 
   private def authPredicate(minimumRoleRequired: GatekeeperRole): Predicate = {
-    val adminEnrolment     = Enrolment(strideAuthConfig.adminRole)
-    val superUserEnrolment = Enrolment(strideAuthConfig.superUserRole)
-    val userEnrolment      = Enrolment(strideAuthConfig.userRole)
+    val adminEnrolment        = Enrolment(strideAuthConfig.adminRole)
+    val superUserEnrolment    = Enrolment(strideAuthConfig.superUserRole)
+    val advancedUserEnrolment = Enrolment(strideAuthConfig.advancedUserRole)
+    val userEnrolment         = Enrolment(strideAuthConfig.userRole)
 
     minimumRoleRequired match {
-      case GatekeeperRole.ADMIN     => adminEnrolment
-      case GatekeeperRole.SUPERUSER => adminEnrolment or superUserEnrolment
-      case GatekeeperRole.USER      => adminEnrolment or superUserEnrolment or userEnrolment
+      case GatekeeperRole.ADMIN        => adminEnrolment
+      case GatekeeperRole.SUPERUSER    => adminEnrolment or superUserEnrolment
+      case GatekeeperRole.ADVANCEDUSER => adminEnrolment or superUserEnrolment or advancedUserEnrolment
+      case GatekeeperRole.USER         => adminEnrolment or superUserEnrolment or advancedUserEnrolment or userEnrolment
     }
   }
 
