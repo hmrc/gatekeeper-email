@@ -28,7 +28,6 @@ sealed trait ApiCategory {
   }
 }
 
-// scalastyle:off cyclomatic.complexity
 object ApiCategory {
 
   case object EXAMPLE                      extends ApiCategory
@@ -120,4 +119,3 @@ object ApiCategory {
   }
 // $COVERAGE-ON$
 }
-// scalastyle:on cyclomatic.complexity
