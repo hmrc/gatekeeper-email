@@ -1,11 +1,11 @@
-import sbt._
+import sbt.*
 
 object AppDependencies {
 
-  lazy val bootstrapPlayVersion = "10.5.0"
-  lazy val hmrcMongoVersion     = "2.11.0"
-  lazy val commonDomainVersion  = "0.19.0"
-  lazy val apiDomainVersion     = "0.20.0"
+  lazy val bootstrapPlayVersion = "10.7.0"
+  lazy val hmrcMongoVersion     = "2.12.0"
+  lazy val commonDomainVersion  = "1.0.0"
+  lazy val apiDomainVersion     = "1.0.0"
 
   def apply(): Seq[ModuleID] = compile ++ test
 
