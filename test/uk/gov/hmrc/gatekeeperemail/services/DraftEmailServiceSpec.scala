@@ -109,8 +109,8 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
     when(developerConnectorMock.fetchByEmailPreferences(*, *, *, *)(*)).thenReturn(Future(users))
     when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
       CombinedApi("VAT", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PUBLIC),
-      CombinedApi("CORP", "CORP", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PRIVATE),
-      CombinedApi("SELF", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PRIVATE)
+      CombinedApi("CORP", "CORP", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.CONTROLLED),
+      CombinedApi("SELF", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.INTERNAL)
     )))
   }
 
@@ -171,8 +171,8 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       when(developerConnectorMock.fetchByEmailPreferences(*, *, *, *)(*)).thenReturn(Future(users))
       when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
         CombinedApi("VAT", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PUBLIC),
-        CombinedApi("CORP", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PRIVATE),
-        CombinedApi("SELF", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PRIVATE)
+        CombinedApi("CORP", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.CONTROLLED),
+        CombinedApi("SELF", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.INTERNAL)
       )))
 
       val overriddenPref = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("VAT", "CORP")))
@@ -190,8 +190,8 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       when(developerConnectorMock.fetchByEmailPreferences(*, *, *, *)(*)).thenReturn(Future(users))
       when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
         CombinedApi("VAT", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PUBLIC),
-        CombinedApi("CORP", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PRIVATE),
-        CombinedApi("SELF", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PRIVATE)
+        CombinedApi("CORP", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.CONTROLLED),
+        CombinedApi("SELF", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.INTERNAL)
       )))
 
       val overriddenPref = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("VAT", "CORP")), privateapimatch = true)
@@ -209,8 +209,8 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       when(developerConnectorMock.fetchByEmailPreferences(*, *, *, *)(*)).thenReturn(Future(users))
       when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
         CombinedApi("VAT", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PUBLIC),
-        CombinedApi("CORP", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PRIVATE),
-        CombinedApi("SELF", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PRIVATE)
+        CombinedApi("CORP", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.CONTROLLED),
+        CombinedApi("SELF", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.INTERNAL)
       )))
 
       val overriddenPref = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("", "")), privateapimatch = true)
@@ -227,8 +227,8 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
       when(developerConnectorMock.fetchByEmailPreferences(*, *, *, *)(*)).thenReturn(Future(users))
       when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
         CombinedApi("VAT", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PUBLIC),
-        CombinedApi("CORP", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PRIVATE),
-        CombinedApi("SELF", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PRIVATE)
+        CombinedApi("CORP", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.CONTROLLED),
+        CombinedApi("SELF", "VAT", List(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.INTERNAL)
       )))
 
       val overriddenPref = DevelopersEmailQuery(topic = Some("TECHNICAL"), apis = Some(Seq("VAT1", "CORP1")))

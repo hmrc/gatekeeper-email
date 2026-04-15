@@ -90,17 +90,18 @@ class DraftEmailService @Inject() (
         developerConnector.fetchVerified()
       case DevelopersEmailQuery(topic, Some(selectedAPIs), None, _, None, false, None) =>
         logger.info(s"Emailing Selected Apis to users that are not overridden")
-        val selectedTopic: Option[TopicOptionChoice] = topic.map(TopicOptionChoice.unsafeApply(_))
+        val selectedTopic: Option[TopicOptionChoice] = topic.map(TopicOptionChoice.unsafeApply)
         if (selectedAPIs.forall(_.isEmpty)) {
           Future.successful(List.empty)
         } else {
           for {
-            apis         <- apmConnector.fetchAllCombinedApis()
-            filteredApis  = filterSelectedApis(Some(selectedAPIs.toList), apis).sortBy(_.displayName)
-            publicUsers  <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.PUBLIC)
-            privateUsers <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.PRIVATE)
-            combinedUsers = publicUsers ++ privateUsers
-            _             = logger.info(s"Outgoing Emails count is ${combinedUsers.size}")
+            apis            <- apmConnector.fetchAllCombinedApis()
+            filteredApis     = filterSelectedApis(Some(selectedAPIs.toList), apis).sortBy(_.displayName)
+            publicUsers     <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.PUBLIC)
+            controlledUsers <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.CONTROLLED)
+            internalUsers   <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.INTERNAL)
+            combinedUsers    = (publicUsers ++ controlledUsers ++ internalUsers).distinct
+            _                = logger.info(s"Outgoing Emails count is ${combinedUsers.size}")
           } yield combinedUsers
         }
       case DevelopersEmailQuery(_, _, _, _, _, _, Some(EmailOverride(_, false)))       =>
@@ -108,7 +109,7 @@ class DraftEmailService @Inject() (
       case _                                                                           =>
         logger.info("Getting Emails for Default match case")
         emailPreferences.topic.map(t =>
-          developerConnector.fetchByEmailPreferences(TopicOptionChoice.unsafeApply(t), emailPreferences.apis, emailPreferences.apiCategories)
+          developerConnector.fetchByEmailPreferences(TopicOptionChoice.unsafeApply(t), emailPreferences.apis, emailPreferences.apiCategories, privateapimatch = false)
         ).getOrElse(Future.successful(List.empty))
     }
     emails
@@ -132,14 +133,14 @@ class DraftEmailService @Inject() (
     val apiNames     = filteredApis.map(_.serviceName)
     selectedTopic.fold(Future.successful(List.empty[RegisteredUser]))(topic => {
       (apiAcessType, filteredApis) match {
-        case (_, Nil)                   =>
+        case (_, Nil)                                                    =>
           successful(List.empty[RegisteredUser])
-        case (ApiAccessType.PUBLIC, _)  =>
+        case (ApiAccessType.PUBLIC, _)                                   =>
           logger.debug(s"Before fetchByEmailPreferences topic: $topic  apiNames: $apiNames categories.distinct: ${categories.distinct} privateapimatch: false")
-          developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories.distinct), false)
-        case (ApiAccessType.PRIVATE, _) =>
-          logger.debug(s"Before fetchByEmailPreferences topic: $topic  apiNames: $apiNames categories.distinct: ${categories.distinct} privateapimatch: false")
-          developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories.distinct), true)
+          developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories.distinct), privateapimatch = false)
+        case (ApiAccessType.CONTROLLED, _) | (ApiAccessType.INTERNAL, _) =>
+          logger.debug(s"Before fetchByEmailPreferences topic: $topic  apiNames: $apiNames categories.distinct: ${categories.distinct} privateapimatch: true")
+          developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories.distinct), privateapimatch = true)
       }
 
     })

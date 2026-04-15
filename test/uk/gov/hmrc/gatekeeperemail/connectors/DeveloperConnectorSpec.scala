@@ -91,7 +91,7 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec
             )
         )
 
-        val result = await(connector.fetchByEmailPreferences(TopicOptionChoice.BUSINESS_AND_POLICY))
+        val result = await(connector.fetchByEmailPreferences(TopicOptionChoice.BUSINESS_AND_POLICY, privateapimatch = false))
 
         wireMockVerify(getRequestedFor(urlPathEqualTo(url)))
 
@@ -113,7 +113,12 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec
         )
 
         val result =
-          await(connector.fetchByEmailPreferences(TopicOptionChoice.BUSINESS_AND_POLICY, maybeApis = None, maybeApiCategories = Some(Seq(ApiCategory.VAT, ApiCategory.OTHER))))
+          await(connector.fetchByEmailPreferences(
+            TopicOptionChoice.BUSINESS_AND_POLICY,
+            maybeApis = None,
+            maybeApiCategories = Some(Seq(ApiCategory.VAT, ApiCategory.OTHER)),
+            privateapimatch = false
+          ))
 
         wireMockVerify(getRequestedFor(matching))
 
@@ -138,7 +143,8 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec
         val result = await(connector.fetchByEmailPreferences(
           TopicOptionChoice.BUSINESS_AND_POLICY,
           maybeApis = Some(Seq("service1", "service2")),
-          maybeApiCategories = Some(Seq(ApiCategory.VAT, ApiCategory.OTHER))
+          maybeApiCategories = Some(Seq(ApiCategory.VAT, ApiCategory.OTHER)),
+          privateapimatch = false
         ))
 
         wireMockVerify(getRequestedFor(matching))

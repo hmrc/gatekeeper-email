@@ -38,17 +38,17 @@ class DeveloperConnector @Inject() (appConfig: AppConfig, http: HttpClientV2)(im
       topic: TopicOptionChoice,
       maybeApis: Option[Seq[String]] = None,
       maybeApiCategories: Option[Seq[ApiCategory]] = None,
-      privateapimatch: Boolean = false
+      privateapimatch: Boolean
     )(implicit hc: HeaderCarrier
     ): Future[List[RegisteredUser]] = {
-    logger.info(s"fetchByEmailPreferences topic is $topic maybeApis: $maybeApis maybeApuCategories $maybeApiCategories privateapimatch $privateapimatch")
+    logger.info(s"fetchByEmailPreferences topic is $topic maybeApis: $maybeApis maybeApiCategories $maybeApiCategories privateapimatch $privateapimatch")
     val regimes: Seq[(String, String)] = maybeApiCategories.fold(Seq.empty[(String, String)])(regimes =>
       regimes.flatMap(regime => Seq("regime" -> regime.toString))
     )
     val privateapimatchParams          = if (privateapimatch) Seq("privateapimatch" -> "true") else Seq.empty
     val queryParams                    =
       Seq("topic" -> topic.toString) ++ regimes ++
-        maybeApis.fold(Seq.empty[(String, String)])(apis => apis.map(("service" -> _))) ++ privateapimatchParams
+        maybeApis.fold(Seq.empty[(String, String)])(apis => apis.map("service" -> _)) ++ privateapimatchParams
 
     // The third-party-developer service only returns verified registered users at this endpoint
     http.get(url"${appConfig.developerBaseUrl}/developers/email-preferences?$queryParams")
