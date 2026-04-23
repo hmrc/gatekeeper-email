@@ -25,7 +25,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import org.mongodb.scala.result.InsertOneResult
 
 import play.api.Logger
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiAccessType
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiAccessType, CombinedApi, ServiceName}
 import uk.gov.hmrc.apiplatform.modules.common.services.ClockNow
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
@@ -91,7 +91,7 @@ class DraftEmailService @Inject() (
       case DevelopersEmailQuery(topic, Some(selectedAPIs), None, _, None, false, None) =>
         logger.info(s"Emailing Selected Apis to users that are not overridden")
         val selectedTopic: Option[TopicOptionChoice] = topic.map(TopicOptionChoice.unsafeApply)
-        if (selectedAPIs.forall(_.isEmpty)) {
+        if (selectedAPIs.forall(_.value.isEmpty)) {
           Future.successful(List.empty)
         } else {
           for {
@@ -109,13 +109,13 @@ class DraftEmailService @Inject() (
       case _                                                                           =>
         logger.info("Getting Emails for Default match case")
         emailPreferences.topic.map(t =>
-          developerConnector.fetchByEmailPreferences(TopicOptionChoice.unsafeApply(t), emailPreferences.apis, emailPreferences.apiCategories, privateapimatch = false)
+          developerConnector.fetchByEmailPreferences(TopicOptionChoice.unsafeApply(t), emailPreferences.apis, emailPreferences.apiCategories.map(_.toSet))
         ).getOrElse(Future.successful(List.empty))
     }
     emails
   }
 
-  private def filterSelectedApis(maybeSelectedAPIs: Option[List[String]], apiList: List[CombinedApi]) = {
+  private def filterSelectedApis(maybeSelectedAPIs: Option[List[ServiceName]], apiList: List[CombinedApi]) = {
     maybeSelectedAPIs.fold(List.empty[CombinedApi])(selectedAPIs => apiList.filter(api => selectedAPIs.contains(api.serviceName)))
   }
 
@@ -125,22 +125,20 @@ class DraftEmailService @Inject() (
       apiAcessType: ApiAccessType
     )(implicit hc: HeaderCarrier
     ): Future[List[RegisteredUser]] = {
-    // APSR-1418 - the accesstype inside combined api is option as a temporary measure until APM version which conatins the change to
-    // return this is deployed out to all environments
     logger.info(s"In handleGettingApiUsers  apis: $apis  selectedTopic $selectedTopic apiAccessType ${apiAcessType.toString}")
     val filteredApis = apis.filter(_.accessType == apiAcessType)
-    val categories   = filteredApis.flatMap(_.categories)
+    val categories   = filteredApis.flatMap(_.categories).toSet
     val apiNames     = filteredApis.map(_.serviceName)
     selectedTopic.fold(Future.successful(List.empty[RegisteredUser]))(topic => {
       (apiAcessType, filteredApis) match {
-        case (_, Nil)                                                    =>
+        case (_, Nil)                                               =>
           successful(List.empty[RegisteredUser])
-        case (ApiAccessType.PUBLIC, _)                                   =>
-          logger.debug(s"Before fetchByEmailPreferences topic: $topic  apiNames: $apiNames categories.distinct: ${categories.distinct} privateapimatch: false")
-          developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories.distinct), privateapimatch = false)
-        case (ApiAccessType.CONTROLLED, _) | (ApiAccessType.INTERNAL, _) =>
-          logger.debug(s"Before fetchByEmailPreferences topic: $topic  apiNames: $apiNames categories.distinct: ${categories.distinct} privateapimatch: true")
-          developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories.distinct), privateapimatch = true)
+        case (ApiAccessType.PUBLIC, _)                              =>
+          logger.debug(s"Before fetchByEmailPreferences topic: $topic  apiNames: $apiNames categories.distinct: ${categories} privateapimatch: false")
+          developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories), false)
+        case (ApiAccessType.INTERNAL | ApiAccessType.CONTROLLED, _) =>
+          logger.debug(s"Before fetchByEmailPreferences topic: $topic  apiNames: $apiNames categories.distinct: ${categories} privateapimatch: false")
+          developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories), true)
       }
 
     })

@@ -25,6 +25,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.libs.json.Json
 import play.api.test.Helpers.OK
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientV2Support
 
@@ -116,7 +117,7 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec
           await(connector.fetchByEmailPreferences(
             TopicOptionChoice.BUSINESS_AND_POLICY,
             maybeApis = None,
-            maybeApiCategories = Some(Seq(ApiCategory.VAT, ApiCategory.OTHER)),
+            maybeApiCategories = Some(Set(ApiCategory.VAT, ApiCategory.OTHER)),
             privateapimatch = false
           ))
 
@@ -142,8 +143,8 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec
 
         val result = await(connector.fetchByEmailPreferences(
           TopicOptionChoice.BUSINESS_AND_POLICY,
-          maybeApis = Some(Seq("service1", "service2")),
-          maybeApiCategories = Some(Seq(ApiCategory.VAT, ApiCategory.OTHER)),
+          maybeApis = Some(Seq(ServiceName("service1"), ServiceName("service2"))),
+          maybeApiCategories = Some(Set(ApiCategory.VAT, ApiCategory.OTHER)),
           privateapimatch = false
         ))
 
@@ -169,8 +170,8 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec
 
         val result = await(connector.fetchByEmailPreferences(
           TopicOptionChoice.BUSINESS_AND_POLICY,
-          maybeApis = Some(Seq("service1", "service2")),
-          maybeApiCategories = Some(Seq(ApiCategory.VAT, ApiCategory.OTHER)),
+          maybeApis = Some(Seq(ServiceName("service1"), ServiceName("service2"))),
+          maybeApiCategories = Some(Set(ApiCategory.VAT, ApiCategory.OTHER)),
           privateapimatch = true
         ))
 

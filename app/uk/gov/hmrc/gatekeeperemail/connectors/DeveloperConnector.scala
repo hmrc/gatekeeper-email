@@ -21,6 +21,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.Logging
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
@@ -36,19 +37,19 @@ class DeveloperConnector @Inject() (appConfig: AppConfig, http: HttpClientV2)(im
 
   def fetchByEmailPreferences(
       topic: TopicOptionChoice,
-      maybeApis: Option[Seq[String]] = None,
-      maybeApiCategories: Option[Seq[ApiCategory]] = None,
-      privateapimatch: Boolean
+      maybeApis: Option[Seq[ServiceName]] = None,
+      maybeApiCategories: Option[Set[ApiCategory]] = None,
+      privateapimatch: Boolean = false
     )(implicit hc: HeaderCarrier
     ): Future[List[RegisteredUser]] = {
     logger.info(s"fetchByEmailPreferences topic is $topic maybeApis: $maybeApis maybeApiCategories $maybeApiCategories privateapimatch $privateapimatch")
     val regimes: Seq[(String, String)] = maybeApiCategories.fold(Seq.empty[(String, String)])(regimes =>
-      regimes.flatMap(regime => Seq("regime" -> regime.toString))
+      regimes.toList.flatMap(regime => Seq("regime" -> regime.toString))
     )
     val privateapimatchParams          = if (privateapimatch) Seq("privateapimatch" -> "true") else Seq.empty
     val queryParams                    =
       Seq("topic" -> topic.toString) ++ regimes ++
-        maybeApis.fold(Seq.empty[(String, String)])(apis => apis.map("service" -> _)) ++ privateapimatchParams
+        maybeApis.fold(Seq.empty[(String, String)])(apis => apis.map(("service" -> _.value))) ++ privateapimatchParams
 
     // The third-party-developer service only returns verified registered users at this endpoint
     http.get(url"${appConfig.developerBaseUrl}/developers/email-preferences?$queryParams")
