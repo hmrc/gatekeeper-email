@@ -109,8 +109,8 @@ class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
     when(developerConnectorMock.fetchByEmailPreferences(*, *, *, *)(*)).thenReturn(Future(users))
     when(apmConnectorMock.fetchAllCombinedApis()(*)).thenReturn(Future(List(
       CombinedApi("VAT", ServiceName("VAT"), Set(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PUBLIC),
-      CombinedApi("CORP", ServiceName("CORP"), Set(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PUBLIC),
-      CombinedApi("SELF", ServiceName("SELF"), Set(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.PUBLIC)
+      CombinedApi("CORP", ServiceName("CORP"), Set(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.INTERNAL),
+      CombinedApi("SELF", ServiceName("SELF"), Set(ApiCategory.AGENTS), ApiType.REST_API, ApiAccessType.INTERNAL)
     )))
   }
 
