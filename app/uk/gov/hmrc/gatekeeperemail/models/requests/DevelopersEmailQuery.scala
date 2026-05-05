@@ -17,13 +17,13 @@
 package uk.gov.hmrc.gatekeeperemail.models.requests
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
 
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
-import uk.gov.hmrc.gatekeeperemail.models.ApiCategory
 
 case class DevelopersEmailQuery(
     topic: Option[String] = None,
-    apis: Option[Seq[String]] = None,
+    apis: Option[Seq[ServiceName]] = None,
     apiCategories: Option[Seq[ApiCategory]] = None,
     privateapimatch: Boolean = false,
     apiVersionFilter: Option[String] = None,

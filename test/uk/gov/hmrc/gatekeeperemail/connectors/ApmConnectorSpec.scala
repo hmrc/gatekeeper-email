@@ -23,11 +23,10 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiAccessType
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiAccessType, _}
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
-import uk.gov.hmrc.gatekeeperemail.models.{CombinedApi, _}
 import uk.gov.hmrc.gatekeeperemail.utils.{AsyncHmrcSpec, _}
 
 class ApmConnectorSpec
@@ -45,8 +44,8 @@ class ApmConnectorSpec
 
     val underTest = new ApmConnector(httpClientV2, mockApmConnectorConfig)
 
-    val combinedRestApi1 = CombinedApi("displayName1", "serviceName1", List(ApiCategory.CUSTOMS), ApiType.REST_API, ApiAccessType.PUBLIC)
-    val combinedXmlApi2  = CombinedApi("displayName2", "serviceName2", List(ApiCategory.VAT), ApiType.XML_API, ApiAccessType.PUBLIC)
+    val combinedRestApi1 = CombinedApi("displayName1", ServiceName("serviceName1"), Set(ApiCategory.CUSTOMS), ApiType.REST_API, ApiAccessType.PUBLIC)
+    val combinedXmlApi2  = CombinedApi("displayName2", ServiceName("serviceName2"), Set(ApiCategory.VAT), ApiType.XML_API, ApiAccessType.PUBLIC)
     val combinedList     = List(combinedRestApi1, combinedXmlApi2)
 
   }

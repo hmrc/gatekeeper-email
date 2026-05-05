@@ -19,23 +19,13 @@ package uk.gov.hmrc.gatekeeperemail.connectors
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-import play.api.libs.json._
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiAccessType
-import uk.gov.hmrc.apiplatform.modules.common.domain.services.SealedTraitJsonFormatting
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
-import uk.gov.hmrc.gatekeeperemail.models.CombinedApi
-
 @Singleton
 class ApmConnector @Inject() (http: HttpClientV2, config: ApmConnector.Config)(implicit ec: ExecutionContext) {
-
-  private def mapText(in: String): Option[ApiAccessType] = ApiAccessType.apply(in).orElse(Some(ApiAccessType.INTERNAL))
-
-  private implicit val overrideFormatForApiAccessType: Format[ApiAccessType] = SealedTraitJsonFormatting.createFormatFor[ApiAccessType]("API Access Type", mapText)
-
-  private implicit val overrideFormatCombinedApi: OFormat[CombinedApi] = Json.format[CombinedApi]
 
   def fetchAllCombinedApis()(implicit hc: HeaderCarrier): Future[List[CombinedApi]] = {
     http.get(url"${config.serviceBaseUrl}/combined-rest-xml-apis").execute[List[CombinedApi]]
