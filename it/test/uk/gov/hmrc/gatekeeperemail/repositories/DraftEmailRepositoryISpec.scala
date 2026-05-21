@@ -17,6 +17,7 @@
 package uk.gov.hmrc.gatekeeperemail.repositories
 
 import java.util.UUID
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import org.mongodb.scala.ReadPreference.primaryPreferred
 import org.mongodb.scala.bson.{BsonBoolean, BsonDocument}
@@ -29,16 +30,18 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
-import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
-import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
-
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
 import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, EmailTemplateData}
+import uk.gov.hmrc.mongo.logging.ObservableFutureImplicits
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
+import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
-class DraftEmailRepositoryISpec extends AnyWordSpec
-    with DefaultPlayMongoRepositorySupport[DraftEmail]
+class DraftEmailRepositoryISpec
+    extends AnyWordSpec
     with Matchers
+    with DefaultPlayMongoRepositorySupport[DraftEmail]
+    with ObservableFutureImplicits
     with BeforeAndAfterEach
     with GuiceOneAppPerSuite
     with FixedClock {
@@ -52,7 +55,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override lazy val repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
+  override val repository: PlayMongoRepository[DraftEmail] = app.injector.instanceOf[DraftEmailRepository]
 
   trait Setup {
     val templateData     = EmailTemplateData("templateId", Map(), false, Map(), None)
@@ -67,7 +70,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec
       "markdownEmailBody",
       "This is test email",
       "test subject",
-      EmailStatus.FAILED,
+      EmailStatus.Failed,
       "composedBy",
       Some("approvedBy"),
       instant,
@@ -89,7 +92,8 @@ class DraftEmailRepositoryISpec extends AnyWordSpec
       await(serviceRepo.persist(email))
 
       val globalIdIndex = await(serviceRepo.collection.listIndexes().toFuture())
-        .find(i => i.get("name").get.asString().getValue == "emailUUIDIndex").get
+        .find(i => i.get("name").get.asString().getValue == "emailUUIDIndex")
+        .get
 
       globalIdIndex.get("unique") shouldBe Some(BsonBoolean(value = true))
       globalIdIndex.get("background").get shouldBe BsonBoolean(true)
@@ -99,7 +103,8 @@ class DraftEmailRepositoryISpec extends AnyWordSpec
       await(serviceRepo.persist(email))
 
       val globalIdIndex = await(serviceRepo.collection.listIndexes().toFuture())
-        .find(i => i.get("name").get.asString().getValue == "ttlIndex").get
+        .find(i => i.get("name").get.asString().getValue == "ttlIndex")
+        .get
 
       globalIdIndex.get("key").get shouldBe BsonDocument("createDateTime" -> Codecs.toBson(1))
       globalIdIndex.get("unique") shouldBe None
@@ -130,7 +135,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec
 
       val emailData = await(serviceRepo.updateEmailSentStatus(email.emailUUID, email.emailsCount))
 
-      emailData.status shouldBe EmailStatus.SENT
+      emailData.status shouldBe EmailStatus.Sent
     }
 
     "return null when email data cannot be found. Is this what we want to happen?" in new Setup {
@@ -150,7 +155,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec
         markdownEmailBody = "some markdown body",
         htmlEmailBody = "some html body",
         subject = "what's it for",
-        status = EmailStatus.PENDING,
+        status = EmailStatus.Pending,
         composedBy = "Ludwig van Beethoven",
         approvedBy = Some("John Doe"),
         createDateTime = instant,
@@ -181,7 +186,7 @@ class DraftEmailRepositoryISpec extends AnyWordSpec
         markdownEmailBody = "some markdown body",
         htmlEmailBody = "some html body",
         subject = "what's it for",
-        status = EmailStatus.PENDING,
+        status = EmailStatus.Pending,
         composedBy = "Ludwig van Beethoven",
         approvedBy = Some("John Doe"),
         createDateTime = instant,

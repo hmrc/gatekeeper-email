@@ -17,6 +17,7 @@
 package uk.gov.hmrc.gatekeeperemail.repositories
 
 import java.util.UUID
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import org.mongodb.scala.ReadPreference.primaryPreferred
 import org.mongodb.scala.bson.{BsonBoolean, BsonDocument}
@@ -29,16 +30,17 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.*
+import uk.gov.hmrc.gatekeeperemail.models.SentEmail
+import uk.gov.hmrc.mongo.logging.ObservableFutureImplicits
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
-import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
-import uk.gov.hmrc.gatekeeperemail.models.SentEmail
-
 class SentEmailRepositoryISpec
     extends AnyWordSpec
-    with DefaultPlayMongoRepositorySupport[SentEmail]
     with Matchers
+    with DefaultPlayMongoRepositorySupport[SentEmail]
+    with ObservableFutureImplicits
     with BeforeAndAfterEach
     with GuiceOneAppPerSuite
     with FixedClock
@@ -54,7 +56,7 @@ class SentEmailRepositoryISpec
         "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
-  override lazy val repository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
+  override val repository: PlayMongoRepository[SentEmail] = app.injector.instanceOf[SentEmailRepository]
 
   val sentEmail: SentEmail = SentEmail(
     createdAt = instant,
@@ -63,7 +65,7 @@ class SentEmailRepositoryISpec
     firstName = "first",
     lastName = "last",
     recipient = "first.last@digital.hmrc.gov.uk",
-    status = PENDING,
+    status = Pending,
     failedCount = 0,
     composedBy = "Test user"
   )
@@ -85,7 +87,8 @@ class SentEmailRepositoryISpec
       await(serviceRepo.persist(sentEmails))
 
       val emailToSendNextIndex = await(serviceRepo.collection.listIndexes().toFuture())
-        .find(i => i.get("name").get.asString().getValue == "emailNextSendIndex").get
+        .find(i => i.get("name").get.asString().getValue == "emailNextSendIndex")
+        .get
       emailToSendNextIndex.get("unique") shouldBe None
       emailToSendNextIndex.get("background").get shouldBe BsonBoolean(true)
     }
@@ -94,7 +97,8 @@ class SentEmailRepositoryISpec
       await(serviceRepo.persist(sentEmails))
 
       val ttlIndex = await(serviceRepo.collection.listIndexes().toFuture())
-        .find(i => i.get("name").get.asString().getValue == "ttlIndex").get
+        .find(i => i.get("name").get.asString().getValue == "ttlIndex")
+        .get
 
       ttlIndex.get("key").get shouldBe BsonDocument("createdAt" -> Codecs.toBson(1))
       ttlIndex.get("unique") shouldBe None
@@ -117,7 +121,8 @@ class SentEmailRepositoryISpec
       await(serviceRepo.persistOne(sentEmail))
 
       val emailToSendNextIndex = await(serviceRepo.collection.listIndexes().toFuture())
-        .find(i => i.get("name").get.asString().getValue == "emailNextSendIndex").get
+        .find(i => i.get("name").get.asString().getValue == "emailNextSendIndex")
+        .get
       emailToSendNextIndex.get("unique") shouldBe None
       emailToSendNextIndex.get("background").get shouldBe BsonBoolean(true)
     }
@@ -126,7 +131,8 @@ class SentEmailRepositoryISpec
       await(serviceRepo.persistOne(sentEmail))
 
       val ttlIndex = await(serviceRepo.collection.listIndexes().toFuture())
-        .find(i => i.get("name").get.asString().getValue == "ttlIndex").get
+        .find(i => i.get("name").get.asString().getValue == "ttlIndex")
+        .get
 
       ttlIndex.get("key").get shouldBe BsonDocument("createdAt" -> Codecs.toBson(1))
       ttlIndex.get("unique") shouldBe None
@@ -145,18 +151,18 @@ class SentEmailRepositoryISpec
       val nextEmail = await(serviceRepo.findNextEmailToSend)
 
       nextEmail.value.recipient shouldBe expectedNextSendRecipient
-      nextEmail.value.status shouldBe PENDING
+      nextEmail.value.status shouldBe Pending
     }
 
     "ignore emails with failed status" in {
-      val emailsToSend = List(sentEmail.copy(id = UUID.randomUUID(), status = FAILED, recipient = "failed.send@abc.com"))
+      val emailsToSend = List(sentEmail.copy(id = UUID.randomUUID(), status = Failed, recipient = "failed.send@abc.com"))
       await(serviceRepo.persist(emailsToSend))
       await(serviceRepo.persist(sentEmails))
 
       val nextEmail = await(serviceRepo.findNextEmailToSend)
 
       nextEmail.value.recipient shouldBe sentEmail.recipient
-      nextEmail.value.status shouldBe PENDING
+      nextEmail.value.status shouldBe Pending
     }
 
     "handle documents with the same created time" in {
@@ -166,7 +172,7 @@ class SentEmailRepositoryISpec
 
       val nextEmail = await(serviceRepo.findNextEmailToSend)
 
-      nextEmail.value.status shouldBe PENDING
+      nextEmail.value.status shouldBe Pending
     }
   }
 
@@ -199,7 +205,7 @@ class SentEmailRepositoryISpec
       val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred()).find().toFuture())
       fetchedRecords.size shouldBe 1
       fetchedRecords.head.failedCount shouldBe 0
-      fetchedRecords.head.status shouldBe FAILED
+      fetchedRecords.head.status shouldBe Failed
     }
   }
 
@@ -216,7 +222,7 @@ class SentEmailRepositoryISpec
       val fetchedRecords = await(serviceRepo.collection.withReadPreference(primaryPreferred()).find().toFuture())
       fetchedRecords.size shouldBe 1
       fetchedRecords.head.failedCount shouldBe 0
-      fetchedRecords.head.status shouldBe SENT
+      fetchedRecords.head.status shouldBe Sent
     }
   }
 }

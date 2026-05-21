@@ -20,7 +20,6 @@ import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 import play.api.ConfigLoader
 import play.api.libs.json.{Json, OFormat}
-
 import uk.gov.hmrc.gatekeeperemail.models.EmailRecipient
 
 case class AdditionalRecipient(email: String, firstName: String, lastName: String) extends EmailRecipient
@@ -32,7 +31,8 @@ object AdditionalRecipient {
 object AdditionalRecipientsConfigProvider {
 
   implicit val configLoader: ConfigLoader[List[AdditionalRecipient]] = ConfigLoader(_.getStringList).map(
-    _.asScala.toList.map(_.split(','))
+    _.asScala.toList
+      .map(_.split(','))
       .filter(_.length == 3)
       .map(userDetails => AdditionalRecipient(userDetails(0), userDetails(1), userDetails(2)))
   )

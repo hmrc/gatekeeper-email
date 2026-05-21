@@ -17,7 +17,6 @@
 package uk.gov.hmrc.gatekeeperemail.models.responses
 
 import play.api.libs.json.{Json, OFormat}
-
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus
 import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
 
@@ -32,7 +31,7 @@ case class OutgoingEmail(
     composedBy: String,
     approvedBy: Option[String],
     emailsCount: Int
-  )
+)
 
 object OutgoingEmail {
   implicit val format: OFormat[OutgoingEmail] = Json.format[OutgoingEmail]

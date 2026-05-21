@@ -16,18 +16,17 @@
 
 package uk.gov.hmrc.gatekeeperemail.repositories
 
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 
 import play.api.libs.json.{JsObject, JsString}
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
-
-import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.Sent
 import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
 import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailTemplateData}
 
-class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSugar with ArgumentMatchersSugar with FixedClock {
+class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSugar with FixedClock {
 
   "format" should {
     val formatter = DraftEmail.format
@@ -44,7 +43,7 @@ class EmailMongoFormatterSpec extends AnyWordSpec with Matchers with MockitoSuga
         "markdownEmailBody",
         "This is test email",
         "test subject",
-        SENT,
+        Sent,
         "composedBy",
         Some("approvedBy"),
         instant,

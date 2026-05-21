@@ -21,7 +21,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.{verify => wireMockVerify, _}
+import com.github.tomakehurst.wiremock.client.WireMock.{verify as wireMockVerify, *}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.http.Fault
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
@@ -29,13 +29,12 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.http.Status.OK
 import play.mvc.Http.Status
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.test.HttpClientV2Support
-
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, DraftEmailRequest}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.test.HttpClientV2Support
 
 class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite with HttpClientV2Support {
 
@@ -83,11 +82,17 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with Before
 
   trait WorkingHttp {
     self: Setup =>
-    stubFor(post(urlEqualTo(emailRendererPath)).willReturn(aResponse().withBody(
-      s"""{"plain": "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
-         |"html": "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "fromAddress": "fromAddress",
-         |"service": "service", "subject": "subject"}""".stripMargin
-    ).withStatus(OK)))
+    stubFor(
+      post(urlEqualTo(emailRendererPath)).willReturn(
+        aResponse()
+          .withBody(
+            s"""{"plain": "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
+               |"html": "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==", "fromAddress": "fromAddress",
+               |"service": "service", "subject": "subject"}""".stripMargin
+          )
+          .withStatus(OK)
+      )
+    )
   }
 
   trait FailingHttp {
@@ -112,17 +117,19 @@ class GatekeeperEmailRendererConnectorSpec extends AsyncHmrcTestSpec with Before
         postRequestedFor(
           urlEqualTo(emailRendererPath)
         )
-          .withRequestBody(equalToJson(
-            s"""
-               |{
-               |  "parameters": {
-               |    "subject": "$subject",
-               |    "fromAddress": "gateKeeper",
-               |    "body": "$emailBody",
-               |    "service": "gatekeeper"
-               |  }
-               |}""".stripMargin
-          ))
+          .withRequestBody(
+            equalToJson(
+              s"""
+                 |{
+                 |  "parameters": {
+                 |    "subject": "$subject",
+                 |    "fromAddress": "gateKeeper",
+                 |    "body": "$emailBody",
+                 |    "service": "gatekeeper"
+                 |  }
+                 |}""".stripMargin
+            )
+          )
       )
     }
 

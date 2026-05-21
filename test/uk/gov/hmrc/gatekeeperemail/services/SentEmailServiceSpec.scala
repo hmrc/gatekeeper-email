@@ -21,22 +21,23 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.successful
 
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
+import org.mockito.ArgumentMatchers.any as `*`
+import org.mockito.Mockito.{verify, when}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
-
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.connectors.{EmailConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models.EmailStatus._
-import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.models.*
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.*
 import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
 
-class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with ArgumentMatchersSugar with FixedClock {
+class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with FixedClock {
 
   trait Setup {
     val draftEmailRepositoryMock: DraftEmailRepository               = mock[DraftEmailRepository]
@@ -58,7 +59,7 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       "markdownEmailBody",
       "Test email",
       "test subject",
-      SENT,
+      Sent,
       gatekeeperUser,
       Some("approvedBy"),
       instant,
@@ -72,25 +73,31 @@ class SentEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPer
       firstName = "first",
       lastName = "last",
       recipient = "first.last@digital.hmrc.gov.uk",
-      status = PENDING,
+      status = Pending,
       failedCount = 0,
       composedBy = "Test user"
     )
 
     when(emailRendererConnectorMock.getTemplatedEmail(*))
-      .thenReturn(successful(Right(RenderResult(
-        "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
-        "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==",
-        "from@digital.hmrc.gov.uk",
-        "subject",
-        ""
-      ))))
+      .thenReturn(
+        successful(
+          Right(
+            RenderResult(
+              "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
+              "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==",
+              "from@digital.hmrc.gov.uk",
+              "subject",
+              ""
+            )
+          )
+        )
+      )
   }
 
   "sendEmails" should {
     "mark email as sent when email connector receives success response" in new Setup {
       when(sentEmailRepositoryMock.findNextEmailToSend).thenReturn(Future(Some(sentEmail)))
-      when(sentEmailRepositoryMock.markSent(*)).thenReturn(Future(sentEmail.copy(status = SENT)))
+      when(sentEmailRepositoryMock.markSent(*)).thenReturn(Future(sentEmail.copy(status = Sent)))
       when(draftEmailServiceMock.fetchEmail(sentEmail.emailUuid.toString)).thenReturn(Future(draftEmail))
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(true))
 

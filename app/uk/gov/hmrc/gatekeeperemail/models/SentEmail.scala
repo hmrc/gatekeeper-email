@@ -33,7 +33,7 @@ case class SentEmail(
     id: UUID = UUID.randomUUID(),
     createdAt: Instant,
     composedBy: String
-  )
+)
 
 object SentEmail {
   implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat

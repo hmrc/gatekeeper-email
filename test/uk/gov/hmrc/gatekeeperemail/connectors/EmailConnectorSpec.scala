@@ -20,20 +20,19 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.{verify => wireMockVerify, _}
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
+import com.github.tomakehurst.wiremock.client.WireMock.{verify as wireMockVerify, *}
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration.*
 import com.github.tomakehurst.wiremock.http.Fault
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.http.Status.OK
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.test.HttpClientV2Support
-
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.models.requests.SendEmailRequest
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.test.HttpClientV2Support
 
 class EmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite with HttpClientV2Support {
 
@@ -109,26 +108,28 @@ class EmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with 
         postRequestedFor(
           urlEqualTo(emailServicePath)
         )
-          .withRequestBody(equalToJson(
-            s"""
-               |{
-               |  "to" : [ "example2@example2.com" ],
-               |  "templateId": "gatekeeper",
-               |  "parameters": {
-               |  "showFooter" : "true",
-               |  "showHmrcBanner" : "true",
-               |  "subject": "$subject",
-               |  "fromAddress": "gateKeeper",
-               |  "body": "$emailBody",
-               |  "service": "gatekeeper",
-               |  "lastName" : "last name2",
-               |  "firstName" : "first name2"
-               |  },
-               |  "force": false,
-               |  "auditData": {},
-               |  "tags" : { }
-               |}""".stripMargin
-          ))
+          .withRequestBody(
+            equalToJson(
+              s"""
+                 |{
+                 |  "to" : [ "example2@example2.com" ],
+                 |  "templateId": "gatekeeper",
+                 |  "parameters": {
+                 |  "showFooter" : "true",
+                 |  "showHmrcBanner" : "true",
+                 |  "subject": "$subject",
+                 |  "fromAddress": "gateKeeper",
+                 |  "body": "$emailBody",
+                 |  "service": "gatekeeper",
+                 |  "lastName" : "last name2",
+                 |  "firstName" : "first name2"
+                 |  },
+                 |  "force": false,
+                 |  "auditData": {},
+                 |  "tags" : { }
+                 |}""".stripMargin
+            )
+          )
       )
     }
 

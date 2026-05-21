@@ -18,20 +18,19 @@ package uk.gov.hmrc.gatekeeperemail.stride.controllers.actions
 
 import scala.concurrent.{ExecutionContext, Future}
 
-import play.api.mvc._
-import uk.gov.hmrc.auth.core._
+import play.api.mvc.*
+import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
-
 import uk.gov.hmrc.gatekeeperemail.controllers.RequestConverter
 import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.models.LoggedInRequest
 import uk.gov.hmrc.gatekeeperemail.stride.domain.models.GatekeeperRole
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
 trait ForbiddenHandler {
-  def handle(msgResult: Request[_]): Result
+  def handle(msgResult: Request[?]): Result
 }
 
 trait GatekeeperAuthorisationActions {
@@ -89,12 +88,12 @@ trait GatekeeperAuthorisationActions {
     }
   }
 
-  private def gatekeeperRoleAction(minimumRoleRequired: GatekeeperRole)(block: LoggedInRequest[_] => Future[Result]): Action[AnyContent] =
+  private def gatekeeperRoleAction(minimumRoleRequired: GatekeeperRole)(block: LoggedInRequest[?] => Future[Result]): Action[AnyContent] =
     Action.async { implicit request =>
       gatekeeperRoleActionRefiner(minimumRoleRequired).invokeBlock(convertRequest(request), block)
     }
 
-  def anyStrideUserAction(block: LoggedInRequest[_] => Future[Result]): Action[AnyContent] =
+  def anyStrideUserAction(block: LoggedInRequest[?] => Future[Result]): Action[AnyContent] =
     gatekeeperRoleAction(GatekeeperRole.USER)(block)
 
   def convertRequest[A](request: Request[A]): MessagesRequest[A] = {

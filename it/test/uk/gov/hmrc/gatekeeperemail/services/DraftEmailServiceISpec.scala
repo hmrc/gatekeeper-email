@@ -20,11 +20,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.successful
 
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
+import org.mockito.ArgumentMatchers.any as `*`
+import org.mockito.Mockito.when
 import org.mongodb.scala.ReadPreference.primaryPreferred
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.Application
@@ -32,19 +34,26 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.Actors
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
-
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, EmailConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.models.*
 import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, EmailData, EmailRequest}
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mongo.logging.ObservableFutureImplicits
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import uk.gov.hmrc.mongo.test.PlayMongoRepositorySupport
 
-class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with MockitoSugar with ArgumentMatchersSugar
-    with GuiceOneAppPerSuite with FixedClock with PlayMongoRepositorySupport[DraftEmail] {
+class DraftEmailServiceISpec
+    extends AnyWordSpec
+    with Matchers
+    with BeforeAndAfterEach
+    with MockitoSugar
+    with GuiceOneAppPerSuite
+    with FixedClock
+    with PlayMongoRepositorySupport[DraftEmail]
+    with ObservableFutureImplicits {
   lazy val emailRepository     = repository.asInstanceOf[DraftEmailRepository]
   lazy val sentEmailRepository = serepository.asInstanceOf[SentEmailRepository]
 
@@ -82,15 +91,21 @@ class DraftEmailServiceISpec extends AnyWordSpec with Matchers with BeforeAndAft
 
     "save the email data into mongodb repo" in new Setup {
       when(emailConnectorMock.sendEmail(*)).thenReturn(Future(true))
-      when(developerConnectorMock.fetchVerified()(*)).thenReturn(Future(users))
+      when(developerConnectorMock.fetchVerified()(using *)).thenReturn(Future(users))
       when(emailRendererConnectorMock.getTemplatedEmail(*))
-        .thenReturn(successful(Right(RenderResult(
-          "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
-          "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==",
-          "from@digital.hmrc.gov.uk",
-          "subject",
-          ""
-        ))))
+        .thenReturn(
+          successful(
+            Right(
+              RenderResult(
+                "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
+                "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==",
+                "from@digital.hmrc.gov.uk",
+                "subject",
+                ""
+              )
+            )
+          )
+        )
       val emailRequest      = EmailRequest(emailPreferences, "gatekeeper", EmailData("Test subject", "Dear Mr XYZ, This is test email"), false, Map(), composedBy = gatekeeperUser)
       val email: DraftEmail = await(underTest.persistEmail(emailRequest, "emailUUID"))
       email.htmlEmailBody shouldBe "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA=="
