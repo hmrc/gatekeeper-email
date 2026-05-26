@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 import play.api.Logging
+
 import uk.gov.hmrc.gatekeeperemail.connectors.EmailConnector
 import uk.gov.hmrc.gatekeeperemail.models.*
 import uk.gov.hmrc.gatekeeperemail.models.requests.SendEmailRequest

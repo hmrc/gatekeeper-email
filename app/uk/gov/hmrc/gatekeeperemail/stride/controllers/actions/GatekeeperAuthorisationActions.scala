@@ -23,11 +23,12 @@ import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
+
 import uk.gov.hmrc.gatekeeperemail.controllers.RequestConverter
 import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.models.LoggedInRequest
 import uk.gov.hmrc.gatekeeperemail.stride.domain.models.GatekeeperRole
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
 trait ForbiddenHandler {
   def handle(msgResult: Request[?]): Result

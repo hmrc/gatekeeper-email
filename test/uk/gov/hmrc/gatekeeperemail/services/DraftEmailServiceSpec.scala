@@ -37,6 +37,8 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiAccessType, *}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.Actors
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+
 import uk.gov.hmrc.gatekeeperemail.config.{AdditionalRecipient, AppConfig}
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailRendererConnector}
@@ -44,7 +46,6 @@ import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.*
 import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, EmailData, EmailOverride, EmailRequest}
 import uk.gov.hmrc.gatekeeperemail.models.{requests, *}
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
-import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 class DraftEmailServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar with FixedClock {
 

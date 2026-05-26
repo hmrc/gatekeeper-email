@@ -32,11 +32,12 @@ import org.mongodb.scala.model.{IndexModel, IndexOptions, *}
 import org.mongodb.scala.result.*
 import org.mongodb.scala.{MongoClient, MongoCollection}
 
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.models.{EmailStatus, SentEmail}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
+
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import uk.gov.hmrc.gatekeeperemail.models.{EmailStatus, SentEmail}
 
 @Singleton
 class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig, val clock: Clock)(implicit ec: ExecutionContext)

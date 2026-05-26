@@ -27,12 +27,13 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.Json
 import play.api.test.Helpers.OK
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.test.HttpClientV2Support
+
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.models.*
 import uk.gov.hmrc.gatekeeperemail.utils.{AsyncHmrcSpec, *}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.test.HttpClientV2Support
 
 class DeveloperConnectorSpec extends AsyncHmrcSpec with WireMockSugar with BeforeAndAfterEach with GuiceOneAppPerSuite with UrlEncoding with HttpClientV2Support {
 

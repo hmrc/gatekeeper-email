@@ -36,10 +36,11 @@ import scala.concurrent.ExecutionContext
 
 import play.api.Logging
 import play.api.mvc.MessagesControllerComponents
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+
 import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig
 import uk.gov.hmrc.gatekeeperemail.stride.connectors.AuthConnector
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.{ForbiddenHandler, GatekeeperAuthorisationActions}
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 abstract class GatekeeperBaseController(
     val strideAuthConfig: StrideAuthConfig,

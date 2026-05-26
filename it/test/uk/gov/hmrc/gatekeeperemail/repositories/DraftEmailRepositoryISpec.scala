@@ -30,12 +30,13 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
-import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
-import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
-import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, EmailTemplateData}
 import uk.gov.hmrc.mongo.logging.ObservableFutureImplicits
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
+
+import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
+import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
+import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailStatus, EmailTemplateData}
 
 class DraftEmailRepositoryISpec
     extends AnyWordSpec

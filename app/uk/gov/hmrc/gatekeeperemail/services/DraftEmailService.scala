@@ -27,13 +27,14 @@ import org.mongodb.scala.result.InsertOneResult
 import play.api.Logger
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiAccessType, CombinedApi, ServiceName}
 import uk.gov.hmrc.apiplatform.modules.common.services.ClockNow
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailRendererConnector}
 import uk.gov.hmrc.gatekeeperemail.models.*
 import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, DraftEmailRequest, EmailOverride, EmailRequest}
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
-import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 @Singleton
 class DraftEmailService @Inject() (

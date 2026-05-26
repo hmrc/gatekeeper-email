@@ -23,12 +23,13 @@ import play.api.Logging
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatform.modules.common.domain.services.EnumJsonHelper.*
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
-import uk.gov.hmrc.gatekeeperemail.models.{TopicOptionChoice, *}
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
+
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
+import uk.gov.hmrc.gatekeeperemail.models.{TopicOptionChoice, *}
 
 @Singleton
 class DeveloperConnector @Inject() (appConfig: AppConfig, http: HttpClientV2)(implicit ec: ExecutionContext) extends Logging {

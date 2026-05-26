@@ -27,12 +27,13 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.http.Status.OK
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.test.HttpClientV2Support
+
 import uk.gov.hmrc.gatekeeperemail.common.AsyncHmrcTestSpec
 import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.models.requests.SendEmailRequest
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.test.HttpClientV2Support
 
 class EmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneAppPerSuite with HttpClientV2Support {
 

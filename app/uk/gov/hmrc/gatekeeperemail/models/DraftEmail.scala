@@ -19,8 +19,9 @@ package uk.gov.hmrc.gatekeeperemail.models
 import java.time.Instant
 
 import play.api.libs.json.*
-import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
+
+import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
 
 case class EmailTemplateData(
     templateId: String,

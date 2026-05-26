@@ -30,10 +30,11 @@ import org.mongodb.scala.model.{IndexModel, IndexOptions, *}
 import org.mongodb.scala.result.*
 import org.mongodb.scala.{MongoClient, MongoCollection}
 
-import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.models.*
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
+
+import uk.gov.hmrc.gatekeeperemail.config.AppConfig
+import uk.gov.hmrc.gatekeeperemail.models.*
 
 @Singleton
 class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)

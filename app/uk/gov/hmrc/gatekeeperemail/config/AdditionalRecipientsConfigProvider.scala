@@ -20,6 +20,7 @@ import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 import play.api.ConfigLoader
 import play.api.libs.json.{Json, OFormat}
+
 import uk.gov.hmrc.gatekeeperemail.models.EmailRecipient
 
 case class AdditionalRecipient(email: String, firstName: String, lastName: String) extends EmailRecipient

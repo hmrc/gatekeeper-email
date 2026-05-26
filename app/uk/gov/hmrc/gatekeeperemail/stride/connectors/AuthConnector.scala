@@ -19,8 +19,9 @@ package uk.gov.hmrc.gatekeeperemail.stride.connectors
 import javax.inject.{Inject, Singleton}
 
 import uk.gov.hmrc.auth.core.*
-import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig
 import uk.gov.hmrc.http.client.HttpClientV2
+
+import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig
 
 @Singleton
 class AuthConnector @Inject() (val httpClientV2: HttpClientV2, strideAuthConfig: StrideAuthConfig) extends PlayAuthConnector {

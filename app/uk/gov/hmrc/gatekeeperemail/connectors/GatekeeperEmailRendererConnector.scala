@@ -23,12 +23,13 @@ import play.api.Logging
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.libs.json.Json
 import play.api.libs.ws.JsonBodyWritables.*
-import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
-import uk.gov.hmrc.gatekeeperemail.models.requests.{DraftEmailRequest, TemplateRenderRequest}
-import uk.gov.hmrc.gatekeeperemail.models.{RenderResult, TemplateRenderResult}
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpErrorFunctions, StringContextOps, UpstreamErrorResponse}
+
+import uk.gov.hmrc.gatekeeperemail.config.EmailRendererConnectorConfig
+import uk.gov.hmrc.gatekeeperemail.models.requests.{DraftEmailRequest, TemplateRenderRequest}
+import uk.gov.hmrc.gatekeeperemail.models.{RenderResult, TemplateRenderResult}
 
 @Singleton
 class GatekeeperEmailRendererConnector @Inject() (httpClient: HttpClientV2, config: EmailRendererConnectorConfig)(implicit ec: ExecutionContext)

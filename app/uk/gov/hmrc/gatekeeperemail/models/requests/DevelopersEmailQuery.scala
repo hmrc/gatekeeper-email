@@ -18,6 +18,7 @@ package uk.gov.hmrc.gatekeeperemail.models.requests
 
 import play.api.libs.json.*
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
+
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 
 case class DevelopersEmailQuery(

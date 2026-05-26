@@ -22,6 +22,7 @@ import org.scalatestplus.mockito.MockitoSugar
 
 import play.api.libs.json.{JsObject, JsString}
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
+
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.Sent
 import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
 import uk.gov.hmrc.gatekeeperemail.models.{DraftEmail, EmailTemplateData}

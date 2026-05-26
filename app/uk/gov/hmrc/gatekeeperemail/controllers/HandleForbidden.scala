@@ -20,6 +20,7 @@ import javax.inject.Singleton
 
 import play.api.mvc.Results.Forbidden
 import play.api.mvc.{Request, Result}
+
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
 
 @Singleton

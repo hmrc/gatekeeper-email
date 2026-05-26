@@ -20,10 +20,11 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
+import uk.gov.hmrc.mongo.lock.MongoLockRepository
+
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
 import uk.gov.hmrc.gatekeeperemail.util.ApplicationLogger
-import uk.gov.hmrc.mongo.lock.MongoLockRepository
 
 @Singleton
 class EmailSendingJob @Inject() (appConfig: AppConfig, override val mongoLockRepository: MongoLockRepository, sentEmailService: SentEmailService)

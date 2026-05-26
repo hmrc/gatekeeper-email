@@ -20,6 +20,7 @@ import scala.concurrent.Future
 
 import play.api.libs.json.JsValue
 import play.api.mvc.*
+
 import uk.gov.hmrc.gatekeeperemail.controllers.GatekeeperBaseController
 import uk.gov.hmrc.gatekeeperemail.stride.domain.models.GatekeeperRole
 

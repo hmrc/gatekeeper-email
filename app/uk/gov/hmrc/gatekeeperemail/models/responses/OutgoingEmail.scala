@@ -17,6 +17,7 @@
 package uk.gov.hmrc.gatekeeperemail.models.responses
 
 import play.api.libs.json.{Json, OFormat}
+
 import uk.gov.hmrc.gatekeeperemail.models.EmailStatus
 import uk.gov.hmrc.gatekeeperemail.models.requests.DevelopersEmailQuery
 

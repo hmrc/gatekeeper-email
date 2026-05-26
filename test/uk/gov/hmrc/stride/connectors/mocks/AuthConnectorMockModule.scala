@@ -26,6 +26,7 @@ import org.scalatestplus.mockito.MockitoSugar
 
 import uk.gov.hmrc.auth.core.retrieve.{Name, Retrieval, ~}
 import uk.gov.hmrc.auth.core.{Enrolment, Enrolments, InsufficientEnrolments, SessionRecordNotFound}
+
 import uk.gov.hmrc.gatekeeperemail.stride.connectors.AuthConnector
 
 trait AuthConnectorMockModule extends MockitoSugar {

@@ -30,11 +30,12 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
-import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.*
-import uk.gov.hmrc.gatekeeperemail.models.SentEmail
 import uk.gov.hmrc.mongo.logging.ObservableFutureImplicits
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
+
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.*
+import uk.gov.hmrc.gatekeeperemail.models.SentEmail
 
 class SentEmailRepositoryISpec
     extends AnyWordSpec

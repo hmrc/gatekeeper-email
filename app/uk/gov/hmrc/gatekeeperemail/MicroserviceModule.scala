@@ -34,6 +34,7 @@ package uk.gov.hmrc.gatekeeperemail
 
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
+
 import uk.gov.hmrc.gatekeeperemail.config.{AppConfig, EmailConnectorConfig, EmailRendererConnectorConfig}
 
 /** This class is a Guice module that tells Guice how to bind several different types. This Guice module is created when the Play application starts. Play will automatically use

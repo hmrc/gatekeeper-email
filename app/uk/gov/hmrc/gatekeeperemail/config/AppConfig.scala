@@ -20,8 +20,9 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 import play.api.{Configuration, Logging}
-import uk.gov.hmrc.gatekeeperemail.config.AdditionalRecipientsConfigProvider.configLoader
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import uk.gov.hmrc.gatekeeperemail.config.AdditionalRecipientsConfigProvider.configLoader
 
 @Singleton
 class AppConfig @Inject() (config: Configuration) extends ServicesConfig(config) with EmailConnectorConfig with EmailRendererConnectorConfig with Logging {
