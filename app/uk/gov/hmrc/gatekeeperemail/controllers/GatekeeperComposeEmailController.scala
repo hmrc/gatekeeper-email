@@ -22,11 +22,11 @@ import scala.concurrent.ExecutionContext
 
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
-import play.api.mvc._
+import play.api.mvc.*
 
 import uk.gov.hmrc.gatekeeperemail.controllers.actions.AuthorisationActions
 import uk.gov.hmrc.gatekeeperemail.models.DraftEmail
-import uk.gov.hmrc.gatekeeperemail.models.requests._
+import uk.gov.hmrc.gatekeeperemail.models.requests.*
 import uk.gov.hmrc.gatekeeperemail.models.responses.{ErrorCode, JsErrorResponse, OutgoingEmail}
 import uk.gov.hmrc.gatekeeperemail.services.DraftEmailService
 import uk.gov.hmrc.gatekeeperemail.stride.config.StrideAuthConfig
@@ -41,12 +41,14 @@ class GatekeeperComposeEmailController @Inject() (
     requestConverter: RequestConverter,
     mcc: MessagesControllerComponents,
     emailService: DraftEmailService
-  )(implicit override val ec: ExecutionContext
-  ) extends GatekeeperBaseController(strideAuthConfig, authConnector, forbiddenHandler, requestConverter, mcc) with AuthorisationActions {
+)(implicit override val ec: ExecutionContext)
+    extends GatekeeperBaseController(strideAuthConfig, authConnector, forbiddenHandler, requestConverter, mcc)
+    with AuthorisationActions {
 
   def saveEmail(emailUUID: String): Action[JsValue] = loggedInJsValue() { implicit request =>
     withJsonBody[EmailRequest] { receiveEmailRequest =>
-      emailService.persistEmail(receiveEmailRequest, emailUUID)
+      emailService
+        .persistEmail(receiveEmailRequest, emailUUID)
         .map(email => Ok(toJson(outgoingEmail(email))))
         .recover(recovery)
     }
@@ -54,7 +56,8 @@ class GatekeeperComposeEmailController @Inject() (
 
   def updateEmail(emailUUID: String): Action[JsValue] = loggedInJsValue() { implicit request =>
     withJsonBody[EmailRequest] { receiveEmailRequest =>
-      emailService.updateEmail(receiveEmailRequest, emailUUID)
+      emailService
+        .updateEmail(receiveEmailRequest, emailUUID)
         .map(email => Ok(toJson(outgoingEmail(email))))
         .recover(recovery)
     }
@@ -62,29 +65,31 @@ class GatekeeperComposeEmailController @Inject() (
 
   def fetchEmail(emailUUID: String): Action[AnyContent] = loggedInAnyContent() { _ =>
     logger.info(s"In fetchEmail for $emailUUID")
-    emailService.fetchEmail(emailUUID)
+    emailService
+      .fetchEmail(emailUUID)
       .map(email => Ok(toJson(outgoingEmail(email))))
       .recover(recovery)
   }
 
   def deleteEmail(emailUUID: String): Action[AnyContent] = loggedInAnyContent() { _ =>
     logger.info(s"In deleteEmail for $emailUUID")
-    emailService.deleteEmail(emailUUID)
-      .map(email =>
-        Ok(toJson(email))
-      )
+    emailService
+      .deleteEmail(emailUUID)
+      .map(email => Ok(toJson(email)))
       .recover(recovery)
   }
 
   def sendEmail(emailUUID: String): Action[AnyContent] = loggedInAnyContent() { _ =>
-    emailService.sendEmail(emailUUID)
+    emailService
+      .sendEmail(emailUUID)
       .map(email => Ok(toJson(outgoingEmail(email))))
       .recover(recovery)
   }
 
   def sendTestEmail(emailUUID: String): Action[JsValue] = loggedInJsValue() { implicit request =>
     withJsonBody[TestEmailRequest] { req =>
-      emailService.sendEmail(emailUUID, req.email)
+      emailService
+        .sendEmail(emailUUID, req.email)
         .map(email => Ok(toJson(outgoingEmail(email))))
     } recover recovery
   }

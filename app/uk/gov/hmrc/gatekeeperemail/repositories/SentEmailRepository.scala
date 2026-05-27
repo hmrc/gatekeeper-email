@@ -25,11 +25,11 @@ import scala.concurrent.{ExecutionContext, Future}
 import com.mongodb.ReadPreference.primaryPreferred
 import com.mongodb.client.model.ReturnDocument
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
-import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Filters.*
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.{combine, set}
-import org.mongodb.scala.model.{IndexModel, IndexOptions, _}
-import org.mongodb.scala.result._
+import org.mongodb.scala.model.{IndexModel, IndexOptions, *}
+import org.mongodb.scala.result.*
 import org.mongodb.scala.{MongoClient, MongoCollection}
 
 import uk.gov.hmrc.mongo.MongoComponent
@@ -70,7 +70,8 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
             .unique(false)
         )
       )
-    ) with MongoJavatimeFormats.Implicits {
+    )
+    with MongoJavatimeFormats.Implicits {
 
   override lazy val collection: MongoCollection[SentEmail] =
     CollectionFactory
@@ -79,15 +80,16 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
         fromRegistries(
           fromCodecs(
             Codecs.playFormatCodec(domainFormat),
-            Codecs.playFormatCodec(EmailStatus.format)
+            Codecs.playFormatCodec(EmailStatus.given_Format_EmailStatus)
           ),
           MongoClient.DEFAULT_CODEC_REGISTRY
         )
       )
 
   def findNextEmailToSend: Future[Option[SentEmail]] = {
-    collection.withReadPreference(primaryPreferred)
-      .find(filter = equal("status", Codecs.toBson[EmailStatus](EmailStatus.PENDING)))
+    collection
+      .withReadPreference(primaryPreferred)
+      .find(filter = equal("status", Codecs.toBson[EmailStatus](EmailStatus.Pending)))
       .sort(ascending("createdAt"))
       .limit(1)
       .toFuture()
@@ -95,7 +97,8 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
   }
 
   def incrementFailedCount(email: SentEmail): Future[SentEmail] = {
-    collection.withReadPreference(primaryPreferred)
+    collection
+      .withReadPreference(primaryPreferred)
       .findOneAndUpdate(
         filter = equal("id", Codecs.toBson(email.id)),
         update = combine(
@@ -116,11 +119,12 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
   }
 
   def markFailed(email: SentEmail): Future[SentEmail] = {
-    collection.withReadPreference(primaryPreferred)
+    collection
+      .withReadPreference(primaryPreferred)
       .findOneAndUpdate(
         filter = equal("id", Codecs.toBson(email.id)),
         update = combine(
-          set("status", Codecs.toBson[EmailStatus](EmailStatus.FAILED)),
+          set("status", Codecs.toBson[EmailStatus](EmailStatus.Failed)),
           set("updatedAt", Codecs.toBson(now(clock)))
         ),
         options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
@@ -129,11 +133,12 @@ class SentEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: 
   }
 
   def markSent(email: SentEmail): Future[SentEmail] = {
-    collection.withReadPreference(primaryPreferred)
+    collection
+      .withReadPreference(primaryPreferred)
       .findOneAndUpdate(
         filter = equal("id", Codecs.toBson(email.id)),
         update = combine(
-          set("status", Codecs.toBson[EmailStatus](EmailStatus.SENT)),
+          set("status", Codecs.toBson[EmailStatus](EmailStatus.Sent)),
           set("updatedAt", Codecs.toBson(now(clock)))
         ),
         options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)

@@ -32,35 +32,73 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
 
+trait TestCase {
+
+  class StubbedScheduler extends Scheduler {
+
+    override def scheduleWithFixedDelay(
+        initialDelay: FiniteDuration,
+        delay: FiniteDuration
+    )(
+        runnable: Runnable
+    )(implicit executor: ExecutionContext): Cancellable = new Cancellable {
+      override def cancel(): Boolean    = true
+      override def isCancelled: Boolean = false
+    }
+    def maxFrequency: Double = 1
+
+    def scheduleOnce(delay: FiniteDuration, runnable: Runnable)(implicit executor: ExecutionContext): Cancellable = new Cancellable {
+      override def cancel(): Boolean    = true
+      override def isCancelled: Boolean = false
+    }
+
+    override def schedule(initialDelay: FiniteDuration, interval: FiniteDuration, runnable: Runnable)(implicit executor: ExecutionContext) = ???
+  }
+
+  class TestScheduledJob extends ScheduledJob {
+    override lazy val initialDelay: FiniteDuration = 2.seconds
+    override lazy val interval: FiniteDuration     = 3.seconds
+    def name: String                               = "TestScheduledJob"
+    def isExecuted: Boolean                        = true
+
+    override def execute(implicit ec: ExecutionContext): Future[Result] = Future.successful(Result("done"))
+    var isRunning: Future[Boolean]                                      = Future.successful(false)
+  }
+  val testScheduledJob = new TestScheduledJob
+
+  class StubCancellable extends Cancellable {
+    var isCancelled = false
+
+    def cancel(): Boolean = {
+      isCancelled = true
+      isCancelled
+    }
+  }
+}
+
 class RunningOfSchedulesJobsSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach {
 
   override def fakeApplication() =
-    new GuiceApplicationBuilder().configure(
-      "metrics.jvm"     -> false,
-      "metrics.enabled" -> false
-    )
+    new GuiceApplicationBuilder()
+      .configure(
+        "metrics.jvm"     -> false,
+        "metrics.enabled" -> false
+      )
+      .disable[SchedulerModule]
       .build()
 
-  trait Setup extends TestCase {
-
-    val subject = new RunningOfScheduledJobs {
-      override implicit val ec: ExecutionContext              = ExecutionContext.Implicits.global
-      override val application: Application                   = fakeApplication()
-      override val scheduledJobs: Seq[ScheduledJob]           = Seq(new TestScheduledJob)
-      override val applicationLifecycle: ApplicationLifecycle = fakeApplication().injector.instanceOf[ApplicationLifecycle]
-    }
-  }
+  trait Setup extends TestCase {}
 
   "When stopping the app, the scheduled job runner" should {
     "cancel all of the scheduled jobs" in new TestCase {
       private val testApp = fakeApplication()
       private val runner  = new RunningOfScheduledJobs {
-        override lazy val ec: ExecutionContext                       = ExecutionContext.Implicits.global
+        override val ec: ExecutionContext                            = ExecutionContext.Implicits.global
         override lazy val applicationLifecycle: ApplicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
-        override lazy val scheduledJobs: Seq[LockedScheduledJob]     = Seq.empty
-        override lazy val application: Application                   = testApp
+        override val scheduledJobs: Seq[LockedScheduledJob]          = Seq.empty
+        override val application: Application                        = testApp
+        override lazy val cancellables                               = Seq(new StubCancellable, new StubCancellable)
       }
-      runner.cancellables = Seq(new StubCancellable, new StubCancellable)
 
       every(runner.cancellables) should not be Symbol("cancelled")
       await(testApp.stop())
@@ -87,50 +125,4 @@ class RunningOfSchedulesJobsSpec extends HmrcSpec with ScalaFutures with GuiceOn
       eventually(timeout(Span(1, Minute))) { stopFuture shouldBe Symbol("completed") }
     }
   }
-
-  trait TestCase {
-
-    class StubbedScheduler extends Scheduler {
-
-      override def scheduleWithFixedDelay(
-          initialDelay: FiniteDuration,
-          delay: FiniteDuration
-        )(
-          runnable: Runnable
-        )(implicit executor: ExecutionContext
-        ): Cancellable = new Cancellable {
-        override def cancel(): Boolean    = true
-        override def isCancelled: Boolean = false
-      }
-      def maxFrequency: Double = 1
-
-      def scheduleOnce(delay: FiniteDuration, runnable: Runnable)(implicit executor: ExecutionContext): Cancellable = new Cancellable {
-        override def cancel(): Boolean    = true
-        override def isCancelled: Boolean = false
-      }
-
-      override def schedule(initialDelay: FiniteDuration, interval: FiniteDuration, runnable: Runnable)(implicit executor: ExecutionContext) = ???
-    }
-
-    class TestScheduledJob extends ScheduledJob {
-      override lazy val initialDelay: FiniteDuration = 2.seconds
-      override lazy val interval: FiniteDuration     = 3.seconds
-      def name: String                               = "TestScheduledJob"
-      def isExecuted: Boolean                        = true
-
-      override def execute(implicit ec: ExecutionContext): Future[Result] = Future.successful(Result("done"))
-      var isRunning: Future[Boolean]                                      = Future.successful(false)
-    }
-    val testScheduledJob = new TestScheduledJob
-
-    class StubCancellable extends Cancellable {
-      var isCancelled = false
-
-      def cancel(): Boolean = {
-        isCancelled = true
-        isCancelled
-      }
-    }
-  }
-
 }

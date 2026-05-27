@@ -30,32 +30,31 @@ import play.api.{Application, Logging}
 trait RunningOfScheduledJobs extends Logging {
 
   implicit val ec: ExecutionContext
-  lazy val scheduler: Scheduler = application.actorSystem.scheduler
   val application: Application
   val scheduledJobs: Seq[ScheduledJob]
 
-  val applicationLifecycle: ApplicationLifecycle
+  lazy val scheduler: Scheduler = application.actorSystem.scheduler
+  lazy val applicationLifecycle: ApplicationLifecycle
 
-  private[scheduled] var cancellables: Seq[Cancellable] = Seq.empty
+  lazy val cancellables: Seq[Cancellable] =
+    scheduledJobs.map { job =>
+      scheduler.scheduleWithFixedDelay(job.initialDelay, job.interval)(new Runnable() {
+        override def run(): Unit = {
+          val stopWatch = new StopWatch
+          stopWatch.start()
+          logger.debug(s"Executing job ${job.name}")
 
-  cancellables = scheduledJobs.map { job =>
-    scheduler.scheduleWithFixedDelay(job.initialDelay, job.interval)(new Runnable() {
-      override def run(): Unit = {
-        val stopWatch = new StopWatch
-        stopWatch.start()
-        logger.debug(s"Executing job ${job.name}")
-
-        job.execute.onComplete {
-          case Success(job.Result(message)) =>
-            stopWatch.stop()
-            logger.debug(s"Completed job ${job.name} in $stopWatch: $message")
-          case Failure(throwable)           =>
-            stopWatch.stop()
-            logger.error(s"Exception running job ${job.name} after $stopWatch", throwable)
+          job.execute.onComplete {
+            case Success(job.Result(message)) =>
+              stopWatch.stop()
+              logger.debug(s"Completed job ${job.name} in $stopWatch: $message")
+            case Failure(throwable)           =>
+              stopWatch.stop()
+              logger.error(s"Exception running job ${job.name} after $stopWatch", throwable)
+          }
         }
-      }
-    })
-  }
+      })
+    }
 
   applicationLifecycle.addStopHook { () =>
     logger.info(s"Cancelling all scheduled jobs.")

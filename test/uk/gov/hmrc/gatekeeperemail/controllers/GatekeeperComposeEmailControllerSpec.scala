@@ -24,29 +24,30 @@ import scala.concurrent.Future.{failed, successful}
 
 import com.mongodb.client.result.{InsertManyResult, InsertOneResult}
 import org.apache.pekko.stream.Materializer
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
+import org.mockito.ArgumentMatchers.any as `*`
+import org.mockito.Mockito.{verifyNoMoreInteractions, when}
 import org.mongodb.scala.bson.BsonNumber
 import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.Actors
 import uk.gov.hmrc.apiplatform.modules.common.utils.FixedClock
-import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, EmailConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.SENT
-import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.models.*
+import uk.gov.hmrc.gatekeeperemail.models.EmailStatus.Sent
 import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, EmailData, EmailRequest, TestEmailRequest}
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
 import uk.gov.hmrc.gatekeeperemail.services.DraftEmailService
 import uk.gov.hmrc.gatekeeperemail.stride.connectors.AuthConnector
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
 
-class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with Matchers with MockitoSugar with ArgumentMatchersSugar with FixedClock {
+class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with Matchers with MockitoSugar with FixedClock {
 
   private val subject      = "Email subject"
   private val emailBody    = "Body to be used in the email template"
@@ -62,7 +63,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
     "markdownEmailBody",
     "This is test email",
     "test subject",
-    SENT,
+    Sent,
     gatekeeperUser.user,
     Some("approvedBy"),
     instant,
@@ -84,8 +85,6 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
   private val mockEmailRendererConnector: GatekeeperEmailRendererConnector = mock[GatekeeperEmailRendererConnector]
 
   trait Setup extends AbstractSetup {
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-
     val mockAppConfig                              = mock[AppConfig]
     val developerConnectorMock: DeveloperConnector = mock[DeveloperConnector]
     val apmConnectorMock: ApmConnector             = mock[ApmConnector]
@@ -107,13 +106,19 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
     )
 
     when(mockEmailRendererConnector.getTemplatedEmail(*))
-      .thenReturn(successful(Right(RenderResult(
-        "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
-        "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==",
-        "from@digital.hmrc.gov.uk",
-        "subject",
-        ""
-      ))))
+      .thenReturn(
+        successful(
+          Right(
+            RenderResult(
+              "RGVhciB1c2VyLCBUaGlzIGlzIGEgdGVzdCBtYWls",
+              "PGgyPkRlYXIgdXNlcjwvaDI+LCA8YnI+VGhpcyBpcyBhIHRlc3QgbWFpbA==",
+              "from@digital.hmrc.gov.uk",
+              "subject",
+              ""
+            )
+          )
+        )
+      )
 
     val emailUUID: String = UUID.randomUUID().toString
 
@@ -122,7 +127,7 @@ class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with M
     val fakeEmailRequest = FakeRequest("POST", s"/gatekeeper-email/send-test-email/$emailUUID")
       .withHeaders("Content-Type" -> "application/json")
       .withBody(Json.toJson(TestEmailRequest(emailAddress)))
-    val dummyEmailData   = DraftEmail("", EmailTemplateData("", Map(), false, Map(), None), "", emailPreferences, "", "", "", SENT, gatekeeperUser.user, None, instant, 1)
+    val dummyEmailData   = DraftEmail("", EmailTemplateData("", Map(), false, Map(), None), "", emailPreferences, "", "", "", Sent, gatekeeperUser.user, None, instant, 1)
     when(mockDraftEmailRepository.getEmailData(emailUUID)).thenReturn(Future(dummyEmailData))
   }
 

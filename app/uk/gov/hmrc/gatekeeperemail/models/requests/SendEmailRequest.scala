@@ -17,12 +17,12 @@
 package uk.gov.hmrc.gatekeeperemail.models.requests
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.apiplatform.modules.common.domain.models.Actors
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.{Actor, Actors}
 
 case class EmailData(emailSubject: String, emailBody: String)
 
 object EmailData {
-  implicit val format: OFormat[EmailData] = Json.format[EmailData]
+  given OFormat[EmailData] = Json.format[EmailData]
 }
 
 case class SendEmailRequest(
@@ -33,10 +33,10 @@ case class SendEmailRequest(
     auditData: Map[String, String] = Map.empty,
     eventUrl: Option[String] = None,
     tags: Map[String, String] = Map.empty
-  )
+)
 
 object SendEmailRequest {
-  implicit val format: OFormat[SendEmailRequest] = Json.format[SendEmailRequest]
+  given OFormat[SendEmailRequest] = Json.format[SendEmailRequest]
 }
 
 case class DraftEmailRequest(
@@ -46,10 +46,10 @@ case class DraftEmailRequest(
     force: Boolean = false,
     auditData: Map[String, String] = Map.empty,
     eventUrl: Option[String] = None
-  )
+)
 
 object DraftEmailRequest {
-  implicit val format: OFormat[DraftEmailRequest] = Json.format[DraftEmailRequest]
+  given OFormat[DraftEmailRequest] = Json.format[DraftEmailRequest]
 }
 
 case class OneEmailRequest(
@@ -60,10 +60,10 @@ case class OneEmailRequest(
     auditData: Map[String, String] = Map.empty,
     eventUrl: Option[String] = None,
     tags: Map[String, String] = Map.empty
-  )
+)
 
 object OneEmailRequest {
-  implicit val format: OFormat[OneEmailRequest] = Json.format[OneEmailRequest]
+  given OFormat[OneEmailRequest] = Json.format[OneEmailRequest]
 }
 
 case class EmailRequest(
@@ -74,14 +74,15 @@ case class EmailRequest(
     auditData: Map[String, String] = Map.empty,
     eventUrl: Option[String] = None,
     composedBy: Actors.GatekeeperUser
-  )
+)
 
 object EmailRequest {
-  implicit val format: OFormat[EmailRequest] = Json.format[EmailRequest]
+  import Actor.given
+  given OFormat[EmailRequest] = Json.format[EmailRequest]
 }
 
 case class TestEmailRequest(email: String)
 
 object TestEmailRequest {
-  implicit val format: OFormat[TestEmailRequest] = Json.format[TestEmailRequest]
+  given OFormat[TestEmailRequest] = Json.format[TestEmailRequest]
 }

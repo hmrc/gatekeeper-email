@@ -5,7 +5,7 @@ object AppDependencies {
   lazy val bootstrapPlayVersion = "10.7.0"
   lazy val hmrcMongoVersion     = "2.12.0"
   lazy val commonDomainVersion  = "1.0.0"
-  lazy val apiDomainVersion     = "1.3.0"
+  lazy val apiDomainVersion     = "1.4.0"
 
   def apply(): Seq[ModuleID] = compile ++ test
 

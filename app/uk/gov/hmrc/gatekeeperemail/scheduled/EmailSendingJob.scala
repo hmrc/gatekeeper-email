@@ -28,7 +28,8 @@ import uk.gov.hmrc.gatekeeperemail.util.ApplicationLogger
 
 @Singleton
 class EmailSendingJob @Inject() (appConfig: AppConfig, override val mongoLockRepository: MongoLockRepository, sentEmailService: SentEmailService)
-    extends LockedScheduledJob with ApplicationLogger {
+    extends LockedScheduledJob
+    with ApplicationLogger {
 
   override def name: String = "EmailSendingJob"
 

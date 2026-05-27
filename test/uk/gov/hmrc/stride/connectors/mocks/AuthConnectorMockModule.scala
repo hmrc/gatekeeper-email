@@ -19,15 +19,17 @@ package uk.gov.hmrc.apiplatform.modules.stride.connectors.mocks
 import java.util.UUID
 import scala.concurrent.Future.{failed, successful}
 
-import org.mockito.Strictness.Lenient
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
+import org.mockito.ArgumentMatchers.any as `*`
+import org.mockito.Mockito.{when, withSettings}
+import org.mockito.quality.Strictness
+import org.scalatestplus.mockito.MockitoSugar
 
 import uk.gov.hmrc.auth.core.retrieve.{Name, Retrieval, ~}
 import uk.gov.hmrc.auth.core.{Enrolment, Enrolments, InsufficientEnrolments, SessionRecordNotFound}
 
 import uk.gov.hmrc.gatekeeperemail.stride.connectors.AuthConnector
 
-trait AuthConnectorMockModule extends MockitoSugar with ArgumentMatchersSugar {
+trait AuthConnectorMockModule extends MockitoSugar {
 
   trait BaseAuthConnectorMock {
     def aMock: AuthConnector
@@ -45,26 +47,26 @@ trait AuthConnectorMockModule extends MockitoSugar with ArgumentMatchersSugar {
       def thenReturn() = {
         val response = successful(new ~(Some(Name(Some(adminName), None)), Enrolments(Set(Enrolment(adminRole)))))
 
-        when(aMock.authorise(*, any[Retrieval[~[Option[Name], Enrolments]]])(*, *)).thenReturn(response)
+        when(aMock.authorise(*, *[Retrieval[~[Option[Name], Enrolments]]])(using *, *)).thenReturn(response)
       }
 
       def thenReturnInsufficientEnrolments() = {
-        when(aMock.authorise(*, any[Retrieval[~[Option[Name], Enrolments]]])(*, *)).thenReturn(failed(new InsufficientEnrolments))
+        when(aMock.authorise(*, *[Retrieval[~[Option[Name], Enrolments]]])(using *, *)).thenReturn(failed(new InsufficientEnrolments))
       }
 
       def thenReturnSessionRecordNotFound() = {
-        when(aMock.authorise(*, any[Retrieval[~[Option[Name], Enrolments]]])(*, *)).thenReturn(failed(new SessionRecordNotFound))
+        when(aMock.authorise(*, *[Retrieval[~[Option[Name], Enrolments]]])(using *, *)).thenReturn(failed(new SessionRecordNotFound))
       }
 
       def thenReturnNoName() = {
         val response = successful(new ~(Option.empty[Name], Enrolments(Set(Enrolment(adminRole)))))
 
-        when(aMock.authorise(*, any[Retrieval[~[Option[Name], Enrolments]]])(*, *)).thenReturn(response)
+        when(aMock.authorise(*, *[Retrieval[~[Option[Name], Enrolments]]])(using *, *)).thenReturn(response)
       }
     }
   }
 
   object AuthConnectorMock extends BaseAuthConnectorMock {
-    val aMock = mock[AuthConnector](withSettings.strictness(Lenient))
+    val aMock = mock[AuthConnector](withSettings().strictness(Strictness.LENIENT))
   }
 }

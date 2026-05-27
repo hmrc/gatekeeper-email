@@ -26,7 +26,7 @@ case class TemplateRenderResult(
     fromAddress: String,
     subject: String,
     service: String
-  )
+)
 
 object TemplateRenderResult {
 

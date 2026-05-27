@@ -48,5 +48,7 @@ abstract class GatekeeperBaseController(
     val forbiddenHandler: ForbiddenHandler,
     val requestConverter: RequestConverter,
     mcc: MessagesControllerComponents
-  )(implicit val ec: ExecutionContext
-  ) extends BackendController(mcc) with GatekeeperAuthorisationActions with Logging {}
+)(implicit val ec: ExecutionContext)
+    extends BackendController(mcc)
+    with GatekeeperAuthorisationActions
+    with Logging {}

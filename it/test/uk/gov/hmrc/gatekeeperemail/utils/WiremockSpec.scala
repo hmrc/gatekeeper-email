@@ -22,10 +22,4 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 
-trait WiremockSpec
-    extends AnyWordSpec
-    with Matchers
-    with GuiceOneServerPerSuite
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with WireMockSugar
+trait WiremockSpec extends AnyWordSpec with Matchers with GuiceOneServerPerSuite with FutureAwaits with DefaultAwaitTimeout with WireMockSugar

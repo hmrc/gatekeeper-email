@@ -18,23 +18,19 @@ package uk.gov.hmrc.gatekeeperemail.connectors
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
+import org.mockito.Mockito.when
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import play.api.libs.json.Json
-import play.api.test.Helpers._
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiAccessType, _}
+import play.api.test.Helpers.*
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiAccessType, *}
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
-import uk.gov.hmrc.gatekeeperemail.utils.{AsyncHmrcSpec, _}
+import uk.gov.hmrc.gatekeeperemail.utils.{AsyncHmrcSpec, *}
 
-class ApmConnectorSpec
-    extends AsyncHmrcSpec
-    with WireMockSugar
-    with GuiceOneAppPerSuite
-    with UrlEncoding
-    with HttpClientV2Support {
+class ApmConnectorSpec extends AsyncHmrcSpec with WireMockSugar with GuiceOneAppPerSuite with UrlEncoding with HttpClientV2Support {
 
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -44,8 +40,8 @@ class ApmConnectorSpec
 
     val underTest = new ApmConnector(httpClientV2, mockApmConnectorConfig)
 
-    val combinedRestApi1 = CombinedApi("displayName1", ServiceName("serviceName1"), Set(ApiCategory.CUSTOMS), ApiType.REST_API, ApiAccessType.PUBLIC)
-    val combinedXmlApi2  = CombinedApi("displayName2", ServiceName("serviceName2"), Set(ApiCategory.VAT), ApiType.XML_API, ApiAccessType.PUBLIC)
+    val combinedRestApi1 = CombinedApi("displayName1", ServiceName("serviceName1"), Set(ApiCategory.Customs), ApiType.RestApi, ApiAccessType.Public)
+    val combinedXmlApi2  = CombinedApi("displayName2", ServiceName("serviceName2"), Set(ApiCategory.Vat), ApiType.XmlApi, ApiAccessType.Public)
     val combinedList     = List(combinedRestApi1, combinedXmlApi2)
 
   }
@@ -82,7 +78,7 @@ class ApmConnectorSpec
       )
 
       val result = await(underTest.fetchAllCombinedApis())
-      result shouldBe List(combinedRestApi1.copy(accessType = ApiAccessType.INTERNAL))
+      result shouldBe List(combinedRestApi1.copy(accessType = ApiAccessType.Internal))
     }
 
     "returns exception when backend returns error" in new Setup {

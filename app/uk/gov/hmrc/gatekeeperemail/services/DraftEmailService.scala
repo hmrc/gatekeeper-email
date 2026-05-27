@@ -32,7 +32,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 import uk.gov.hmrc.gatekeeperemail.connectors.{ApmConnector, DeveloperConnector, GatekeeperEmailRendererConnector}
-import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.models.*
 import uk.gov.hmrc.gatekeeperemail.models.requests.{DevelopersEmailQuery, DraftEmailRequest, EmailOverride, EmailRequest}
 import uk.gov.hmrc.gatekeeperemail.repositories.{DraftEmailRepository, SentEmailRepository}
 
@@ -45,8 +45,8 @@ class DraftEmailService @Inject() (
     sentEmailRepository: SentEmailRepository,
     appConfig: AppConfig,
     val clock: Clock
-  )(implicit val ec: ExecutionContext
-  ) extends ClockNow {
+)(implicit val ec: ExecutionContext)
+    extends ClockNow {
 
   val logger: Logger = Logger(getClass.getName)
 
@@ -90,16 +90,16 @@ class DraftEmailService @Inject() (
         developerConnector.fetchVerified()
       case DevelopersEmailQuery(topic, Some(selectedAPIs), None, _, None, false, None) =>
         logger.info(s"Emailing Selected Apis to users that are not overridden")
-        val selectedTopic: Option[TopicOptionChoice] = topic.map(TopicOptionChoice.unsafeApply)
-        if (selectedAPIs.forall(_.value.isEmpty)) {
+        val selectedTopic: Option[TopicOptionChoice] = topic.map(TopicOptionChoice.unsafeApply(_))
+        if (selectedAPIs.forall(_.isEmpty)) {
           Future.successful(List.empty)
         } else {
           for {
             apis            <- apmConnector.fetchAllCombinedApis()
             filteredApis     = filterSelectedApis(Some(selectedAPIs.toList), apis).sortBy(_.displayName)
-            publicUsers     <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.PUBLIC)
-            controlledUsers <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.CONTROLLED)
-            internalUsers   <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.INTERNAL)
+            publicUsers     <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.Public)
+            controlledUsers <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.Controlled)
+            internalUsers   <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.Internal)
             combinedUsers    = (publicUsers ++ controlledUsers ++ internalUsers).distinct
             _                = logger.info(s"Outgoing Emails count is ${combinedUsers.size}")
           } yield combinedUsers
@@ -108,9 +108,9 @@ class DraftEmailService @Inject() (
         Future.successful(emailPreferences.emailsForSomeCases.get.email)
       case _                                                                           =>
         logger.info("Getting Emails for Default match case")
-        emailPreferences.topic.map(t =>
-          developerConnector.fetchByEmailPreferences(TopicOptionChoice.unsafeApply(t), emailPreferences.apis, emailPreferences.apiCategories.map(_.toSet))
-        ).getOrElse(Future.successful(List.empty))
+        emailPreferences.topic
+          .map(t => developerConnector.fetchByEmailPreferences(TopicOptionChoice.unsafeApply(t), emailPreferences.apis, emailPreferences.apiCategories.map(_.toSet)))
+          .getOrElse(Future.successful(List.empty))
     }
     emails
   }
@@ -123,8 +123,7 @@ class DraftEmailService @Inject() (
       apis: List[CombinedApi],
       selectedTopic: Option[TopicOptionChoice],
       apiAcessType: ApiAccessType
-    )(implicit hc: HeaderCarrier
-    ): Future[List[RegisteredUser]] = {
+  )(implicit hc: HeaderCarrier): Future[List[RegisteredUser]] = {
     logger.info(s"In handleGettingApiUsers  apis: $apis  selectedTopic $selectedTopic apiAccessType ${apiAcessType.toString}")
     val filteredApis = apis.filter(_.accessType == apiAcessType)
     val categories   = filteredApis.flatMap(_.categories).toSet
@@ -133,10 +132,10 @@ class DraftEmailService @Inject() (
       (apiAcessType, filteredApis) match {
         case (_, Nil)                                               =>
           successful(List.empty[RegisteredUser])
-        case (ApiAccessType.PUBLIC, _)                              =>
+        case (ApiAccessType.Public, _)                              =>
           logger.debug(s"Before fetchByEmailPreferences topic: $topic  apiNames: $apiNames categories.distinct: ${categories} privateapimatch: false")
           developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories), false)
-        case (ApiAccessType.INTERNAL | ApiAccessType.CONTROLLED, _) =>
+        case (ApiAccessType.Internal | ApiAccessType.Controlled, _) =>
           logger.debug(s"Before fetchByEmailPreferences topic: $topic  apiNames: $apiNames categories.distinct: ${categories} privateapimatch: false")
           developerConnector.fetchByEmailPreferences(topic, Some(apiNames), Some(categories), true)
       }
@@ -163,7 +162,7 @@ class DraftEmailService @Inject() (
         firstName = elem.firstName,
         lastName = elem.lastName,
         recipient = elem.email,
-        status = EmailStatus.PENDING,
+        status = EmailStatus.Pending,
         failedCount = 0,
         composedBy = email.composedBy
       )
@@ -194,7 +193,7 @@ class DraftEmailService @Inject() (
         firstName = "Test",
         lastName = "Email",
         recipient = emailAddress,
-        status = EmailStatus.PENDING,
+        status = EmailStatus.Pending,
         failedCount = 0,
         composedBy = email.composedBy
       )
@@ -249,7 +248,7 @@ class DraftEmailService @Inject() (
       emailRequest.emailData.emailBody,
       emailRequest.emailData.emailBody,
       emailRequest.emailData.emailSubject,
-      EmailStatus.PENDING,
+      EmailStatus.Pending,
       emailRequest.composedBy.user,
       Some("approvedBy"),
       instant,

@@ -20,8 +20,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 
+import org.mockito.ArgumentMatchers.{any as `*`, eq as eqTo}
+import org.mockito.Mockito.{never, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
 
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -32,13 +35,14 @@ import uk.gov.hmrc.mongo.lock.{Lock, MongoLockRepository}
 import uk.gov.hmrc.gatekeeperemail.config.{AppConfig, ScheduledJobConfig}
 import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
 
-class LockedScheduledJobSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach with FixedClock {
+class LockedScheduledJobSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach with FixedClock with MockitoSugar {
 
   override def fakeApplication() =
-    new GuiceApplicationBuilder().configure(
-      "metrics.jvm"     -> false,
-      "metrics.enabled" -> false
-    )
+    new GuiceApplicationBuilder()
+      .configure(
+        "metrics.jvm"     -> false,
+        "metrics.enabled" -> false
+      )
       .build()
 
   trait Setup {

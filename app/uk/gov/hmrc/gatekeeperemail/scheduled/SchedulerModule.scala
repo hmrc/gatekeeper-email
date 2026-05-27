@@ -33,11 +33,12 @@ class SchedulerModule extends AbstractModule {
 
 @Singleton
 class Scheduler @Inject() (
-    override val applicationLifecycle: ApplicationLifecycle,
+    val lifecycle: ApplicationLifecycle,
     override val application: Application,
     emailSendingJob: EmailSendingJob
-  )(
+)(
     override implicit val ec: ExecutionContext
-  ) extends RunningOfScheduledJobs {
-  override lazy val scheduledJobs: Seq[ScheduledJob] = Seq(emailSendingJob)
+) extends RunningOfScheduledJobs {
+  override val scheduledJobs: Seq[ScheduledJob] = Seq(emailSendingJob)
+  override lazy val applicationLifecycle        = lifecycle
 }

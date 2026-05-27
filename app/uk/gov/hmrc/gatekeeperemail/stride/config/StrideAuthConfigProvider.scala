@@ -31,7 +31,7 @@ case class StrideAuthConfig(
     advancedUserRole: String,
     userRole: String,
     successUrlBase: String
-  )
+)
 
 trait BaseUrl {
   def config: Config

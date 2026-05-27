@@ -32,7 +32,7 @@ case class OutgoingEmail(
     composedBy: String,
     approvedBy: Option[String],
     emailsCount: Int
-  )
+)
 
 object OutgoingEmail {
   implicit val format: OFormat[OutgoingEmail] = Json.format[OutgoingEmail]

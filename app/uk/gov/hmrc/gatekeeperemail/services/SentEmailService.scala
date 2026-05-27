@@ -22,7 +22,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.Logging
 
 import uk.gov.hmrc.gatekeeperemail.connectors.EmailConnector
-import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.models.*
 import uk.gov.hmrc.gatekeeperemail.models.requests.SendEmailRequest
 import uk.gov.hmrc.gatekeeperemail.repositories.SentEmailRepository
 
@@ -31,8 +31,8 @@ class SentEmailService @Inject() (
     emailConnector: EmailConnector,
     draftEmailService: DraftEmailService,
     sentEmailRepository: SentEmailRepository
-  )(implicit val ec: ExecutionContext
-  ) extends Logging {
+)(implicit val ec: ExecutionContext)
+    extends Logging {
 
   def sendNextPendingEmail: Future[String] = {
     def updateEmailStatusToSent(email: SentEmail): Future[String] = {

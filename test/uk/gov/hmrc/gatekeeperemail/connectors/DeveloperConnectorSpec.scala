@@ -18,8 +18,9 @@ package uk.gov.hmrc.gatekeeperemail.connectors
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, stubFor, urlEqualTo, _}
-import com.github.tomakehurst.wiremock.client.WireMock.{verify => wireMockVerify}
+import com.github.tomakehurst.wiremock.client.WireMock.verify as wireMockVerify
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, stubFor, urlEqualTo, *}
+import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
@@ -31,15 +32,10 @@ import uk.gov.hmrc.http.test.HttpClientV2Support
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
-import uk.gov.hmrc.gatekeeperemail.models._
-import uk.gov.hmrc.gatekeeperemail.utils.{AsyncHmrcSpec, _}
+import uk.gov.hmrc.gatekeeperemail.models.*
+import uk.gov.hmrc.gatekeeperemail.utils.{AsyncHmrcSpec, *}
 
-class DeveloperConnectorSpec extends AsyncHmrcSpec
-    with WireMockSugar
-    with BeforeAndAfterEach
-    with GuiceOneAppPerSuite
-    with UrlEncoding
-    with HttpClientV2Support {
+class DeveloperConnectorSpec extends AsyncHmrcSpec with WireMockSugar with BeforeAndAfterEach with GuiceOneAppPerSuite with UrlEncoding with HttpClientV2Support {
 
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -64,11 +60,15 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec
     }
 
     "fetch verified developers" in new Setup {
-      stubFor(get(urlEqualTo("/developers/all?status=VERIFIED")).willReturn(
-        aResponse().withStatus(OK).withBody(
-          Json.toJson(Seq(aUserResponse(developerEmail), aUserResponse(developerEmailWithSpecialCharacter))).toString()
+      stubFor(
+        get(urlEqualTo("/developers/all?status=VERIFIED")).willReturn(
+          aResponse()
+            .withStatus(OK)
+            .withBody(
+              Json.toJson(Seq(aUserResponse(developerEmail), aUserResponse(developerEmailWithSpecialCharacter))).toString()
+            )
         )
-      ))
+      )
 
       val result = await(connector.fetchVerified())
 
@@ -84,7 +84,7 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec
 
         stubFor(
           get(urlPathEqualTo(url))
-            .withQueryParam("topic", equalTo(TopicOptionChoice.BUSINESS_AND_POLICY.toString))
+            .withQueryParam("topic", equalTo(TopicOptionChoice.BusinessAndPolicy.toString))
             .willReturn(
               aResponse()
                 .withStatus(OK)
@@ -92,7 +92,7 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec
             )
         )
 
-        val result = await(connector.fetchByEmailPreferences(TopicOptionChoice.BUSINESS_AND_POLICY, privateapimatch = false))
+        val result = await(connector.fetchByEmailPreferences(TopicOptionChoice.BusinessAndPolicy, privateapimatch = false))
 
         wireMockVerify(getRequestedFor(urlPathEqualTo(url)))
 
@@ -100,12 +100,13 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec
       }
 
       "make a call with topic and api category passed into the service and return users from response" in new Setup {
-        val url      = s"""/developers/email-preferences\\?topic=${TopicOptionChoice.BUSINESS_AND_POLICY.toString}&regime=VAT&regime=OTHER"""
-        val user     = aUserResponse(developerEmail)
-        val matching = urlMatching(url)
+        val url  = """/developers/email-preferences"""
+        val user = aUserResponse(developerEmail)
 
         stubFor(
-          get(matching)
+          get(urlPathEqualTo(url))
+            .withQueryParam("topic", equalTo(TopicOptionChoice.BusinessAndPolicy.toString))
+            .withQueryParam("regime", havingExactly("VAT", "OTHER"))
             .willReturn(
               aResponse()
                 .withStatus(OK)
@@ -114,26 +115,30 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec
         )
 
         val result =
-          await(connector.fetchByEmailPreferences(
-            TopicOptionChoice.BUSINESS_AND_POLICY,
-            maybeApis = None,
-            maybeApiCategories = Some(Set(ApiCategory.VAT, ApiCategory.OTHER)),
-            privateapimatch = false
-          ))
+          await(
+            connector.fetchByEmailPreferences(
+              TopicOptionChoice.BusinessAndPolicy,
+              maybeApis = None,
+              maybeApiCategories = Some(Set(ApiCategory.Vat, ApiCategory.Other)),
+              privateapimatch = false
+            )
+          )
 
-        wireMockVerify(getRequestedFor(matching))
+        wireMockVerify(getRequestedFor(urlPathEqualTo(url)))
 
         result shouldBe List(user)
 
       }
 
       "make a call with topic, api categories and apis passed into the service and return users from response" in new Setup {
-        val url      = s"""/developers/email-preferences\\?topic=${TopicOptionChoice.BUSINESS_AND_POLICY.toString}&regime=VAT&regime=OTHER&service=service1&service=service2"""
-        val user     = aUserResponse(developerEmail)
-        val matching = urlMatching(url)
+        val url  = """/developers/email-preferences"""
+        val user = aUserResponse(developerEmail)
 
         stubFor(
-          get(matching)
+          get(urlPathEqualTo(url))
+            .withQueryParam("topic", equalTo(TopicOptionChoice.BusinessAndPolicy.toString))
+            .withQueryParam("regime", havingExactly("VAT", "OTHER"))
+            .withQueryParam("service", havingExactly("service1", "service2"))
             .willReturn(
               aResponse()
                 .withStatus(OK)
@@ -141,26 +146,30 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec
             )
         )
 
-        val result = await(connector.fetchByEmailPreferences(
-          TopicOptionChoice.BUSINESS_AND_POLICY,
-          maybeApis = Some(Seq(ServiceName("service1"), ServiceName("service2"))),
-          maybeApiCategories = Some(Set(ApiCategory.VAT, ApiCategory.OTHER)),
-          privateapimatch = false
-        ))
+        val result = await(
+          connector.fetchByEmailPreferences(
+            TopicOptionChoice.BusinessAndPolicy,
+            maybeApis = Some(Seq(ServiceName("service1"), ServiceName("service2"))),
+            maybeApiCategories = Some(Set(ApiCategory.Vat, ApiCategory.Other)),
+            privateapimatch = false
+          )
+        )
 
-        wireMockVerify(getRequestedFor(matching))
+        wireMockVerify(getRequestedFor(urlPathEqualTo(url)))
 
         result shouldBe List(user)
       }
 
       "make a call with topic, api categories and apis passed and privateapimatch as true into the service and return users from response" in new Setup {
-        val url      =
-          s"""/developers/email-preferences\\?topic=${TopicOptionChoice.BUSINESS_AND_POLICY.toString}&regime=VAT&regime=OTHER&service=service1&service=service2&privateapimatch=true"""
-        val user     = aUserResponse(developerEmail)
-        val matching = urlMatching(url)
+        val url  = """/developers/email-preferences"""
+        val user = aUserResponse(developerEmail)
 
         stubFor(
-          get(matching)
+          get(urlPathEqualTo(url))
+            .withQueryParam("topic", equalTo(TopicOptionChoice.BusinessAndPolicy.toString))
+            .withQueryParam("regime", havingExactly("VAT", "OTHER"))
+            .withQueryParam("service", havingExactly("service1", "service2"))
+            .withQueryParam("privateapimatch", equalTo("true"))
             .willReturn(
               aResponse()
                 .withStatus(OK)
@@ -168,14 +177,16 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec
             )
         )
 
-        val result = await(connector.fetchByEmailPreferences(
-          TopicOptionChoice.BUSINESS_AND_POLICY,
-          maybeApis = Some(Seq(ServiceName("service1"), ServiceName("service2"))),
-          maybeApiCategories = Some(Set(ApiCategory.VAT, ApiCategory.OTHER)),
-          privateapimatch = true
-        ))
+        val result = await(
+          connector.fetchByEmailPreferences(
+            TopicOptionChoice.BusinessAndPolicy,
+            maybeApis = Some(Seq(ServiceName("service1"), ServiceName("service2"))),
+            maybeApiCategories = Some(Set(ApiCategory.Vat, ApiCategory.Other)),
+            privateapimatch = true
+          )
+        )
 
-        wireMockVerify(getRequestedFor(matching))
+        wireMockVerify(getRequestedFor(urlPathEqualTo(url)))
 
         result shouldBe List(user)
       }

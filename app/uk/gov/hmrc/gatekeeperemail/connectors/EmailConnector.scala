@@ -23,9 +23,9 @@ import scala.util.control.NonFatal
 import play.api.Logging
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status
-import play.api.libs.json.Json
 import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import play.api.libs.json.{JsValue, Json}
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpErrorFunctions, HttpResponse, StringContextOps, UpstreamErrorResponse}
 
@@ -33,40 +33,41 @@ import uk.gov.hmrc.gatekeeperemail.config.EmailConnectorConfig
 import uk.gov.hmrc.gatekeeperemail.models.requests.{OneEmailRequest, SendEmailRequest}
 
 @Singleton
-class EmailConnector @Inject() (http: HttpClientV2, config: EmailConnectorConfig)(implicit ec: ExecutionContext)
-    extends HttpErrorFunctions with Logging {
+class EmailConnector @Inject() (http: HttpClientV2, config: EmailConnectorConfig)(implicit ec: ExecutionContext) extends HttpErrorFunctions with Logging {
 
   private lazy val serviceUrl = config.emailBaseUrl
 
   def sendEmail(emailRequest: SendEmailRequest): Future[Boolean] = {
     implicit val hc: HeaderCarrier = HeaderCarrier().withExtraHeaders(CONTENT_TYPE -> "application/json")
 
-    postHttpRequest(emailRequest).map {
-      case Left(UpstreamErrorResponse(_, statusCode, _, _)) =>
-        logger.warn(s"Error while sending an email for templateId ${emailRequest.templateId}: $statusCode")
-        false
-      case Right(_)                                         =>
-        true
-    }
-      .recoverWith {
-        case NonFatal(e) =>
-          logger.warn(s"NonFatal error ${e.getMessage} while sending message for templateId ${emailRequest.templateId}", e)
-          Future.successful(false)
+    postHttpRequest(emailRequest)
+      .map {
+        case Left(UpstreamErrorResponse(_, statusCode, _, _)) =>
+          logger.warn(s"Error while sending an email for templateId ${emailRequest.templateId}: $statusCode")
+          false
+        case Right(_)                                         =>
+          true
+      }
+      .recoverWith { case NonFatal(e) =>
+        logger.warn(s"NonFatal error ${e.getMessage} while sending message for templateId ${emailRequest.templateId}", e)
+        Future.successful(false)
       }
   }
 
   private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, Boolean]] = {
+    import play.api.libs.ws.JsonBodyWritables._
+
     val oneEmailRequest = OneEmailRequest(List(request.to), request.templateId, request.parameters, request.force, request.auditData, request.eventUrl, request.tags)
-    http.post(url"$serviceUrl/developer/email")
+    http
+      .post(url"$serviceUrl/developer/email")
       .withBody(Json.toJson(oneEmailRequest))
       .execute[HttpResponse]
-      .map {
-        res => Right(res.status == Status.ACCEPTED)
+      .map { res =>
+        Right(res.status == Status.ACCEPTED)
       }
-      .recover {
-        case NonFatal(e) =>
-          logger.error(e.getMessage)
-          Left(e)
+      .recover { case NonFatal(e) =>
+        logger.error(e.getMessage)
+        Left(e)
       }
   }
 }

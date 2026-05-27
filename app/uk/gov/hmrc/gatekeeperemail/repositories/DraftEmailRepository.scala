@@ -23,18 +23,18 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import com.mongodb.client.model.ReturnDocument
 import org.bson.codecs.configuration.CodecRegistries.{fromCodecs, fromRegistries}
-import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Filters.*
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.{combine, set}
-import org.mongodb.scala.model.{IndexModel, IndexOptions, _}
-import org.mongodb.scala.result._
+import org.mongodb.scala.model.{IndexModel, IndexOptions, *}
+import org.mongodb.scala.result.*
 import org.mongodb.scala.{MongoClient, MongoCollection}
 
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, CollectionFactory, PlayMongoRepository}
 
 import uk.gov.hmrc.gatekeeperemail.config.AppConfig
-import uk.gov.hmrc.gatekeeperemail.models._
+import uk.gov.hmrc.gatekeeperemail.models.*
 
 @Singleton
 class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)
@@ -92,27 +92,31 @@ class DraftEmailRepository @Inject() (mongoComponent: MongoComponent, appConfig:
   }
 
   def updateEmailSentStatus(emailUUID: String, emailCount: Int): Future[DraftEmail] = {
-    collection.findOneAndUpdate(
-      equal("emailUUID", Codecs.toBson(emailUUID)),
-      update = combine(
-        set("status", Codecs.toBson[EmailStatus](EmailStatus.SENT)),
-        set("emailsCount", emailCount)
-      ),
-      options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
-    ).head()
+    collection
+      .findOneAndUpdate(
+        equal("emailUUID", Codecs.toBson(emailUUID)),
+        update = combine(
+          set("status", Codecs.toBson[EmailStatus](EmailStatus.Sent)),
+          set("emailsCount", emailCount)
+        ),
+        options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
+      )
+      .head()
   }
 
   def updateEmail(email: DraftEmail): Future[DraftEmail] = {
-    collection.findOneAndUpdate(
-      equal("emailUUID", Codecs.toBson(email.emailUUID)),
-      update = combine(
-        set("templateData", email.templateData),
-        set("htmlEmailBody", email.htmlEmailBody),
-        set("markdownEmailBody", email.markdownEmailBody),
-        set("subject", email.subject)
-      ),
-      options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
-    ).head()
+    collection
+      .findOneAndUpdate(
+        equal("emailUUID", Codecs.toBson(email.emailUUID)),
+        update = combine(
+          set("templateData", email.templateData),
+          set("htmlEmailBody", email.htmlEmailBody),
+          set("markdownEmailBody", email.markdownEmailBody),
+          set("subject", email.subject)
+        ),
+        options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
+      )
+      .head()
   }
 
   def deleteByEmailUUID(emailUUID: String): Future[Boolean] = {

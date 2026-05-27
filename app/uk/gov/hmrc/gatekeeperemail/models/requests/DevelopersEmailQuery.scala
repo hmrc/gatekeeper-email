@@ -16,27 +16,28 @@
 
 package uk.gov.hmrc.gatekeeperemail.models.requests
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.*
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
 
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
 
 case class DevelopersEmailQuery(
     topic: Option[String] = None,
-    apis: Option[Seq[ServiceName]] = None,
-    apiCategories: Option[Seq[ApiCategory]] = None,
+    apis: Option[List[ServiceName]] = None,
+    apiCategories: Option[List[ApiCategory]] = None,
     privateapimatch: Boolean = false,
     apiVersionFilter: Option[String] = None,
     allUsers: Boolean = false,
     emailsForSomeCases: Option[EmailOverride] = None
-  )
+)
 
 object DevelopersEmailQuery {
-  implicit val format: OFormat[DevelopersEmailQuery] = Json.format[DevelopersEmailQuery]
+  import ServiceName.given
+  given OFormat[DevelopersEmailQuery] = Json.format[DevelopersEmailQuery]
 }
 
 case class EmailOverride(email: List[RegisteredUser], isOverride: Boolean = false)
 
 object EmailOverride {
-  implicit val format: OFormat[EmailOverride] = Json.format[EmailOverride]
+  given OFormat[EmailOverride] = Json.format[EmailOverride]
 }
