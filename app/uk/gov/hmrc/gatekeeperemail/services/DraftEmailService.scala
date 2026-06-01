@@ -90,16 +90,15 @@ class DraftEmailService @Inject() (
         developerConnector.fetchVerified()
       case DevelopersEmailQuery(topic, Some(selectedAPIs), None, _, None, false, None) =>
         logger.info(s"Emailing Selected Apis to users that are not overridden")
-        val selectedTopic: Option[TopicOptionChoice] = topic.map(TopicOptionChoice.unsafeApply(_))
         if (selectedAPIs.forall(_.isEmpty)) {
           Future.successful(List.empty)
         } else {
           for {
             apis            <- apmConnector.fetchAllCombinedApis()
             filteredApis     = filterSelectedApis(Some(selectedAPIs.toList), apis).sortBy(_.displayName)
-            publicUsers     <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.Public)
-            controlledUsers <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.Controlled)
-            internalUsers   <- handleGettingApiUsers(filteredApis, selectedTopic, ApiAccessType.Internal)
+            publicUsers     <- handleGettingApiUsers(filteredApis, topic, ApiAccessType.Public)
+            controlledUsers <- handleGettingApiUsers(filteredApis, topic, ApiAccessType.Controlled)
+            internalUsers   <- handleGettingApiUsers(filteredApis, topic, ApiAccessType.Internal)
             combinedUsers    = (publicUsers ++ controlledUsers ++ internalUsers).distinct
             _                = logger.info(s"Outgoing Emails count is ${combinedUsers.size}")
           } yield combinedUsers
@@ -109,7 +108,7 @@ class DraftEmailService @Inject() (
       case _                                                                           =>
         logger.info("Getting Emails for Default match case")
         emailPreferences.topic
-          .map(t => developerConnector.fetchByEmailPreferences(TopicOptionChoice.unsafeApply(t), emailPreferences.apis, emailPreferences.apiCategories.map(_.toSet)))
+          .map(t => developerConnector.fetchByEmailPreferences(t, emailPreferences.apis, emailPreferences.apiCategories.map(_.toSet)))
           .getOrElse(Future.successful(List.empty))
     }
     emails
