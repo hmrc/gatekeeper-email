@@ -84,7 +84,7 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec with WireMockSugar with Befor
 
         stubFor(
           get(urlPathEqualTo(url))
-            .withQueryParam("topic", equalTo(TopicOptionChoice.BusinessAndPolicy.toString))
+            .withQueryParam("topic", equalTo("BUSINESS_AND_POLICY"))
             .willReturn(
               aResponse()
                 .withStatus(OK)
@@ -105,7 +105,7 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec with WireMockSugar with Befor
 
         stubFor(
           get(urlPathEqualTo(url))
-            .withQueryParam("topic", equalTo(TopicOptionChoice.BusinessAndPolicy.toString))
+            .withQueryParam("topic", equalTo("BUSINESS_AND_POLICY"))
             .withQueryParam("regime", havingExactly("VAT", "OTHER"))
             .willReturn(
               aResponse()
@@ -136,7 +136,7 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec with WireMockSugar with Befor
 
         stubFor(
           get(urlPathEqualTo(url))
-            .withQueryParam("topic", equalTo(TopicOptionChoice.BusinessAndPolicy.toString))
+            .withQueryParam("topic", equalTo("BUSINESS_AND_POLICY"))
             .withQueryParam("regime", havingExactly("VAT", "OTHER"))
             .withQueryParam("service", havingExactly("service1", "service2"))
             .willReturn(
@@ -166,7 +166,7 @@ class DeveloperConnectorSpec extends AsyncHmrcSpec with WireMockSugar with Befor
 
         stubFor(
           get(urlPathEqualTo(url))
-            .withQueryParam("topic", equalTo(TopicOptionChoice.BusinessAndPolicy.toString))
+            .withQueryParam("topic", equalTo("BUSINESS_AND_POLICY"))
             .withQueryParam("regime", havingExactly("VAT", "OTHER"))
             .withQueryParam("service", havingExactly("service1", "service2"))
             .withQueryParam("privateapimatch", equalTo("true"))
