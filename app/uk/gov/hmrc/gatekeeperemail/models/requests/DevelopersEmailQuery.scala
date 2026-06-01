@@ -20,9 +20,10 @@ import play.api.libs.json.*
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
 
 import uk.gov.hmrc.gatekeeperemail.connectors.DeveloperConnector.RegisteredUser
+import uk.gov.hmrc.gatekeeperemail.models.TopicOptionChoice
 
 case class DevelopersEmailQuery(
-    topic: Option[String] = None,
+    topic: Option[TopicOptionChoice] = None,
     apis: Option[List[ServiceName]] = None,
     apiCategories: Option[List[ApiCategory]] = None,
     privateapimatch: Boolean = false,

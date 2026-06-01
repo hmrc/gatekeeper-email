@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,6 @@ package uk.gov.hmrc.gatekeeperemail.models
 
 import play.api.libs.json.Format
 import uk.gov.hmrc.apiplatform.modules.common.domain.services.SimpleEnumJsonFormatting
-
-enum EmailStatus {
-  case Failed, Pending, Sent
-}
-
-object EmailStatus {
-  def apply(text: String): Option[EmailStatus] = EmailStatus.values.find(_.toString().equalsIgnoreCase(text))
-
-  def unsafeApply(text: String): EmailStatus = apply(text).getOrElse(throw new RuntimeException(s"$text is not a valid Email Status"))
-
-  given Format[EmailStatus] = SimpleEnumJsonFormatting.createEnumFormatFor[EmailStatus]("Email Status", apply)
-}
 
 enum TopicOptionChoice {
   case BusinessAndPolicy, Technical, ReleaseSchedules, EventInvites
