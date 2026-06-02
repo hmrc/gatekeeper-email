@@ -47,7 +47,7 @@ class DeveloperConnector @Inject() (appConfig: AppConfig, http: HttpClientV2)(im
       maybeApiCategories.fold(Seq.empty[(String, String)])(regimes => regimes.toList.flatMap(regime => Seq("regime" -> toScreamingSnakeCase(regime))))
     val privateapimatchParams          = if (privateapimatch) Seq("privateapimatch" -> "true") else Seq.empty
     val queryParams                    =
-      Seq("topic" -> topic.toString) ++ regimes ++
+      Seq("topic" -> toScreamingSnakeCase(topic)) ++ regimes ++
         maybeApis.fold(Seq.empty[(String, String)])(apis => apis.map(("service" -> _))) ++ privateapimatchParams
 
     // The third-party-developer service only returns verified registered users at this endpoint
