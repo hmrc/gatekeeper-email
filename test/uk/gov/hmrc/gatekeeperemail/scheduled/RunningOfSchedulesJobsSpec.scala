@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Deadline, DurationInt, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -91,14 +92,10 @@ class RunningOfSchedulesJobsSpec extends HmrcSpec with ScalaFutures with GuiceOn
 
   "When stopping the app, the scheduled job runner" should {
     "cancel all of the scheduled jobs" in new TestCase {
-      private val testApp = fakeApplication()
-      private val runner  = new RunningOfScheduledJobs {
-        override val ec: ExecutionContext                            = ExecutionContext.Implicits.global
-        override lazy val applicationLifecycle: ApplicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
-        override val scheduledJobs: Seq[LockedScheduledJob]          = Seq.empty
-        override val application: Application                        = testApp
-        override lazy val cancellables                               = Seq(new StubCancellable, new StubCancellable)
-      }
+      private val testApp              = fakeApplication()
+      private val applicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
+      private val emailSendingJob      = testApp.injector.instanceOf[EmailSendingJob]
+      private val runner               = RunningOfScheduledJobs(testApp, applicationLifecycle, emailSendingJob)
 
       every(runner.cancellables) should not be Symbol("cancelled")
       await(testApp.stop())

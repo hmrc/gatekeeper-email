@@ -16,29 +16,11 @@
 
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
-
 import com.google.inject.AbstractModule
-
-import play.api.Application
-import play.api.inject.ApplicationLifecycle
 
 class SchedulerModule extends AbstractModule {
 
   override def configure(): Unit = {
-    bind(classOf[Scheduler]).asEagerSingleton()
+    bind(classOf[RunningOfScheduledJobs]).asEagerSingleton()
   }
-}
-
-@Singleton
-class Scheduler @Inject() (
-    val lifecycle: ApplicationLifecycle,
-    override val application: Application,
-    emailSendingJob: EmailSendingJob
-)(
-    override implicit val ec: ExecutionContext
-) extends RunningOfScheduledJobs {
-  override val scheduledJobs: Seq[ScheduledJob] = Seq(emailSendingJob)
-  override lazy val applicationLifecycle        = lifecycle
 }

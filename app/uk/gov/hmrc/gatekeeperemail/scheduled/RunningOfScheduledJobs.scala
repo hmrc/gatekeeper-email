@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -25,18 +26,19 @@ import org.apache.pekko.actor.{Cancellable, Scheduler}
 import play.api.inject.ApplicationLifecycle
 import play.api.{Application, Logging}
 
-/** All implementing classes must be singletons - see https://www.playframework.com/documentation/2.8.x/ScalaDependencyInjection#Stopping/cleaning-up
-  */
-trait RunningOfScheduledJobs extends Logging {
+@Singleton
+class RunningOfScheduledJobs @Inject() (
+    val application: Application,
+    val applicationLifecycle: ApplicationLifecycle,
+    emailSendingJob: EmailSendingJob
+)(implicit
+    val ec: ExecutionContext
+) extends Logging {
+  val scheduledJobs: Seq[ScheduledJob] = Seq(emailSendingJob)
 
-  implicit val ec: ExecutionContext
-  val application: Application
-  val scheduledJobs: Seq[ScheduledJob]
+  val scheduler: Scheduler = application.actorSystem.scheduler
 
-  lazy val scheduler: Scheduler = application.actorSystem.scheduler
-  lazy val applicationLifecycle: ApplicationLifecycle
-
-  lazy val cancellables: Seq[Cancellable] =
+  val cancellables: Seq[Cancellable] =
     scheduledJobs.map { job =>
       scheduler.scheduleWithFixedDelay(job.initialDelay, job.interval)(new Runnable() {
         override def run(): Unit = {
