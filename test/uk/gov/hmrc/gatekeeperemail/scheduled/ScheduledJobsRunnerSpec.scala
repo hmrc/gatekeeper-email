@@ -17,10 +17,8 @@
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.{Deadline, DurationInt, FiniteDuration}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext}
 
-import org.apache.pekko.actor.{Cancellable, Scheduler}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.concurrent.ScalaFutures
@@ -32,50 +30,10 @@ import play.api.inject.ApplicationLifecycle
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
-
-trait TestCase {
-
-  class StubbedScheduler extends Scheduler {
-
-    override def scheduleWithFixedDelay(
-        initialDelay: FiniteDuration,
-        delay: FiniteDuration
-    )(
-        runnable: Runnable
-    )(implicit executor: ExecutionContext): Cancellable = new Cancellable {
-      override def cancel(): Boolean    = true
-      override def isCancelled: Boolean = false
-    }
-    def maxFrequency: Double = 1
-
-    def scheduleOnce(delay: FiniteDuration, runnable: Runnable)(implicit executor: ExecutionContext): Cancellable = new Cancellable {
-      override def cancel(): Boolean    = true
-      override def isCancelled: Boolean = false
-    }
-
-    override def schedule(initialDelay: FiniteDuration, interval: FiniteDuration, runnable: Runnable)(implicit executor: ExecutionContext) = ???
-  }
-
-  class TestScheduledJob extends ScheduledJob {
-    override lazy val initialDelay: FiniteDuration = 2.seconds
-    override lazy val interval: FiniteDuration     = 3.seconds
-    def name: String                               = "TestScheduledJob"
-    def isExecuted: Boolean                        = true
-
-    override def execute(implicit ec: ExecutionContext): Future[Result] = Future.successful(Result("done"))
-    var isRunning: Future[Boolean]                                      = Future.successful(false)
-  }
-  val testScheduledJob = new TestScheduledJob
-
-  class StubCancellable extends Cancellable {
-    var isCancelled = false
-
-    def cancel(): Boolean = {
-      isCancelled = true
-      isCancelled
-    }
-  }
-}
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import scala.concurrent.Promise
+import scala.util.Success
 
 class ScheduledJobsRunnerSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach {
 
@@ -88,38 +46,61 @@ class ScheduledJobsRunnerSpec extends HmrcSpec with ScalaFutures with GuiceOneAp
       .disable[SchedulerModule]
       .build()
 
-  trait Setup extends TestCase {}
+  "ScheduledJobsRunner" should {
+    "Invoke execute method on jobs after small delay" in {
+      val cdl = new CountDownLatch(2)
+      val testScheduledJob1     = new TestScheduledJob(cdl)
+      val testScheduledJob2     = new TestScheduledJob(cdl)
 
-  "When stopping the app, the scheduled job runner" should {
-    "cancel all of the scheduled jobs" in new TestCase {
-      private val testApp              = fakeApplication()
-      private val applicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
-      private val emailSendingJob      = testApp.injector.instanceOf[EmailSendingJob]
-      private val runner               = ScheduledJobsRunner(testApp, applicationLifecycle, ScheduledJobs(List(emailSendingJob)))
+      val testApp              = fakeApplication()
+      val applicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
+
+      ScheduledJobsRunner(testApp, applicationLifecycle, ScheduledJobs(List(testScheduledJob1, testScheduledJob2)))
+
+      // Both jobs should be executed quickly
+      cdl.await(5, TimeUnit.SECONDS) shouldBe true
+
+      await(testApp.stop())
+    }
+  
+    "When stopping the app, the scheduled job runner should cancel all of the scheduled jobs" in {
+      val cdl = new CountDownLatch(2)
+      val testScheduledJob1     = new TestScheduledJob(cdl)
+      val testScheduledJob2     = new TestScheduledJob(cdl)
+
+      val testApp              = fakeApplication()
+      val applicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
+
+      val runner               = ScheduledJobsRunner(testApp, applicationLifecycle, ScheduledJobs(List(testScheduledJob1, testScheduledJob2)))
 
       every(runner.cancellables) should not be Symbol("cancelled")
       await(testApp.stop())
       every(runner.cancellables) shouldBe Symbol("cancelled")
     }
 
-    "block while scheduled jobs are still running" in new TestCase {
-      private val testApp = fakeApplication()
-      val stoppableJob    = new TestScheduledJob() {
-        override def name: String = "StoppableJob"
-      }
+    "block while scheduled jobs are still running" in {
+      val testApp              = fakeApplication()
+      val applicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
 
-      stoppableJob.isRunning = Future.successful(true)
+      val startedMarker = new CountDownLatch(1)
+      val jobCompleter = Promise[String]
+      val job = new ShutdownDelayedScheduledJob(startedMarker, jobCompleter)
 
-      val deadline: Deadline = 5000.milliseconds.fromNow
-      while (deadline.hasTimeLeft()) {
-        /* Intentionally burning CPU cycles for fixed period */
-      }
+      val runner               = ScheduledJobsRunner(testApp, applicationLifecycle, ScheduledJobs(List(job)))
+
+      // Ensure we are running execute block
+      startedMarker.await(5, TimeUnit.SECONDS) shouldBe true
 
       val stopFuture = testApp.stop()
+      // When we stop the app it should wait for the runnning job to complete
       stopFuture should not be Symbol("completed")
 
-      stoppableJob.isRunning = Future.successful(false)
+      // Complete the job
+      jobCompleter.complete(Success("Done"))
+
+      // Check everything is shutdown
       eventually(timeout(Span(1, Minute))) { stopFuture shouldBe Symbol("completed") }
+      every(runner.cancellables) shouldBe Symbol("cancelled")
     }
   }
 }

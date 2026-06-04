@@ -35,6 +35,5 @@ class SchedulerModule extends Module {
 class ScheduledJobsProvider @Inject() (
     emailSendingJob: EmailSendingJob
 ) extends Provider[ScheduledJobs] {
-
   override def get(): ScheduledJobs = ScheduledJobs(List(emailSendingJob))
 }
