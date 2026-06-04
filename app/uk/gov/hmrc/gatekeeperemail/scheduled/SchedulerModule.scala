@@ -16,11 +16,25 @@
 
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
-import com.google.inject.AbstractModule
+import javax.inject.{Inject, Singleton}
 
-class SchedulerModule extends AbstractModule {
+import com.google.inject.Provider
 
-  override def configure(): Unit = {
-    bind(classOf[RunningOfScheduledJobs]).asEagerSingleton()
-  }
+import play.api.inject.Module
+import play.api.{Configuration, Environment}
+
+class SchedulerModule extends Module {
+
+  override def bindings(environment: Environment, configuration: Configuration) = Seq(
+    bind[ScheduledJobs].toProvider[ScheduledJobsProvider],
+    bind[ScheduledJobsRunner].toSelf.eagerly()
+  )
+}
+
+@Singleton
+class ScheduledJobsProvider @Inject() (
+    emailSendingJob: EmailSendingJob
+) extends Provider[ScheduledJobs] {
+
+  override def get(): ScheduledJobs = ScheduledJobs(List(emailSendingJob))
 }

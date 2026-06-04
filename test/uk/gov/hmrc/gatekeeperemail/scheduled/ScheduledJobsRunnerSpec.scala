@@ -77,7 +77,7 @@ trait TestCase {
   }
 }
 
-class RunningOfSchedulesJobsSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach {
+class ScheduledJobsRunnerSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach {
 
   override def fakeApplication() =
     new GuiceApplicationBuilder()
@@ -95,7 +95,7 @@ class RunningOfSchedulesJobsSpec extends HmrcSpec with ScalaFutures with GuiceOn
       private val testApp              = fakeApplication()
       private val applicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
       private val emailSendingJob      = testApp.injector.instanceOf[EmailSendingJob]
-      private val runner               = RunningOfScheduledJobs(testApp, applicationLifecycle, emailSendingJob)
+      private val runner               = ScheduledJobsRunner(testApp, applicationLifecycle, ScheduledJobs(List(emailSendingJob)))
 
       every(runner.cancellables) should not be Symbol("cancelled")
       await(testApp.stop())

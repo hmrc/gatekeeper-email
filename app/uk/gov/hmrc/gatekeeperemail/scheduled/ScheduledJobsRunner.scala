@@ -26,20 +26,21 @@ import org.apache.pekko.actor.{Cancellable, Scheduler}
 import play.api.inject.ApplicationLifecycle
 import play.api.{Application, Logging}
 
+case class ScheduledJobs(allJobs: List[ScheduledJob])
+
 @Singleton
-class RunningOfScheduledJobs @Inject() (
-    val application: Application,
-    val applicationLifecycle: ApplicationLifecycle,
-    emailSendingJob: EmailSendingJob
+class ScheduledJobsRunner @Inject() (
+    application: Application,
+    applicationLifecycle: ApplicationLifecycle,
+    scheduledJobs: ScheduledJobs
 )(implicit
     val ec: ExecutionContext
 ) extends Logging {
-  val scheduledJobs: Seq[ScheduledJob] = Seq(emailSendingJob)
 
   val scheduler: Scheduler = application.actorSystem.scheduler
 
   val cancellables: Seq[Cancellable] =
-    scheduledJobs.map { job =>
+    scheduledJobs.allJobs.map { job =>
       scheduler.scheduleWithFixedDelay(job.initialDelay, job.interval)(new Runnable() {
         override def run(): Unit = {
           val stopWatch = new StopWatch
