@@ -16,31 +16,33 @@
 
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
-import scala.concurrent.duration.{DurationInt, FiniteDuration}
-import scala.concurrent.{ExecutionContext, Future}
 import java.util.concurrent.CountDownLatch
-import scala.concurrent.Promise
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 
-class TestScheduledJob(startedMarker: CountDownLatch) extends ScheduledJob {
-  override lazy val initialDelay: FiniteDuration = 1.seconds
-  override lazy val interval: FiniteDuration     = 5.seconds
-  def name: String                               = "TestScheduledJob"
+class SequencingScheduledJob(
+    val initialDelay: FiniteDuration = 1.seconds,
+    jobCompleter: Promise[String] = Promise.successful("Done")
+) extends ScheduledJob {
+  override lazy val interval: FiniteDuration = 1.hour
+  def name: String                           = "SequencingScheduledJob1"
 
-  override def execute(implicit ec: ExecutionContext): Future[Result] = {
-    startedMarker.countDown()
-    Future.successful(Result("done"))
+  private val startedMarker   = CountDownLatch(1)
+  private val completedMarker = CountDownLatch(1)
+
+  def awaitStarted(timeout: FiniteDuration): Boolean   = {
+    startedMarker.await(timeout.length, timeout.unit)
+  }
+  def awaitCompleted(timeout: FiniteDuration): Boolean = {
+    completedMarker.await(timeout.length, timeout.unit)
   }
 
-  var isRunning: Future[Boolean] = Future.successful(false)
-}
-
-class ShutdownDelayedScheduledJob(startedMarker: CountDownLatch, promise: Promise[String]) extends ScheduledJob {
-  override lazy val initialDelay: FiniteDuration = 1.seconds
-  override lazy val interval: FiniteDuration     = 30.seconds
-  def name: String                               = "StopDelayedScheduledJob"
-
   override def execute(implicit ec: ExecutionContext): Future[Result] = {
     startedMarker.countDown()
-    promise.future.map(Result(_))
+    val future = jobCompleter.future.map(Result(_))
+    future.onComplete { case _ =>
+      completedMarker.countDown()
+    }
+    future
   }
 }

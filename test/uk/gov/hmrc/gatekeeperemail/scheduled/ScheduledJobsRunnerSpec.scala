@@ -17,7 +17,9 @@
 package uk.gov.hmrc.gatekeeperemail.scheduled
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext}
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{ExecutionContext, Promise}
+import scala.util.Success
 
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually.eventually
@@ -30,10 +32,6 @@ import play.api.inject.ApplicationLifecycle
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import scala.concurrent.Promise
-import scala.util.Success
 
 class ScheduledJobsRunnerSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach {
 
@@ -47,55 +45,89 @@ class ScheduledJobsRunnerSpec extends HmrcSpec with ScalaFutures with GuiceOneAp
       .build()
 
   "ScheduledJobsRunner" should {
-    "Invoke execute method on jobs after small delay" in {
-      val cdl = new CountDownLatch(2)
-      val testScheduledJob1     = new TestScheduledJob(cdl)
-      val testScheduledJob2     = new TestScheduledJob(cdl)
-
+    "not execute jobs during the initial delay" in {
       val testApp              = fakeApplication()
       val applicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
+      val testJob              = new SequencingScheduledJob(5.seconds)
 
-      ScheduledJobsRunner(testApp, applicationLifecycle, ScheduledJobs(List(testScheduledJob1, testScheduledJob2)))
+      ScheduledJobsRunner(testApp, applicationLifecycle, ScheduledJobs(List(testJob)))
 
-      // Both jobs should be executed quickly
-      cdl.await(5, TimeUnit.SECONDS) shouldBe true
+      // it won't start yet - see CDL await
+      withClue("testJob has started too soon") { testJob.awaitStarted(4.seconds) shouldBe false }
+
+      // it should have started now
+      withClue("testJob has not started") { testJob.awaitStarted(5.seconds) shouldBe true }
 
       await(testApp.stop())
     }
-  
-    "When stopping the app, the scheduled job runner should cancel all of the scheduled jobs" in {
-      val cdl = new CountDownLatch(2)
-      val testScheduledJob1     = new TestScheduledJob(cdl)
-      val testScheduledJob2     = new TestScheduledJob(cdl)
 
+    "execute jobs after the initial delay" in {
       val testApp              = fakeApplication()
       val applicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
 
-      val runner               = ScheduledJobsRunner(testApp, applicationLifecycle, ScheduledJobs(List(testScheduledJob1, testScheduledJob2)))
+      val testJob1 = new SequencingScheduledJob(1.seconds)
+      val testJob2 = new SequencingScheduledJob(1.seconds)
+
+      ScheduledJobsRunner(testApp, applicationLifecycle, ScheduledJobs(List(testJob1, testJob2)))
+
+      // Both jobs should be executed quickly
+      withClue("testJob1 has not started") { testJob1.awaitStarted(5.seconds) shouldBe true }
+      withClue("testJob2 has not started") { testJob2.awaitStarted(5.seconds) shouldBe true }
+
+      await(testApp.stop())
+    }
+
+    "cancel all of the scheduled jobs when stopping the app" in {
+      val testApp              = fakeApplication()
+      val applicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
+
+      val testJob1 = new SequencingScheduledJob()
+      val testJob2 = new SequencingScheduledJob()
+
+      val runner = ScheduledJobsRunner(testApp, applicationLifecycle, ScheduledJobs(List(testJob1, testJob2)))
 
       every(runner.cancellables) should not be Symbol("cancelled")
-      await(testApp.stop())
+
+      val stopFuture = testApp.stop()
+      eventually(timeout(Span(1, Minute))) { stopFuture shouldBe Symbol("completed") }
+
       every(runner.cancellables) shouldBe Symbol("cancelled")
     }
 
-    "block while scheduled jobs are still running" in {
+    "demonstrate job completion can be delayed in SequencingScheduledJob before next test" in {
       val testApp              = fakeApplication()
       val applicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
 
-      val startedMarker = new CountDownLatch(1)
       val jobCompleter = Promise[String]
-      val job = new ShutdownDelayedScheduledJob(startedMarker, jobCompleter)
+      val testJob      = new SequencingScheduledJob(1.seconds, jobCompleter)
 
-      val runner               = ScheduledJobsRunner(testApp, applicationLifecycle, ScheduledJobs(List(job)))
+      ScheduledJobsRunner(testApp, applicationLifecycle, ScheduledJobs(List(testJob)))
+
+      withClue("testJob has started too soon") { testJob.awaitCompleted(5.seconds) shouldBe false }
+      jobCompleter.complete(Success("Done"))
+      withClue("testJob has not started") { testJob.awaitCompleted(1.seconds) shouldBe true }
+
+      await(testApp.stop())
+    }
+
+    "block shutdown while scheduled jobs are still running" in {
+      val testApp              = fakeApplication()
+      val applicationLifecycle = testApp.injector.instanceOf[ApplicationLifecycle]
+
+      val jobCompleter = Promise[String]
+      val testJob      = new SequencingScheduledJob(1.seconds, jobCompleter)
+
+      val runner = ScheduledJobsRunner(testApp, applicationLifecycle, ScheduledJobs(List(testJob)))
 
       // Ensure we are running execute block
-      startedMarker.await(5, TimeUnit.SECONDS) shouldBe true
+      withClue("testJob has not started") { testJob.awaitStarted(5.seconds) shouldBe true }
 
       val stopFuture = testApp.stop()
+
       // When we stop the app it should wait for the runnning job to complete
       stopFuture should not be Symbol("completed")
 
-      // Complete the job
+      // Complete the running scheduled job
       jobCompleter.complete(Success("Done"))
 
       // Check everything is shutdown
