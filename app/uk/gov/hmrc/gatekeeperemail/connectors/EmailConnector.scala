@@ -57,7 +57,8 @@ class EmailConnector @Inject() (http: HttpClientV2, config: EmailConnectorConfig
   private def postHttpRequest(request: SendEmailRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, Boolean]] = {
     import play.api.libs.ws.JsonBodyWritables._
 
-    val oneEmailRequest = OneEmailRequest(List(request.to), request.templateId, request.parameters, request.force, request.auditData, request.eventUrl, request.tags)
+    val oneEmailRequest =
+      OneEmailRequest(List(request.to), request.templateId, request.parameters, request.force, request.auditData, request.eventUrl, request.tags + ("source" -> "APIPlatformGK"))
     http
       .post(url"$serviceUrl/developer/email")
       .withBody(Json.toJson(oneEmailRequest))

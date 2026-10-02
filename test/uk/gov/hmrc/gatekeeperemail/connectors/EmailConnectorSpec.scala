@@ -127,7 +127,9 @@ class EmailConnectorSpec extends AsyncHmrcTestSpec with BeforeAndAfterEach with 
                  |  },
                  |  "force": false,
                  |  "auditData": {},
-                 |  "tags" : { }
+                 |  "tags" : {
+                 |  "source": "APIPlatformGK"
+                 |  }
                  |}""".stripMargin
             )
           )
