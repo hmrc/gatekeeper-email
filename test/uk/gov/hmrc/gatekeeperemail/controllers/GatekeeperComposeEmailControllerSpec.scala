@@ -47,7 +47,7 @@ import uk.gov.hmrc.gatekeeperemail.services.DraftEmailService
 import uk.gov.hmrc.gatekeeperemail.stride.connectors.AuthConnector
 import uk.gov.hmrc.gatekeeperemail.stride.controllers.actions.ForbiddenHandler
 
-class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with Matchers with MockitoSugar with FixedClock {
+class GatekeeperComposeEmailControllerSpec extends AbstractControllerSpec with Matchers with FixedClock {
 
   private val subject      = "Email subject"
   private val emailBody    = "Body to be used in the email template"

@@ -3,9 +3,9 @@ import sbt.*
 object AppDependencies {
 
   lazy val bootstrapPlayVersion = "10.7.0"
-  lazy val hmrcMongoVersion     = "2.12.0"
-  lazy val commonDomainVersion  = "1.0.0"
-  lazy val apiDomainVersion     = "1.4.0"
+  lazy val hmrcMongoVersion     = "2.14.0"
+  lazy val commonDomainVersion  = "1.4.0"
+  lazy val apiDomainVersion     = "1.8.0"
 
   def apply(): Seq[ModuleID] = compile ++ test
 
@@ -13,7 +13,8 @@ object AppDependencies {
     "uk.gov.hmrc"             %% "bootstrap-backend-play-30"   % bootstrapPlayVersion,
     "uk.gov.hmrc.mongo"       %% "hmrc-mongo-play-30"          % hmrcMongoVersion,
     "org.typelevel"           %% "cats-core"                   % "2.13.0",
-    "uk.gov.hmrc"             %% "api-platform-api-domain"     % apiDomainVersion
+    "uk.gov.hmrc"             %% "api-platform-api-domain"     % apiDomainVersion,
+    "uk.gov.hmrc"             %% "api-platform-common-domain"  % commonDomainVersion,
   )
 
   val test = Seq(
