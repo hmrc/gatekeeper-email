@@ -28,7 +28,7 @@ import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiAccessType, *}
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
-import uk.gov.hmrc.gatekeeperemail.utils.{AsyncHmrcSpec, *}
+import uk.gov.hmrc.gatekeeperemail.utils.{AsyncHmrcSpec, UrlEncoding, WireMockSugar}
 
 class ApmConnectorSpec extends AsyncHmrcSpec with WireMockSugar with GuiceOneAppPerSuite with UrlEncoding with HttpClientV2Support {
 

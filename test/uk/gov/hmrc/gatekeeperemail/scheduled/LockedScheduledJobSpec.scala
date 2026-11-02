@@ -35,7 +35,7 @@ import uk.gov.hmrc.mongo.lock.{Lock, MongoLockRepository}
 import uk.gov.hmrc.gatekeeperemail.config.{AppConfig, ScheduledJobConfig}
 import uk.gov.hmrc.gatekeeperemail.services.SentEmailService
 
-class LockedScheduledJobSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach with FixedClock with MockitoSugar {
+class LockedScheduledJobSpec extends HmrcSpec with ScalaFutures with GuiceOneAppPerTest with BeforeAndAfterEach with FixedClock {
 
   override def fakeApplication() =
     new GuiceApplicationBuilder()
